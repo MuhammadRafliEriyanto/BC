@@ -1,0 +1,73 @@
+<svg width="720" height="560" viewBox="0 0 720 560" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Peta Lokasi Bina Cendekia</title>
+  <desc id="desc">Ilustrasi peta lokasi Bina Cendekia dengan penanda Jagakarsa dan Bekasi Barat.</desc>
+  <defs>
+    <linearGradient id="bg" x1="84" y1="48" x2="640" y2="520" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7D1436"/>
+      <stop offset="0.55" stop-color="#BB4A16"/>
+      <stop offset="1" stop-color="#F59E0B"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#FDE68A"/>
+      <stop offset="1" stop-color="#FDBA74"/>
+    </linearGradient>
+    <filter id="blur" x="-120" y="-120" width="960" height="800" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="46"/>
+    </filter>
+  </defs>
+
+  <rect width="720" height="560" rx="32" fill="url(#bg)"/>
+  <g opacity="0.22" filter="url(#blur)">
+    <circle cx="168" cy="148" r="104" fill="#FDE68A"/>
+    <circle cx="576" cy="420" r="124" fill="#FB7185"/>
+  </g>
+
+  <rect x="34" y="34" width="652" height="492" rx="26" fill="#FFF7ED" fill-opacity="0.1" stroke="white" stroke-opacity="0.18"/>
+
+  <g opacity="0.12" stroke="white">
+    <path d="M96 92H624"/>
+    <path d="M96 154H624"/>
+    <path d="M96 216H624"/>
+    <path d="M96 278H624"/>
+    <path d="M96 340H624"/>
+    <path d="M96 402H624"/>
+    <path d="M96 464H624"/>
+    <path d="M128 72V488"/>
+    <path d="M224 72V488"/>
+    <path d="M320 72V488"/>
+    <path d="M416 72V488"/>
+    <path d="M512 72V488"/>
+    <path d="M608 72V488"/>
+  </g>
+
+  <g stroke-linecap="round">
+    <path d="M118 420C184 372 208 320 250 298C294 274 346 286 390 250C436 214 464 158 548 126" stroke="#FFFFFF" stroke-opacity="0.34" stroke-width="22"/>
+    <path d="M148 142C210 170 232 208 274 226C322 246 388 232 430 260C470 286 504 344 562 380" stroke="#FFF3C4" stroke-opacity="0.72" stroke-width="18"/>
+    <path d="M212 92C252 150 290 186 340 202C390 218 438 228 470 254C510 286 538 342 566 434" stroke="#FFFFFF" stroke-opacity="0.2" stroke-width="12"/>
+    <path d="M108 262C176 252 212 244 258 250C308 258 350 286 404 292C456 298 500 286 618 244" stroke="#FFF3C4" stroke-opacity="0.52" stroke-width="10" stroke-dasharray="16 18"/>
+  </g>
+
+  <g>
+    <rect x="470" y="70" width="168" height="70" rx="18" fill="#5B1631" fill-opacity="0.72" stroke="white" stroke-opacity="0.12"/>
+    <text x="494" y="98" fill="#FDE68A" font-family="Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="2">BINA CENDEKIA</text>
+    <text x="494" y="121" fill="white" fill-opacity="0.78" font-family="Arial, sans-serif" font-size="15">2 titik layanan aktif</text>
+  </g>
+
+  <g transform="translate(206 306)">
+    <path d="M0 0C0-33.137 26.863-60 60-60C93.137-60 120-33.137 120 0C120 47.25 60 112 60 112C60 112 0 47.25 0 0Z" fill="#7D1436" stroke="#FDE68A" stroke-width="8"/>
+    <circle cx="60" cy="4" r="26" fill="#FDE68A"/>
+    <circle cx="60" cy="4" r="10" fill="#7D1436"/>
+    <rect x="92" y="-28" width="186" height="72" rx="20" fill="#FFF8EE" fill-opacity="0.92"/>
+    <text x="116" y="-1" fill="#7D1436" font-family="Arial, sans-serif" font-size="22" font-weight="700">Jagakarsa</text>
+    <text x="116" y="24" fill="#6B7280" font-family="Arial, sans-serif" font-size="15">Jl. Moh. Kahfi II</text>
+  </g>
+
+  <g transform="translate(438 160)">
+    <path d="M0 0C0-27.614 22.386-50 50-50C77.614-50 100-27.614 100 0C100 39.375 50 94 50 94C50 94 0 39.375 0 0Z" fill="#F97316" stroke="#FFF7ED" stroke-width="7"/>
+    <circle cx="50" cy="0" r="22" fill="#FFF7ED"/>
+    <circle cx="50" cy="0" r="8" fill="#F97316"/>
+    <rect x="-14" y="106" width="190" height="68" rx="18" fill="#5B1631" fill-opacity="0.82"/>
+    <text x="16" y="133" fill="#FDE68A" font-family="Arial, sans-serif" font-size="20" font-weight="700">Bekasi Barat</text>
+    <text x="16" y="157" fill="white" fill-opacity="0.78" font-family="Arial, sans-serif" font-size="14">Jl. KH. Noer Ali</text>
+  </g>
+</svg>

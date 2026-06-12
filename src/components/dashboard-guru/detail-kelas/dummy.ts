@@ -1,0 +1,209 @@
+import {
+  AlertCircle,
+  CalendarDays,
+  ClipboardCheck,
+  FileText,
+  Trophy,
+  Users,
+} from "lucide-react";
+
+import type { ClassDetailData } from "@/components/dashboard-guru/data/guruClassData";
+import {
+  hasGuruClassDetail,
+  resolveGuruClassDetail,
+} from "@/components/dashboard-guru/data/guruClassData";
+
+import type {
+  DetailSectionItem,
+  MateriPertemuan,
+  NilaiSiswa,
+  TugasPertemuan,
+} from "./types";
+
+export const DETAIL_SECTION_ITEMS: DetailSectionItem[] = [
+  {
+    key: "peserta",
+    label: "Peserta Kelas",
+    shortLabel: "Peserta",
+    description: "Daftar siswa aktif dan detail riwayat peserta.",
+    icon: Users,
+  },
+  {
+    key: "absensi",
+    label: "Absensi Pertemuan",
+    shortLabel: "Absensi",
+    description: "Rekap absensi tiap sesi dan detail kehadiran per siswa.",
+    icon: ClipboardCheck,
+  },
+  {
+    key: "pertemuan",
+    label: "Detail Pertemuan",
+    shortLabel: "Pertemuan",
+    description: "Riwayat sesi, materi, dan fokus pembelajaran.",
+    icon: CalendarDays,
+  },
+  {
+    key: "tugas",
+    label: "Tugas Setiap Pertemuan",
+    shortLabel: "Tugas",
+    description: "Daftar tugas kelas dan status penilaian.",
+    icon: FileText,
+  },
+  {
+    key: "belum-dinilai",
+    label: "Peringatan Belum Dinilai",
+    shortLabel: "Belum Dinilai",
+    description: "Prioritas tugas yang belum selesai direview.",
+    icon: AlertCircle,
+  },
+  {
+    key: "nilai",
+    label: "Tabel Nilai",
+    shortLabel: "Nilai",
+    description: "Rekap skor siswa secara menyeluruh.",
+    icon: Trophy,
+  },
+];
+
+const INDONESIAN_MONTHS: Record<string, string> = {
+  Januari: "01",
+  Februari: "02",
+  Maret: "03",
+  April: "04",
+  Mei: "05",
+  Juni: "06",
+  Juli: "07",
+  Agustus: "08",
+  September: "09",
+  Oktober: "10",
+  November: "11",
+  Desember: "12",
+};
+
+const DATE_FORMATTER = new Intl.DateTimeFormat("id-ID", {
+  day: "2-digit",
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+function extractPertemuanKe(label: string) {
+  const parsed = Number.parseInt(label.replace(/\D/g, ""), 10);
+  return Number.isFinite(parsed) ? parsed : 1;
+}
+
+function createLocalId(prefix: string) {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export function toIsoDate(value: string) {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return value;
+  }
+
+  const parts = value.trim().split(" ");
+  if (parts.length !== 3) {
+    return value;
+  }
+
+  const [day, monthLabel, year] = parts;
+  const month = INDONESIAN_MONTHS[monthLabel];
+  if (!month) {
+    return value;
+  }
+
+  return `${year}-${month}-${day.padStart(2, "0")}`;
+}
+
+export function formatDisplayDate(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return value;
+  }
+
+  const date = new Date(`${value}T00:00:00Z`);
+  return DATE_FORMATTER.format(date);
+}
+
+export function createInitialMateri(activeClass: ClassDetailData): MateriPertemuan[] {
+  return activeClass.meetings.map((meeting, index) => ({
+    id: `${activeClass.kelasId}-materi-${index + 1}`,
+    kelasId: activeClass.kelasId,
+    pertemuanKe: extractPertemuanKe(meeting.meeting),
+    tanggal: toIsoDate(meeting.date),
+    judulMateri: meeting.material,
+    deskripsi: `${meeting.focus}. ${meeting.note}`,
+    linkMateri: "",
+    statusMateri:
+      index === activeClass.meetings.length - 1 ? "Draft" : "Dipublikasikan",
+  }));
+}
+
+export function createInitialTugas(activeClass: ClassDetailData): TugasPertemuan[] {
+  return activeClass.assignments.map((assignment, index) => ({
+    id: `${activeClass.kelasId}-tugas-${index + 1}`,
+    kelasId: activeClass.kelasId,
+    pertemuanKe: extractPertemuanKe(assignment.meeting),
+    judulTugas: assignment.title,
+    deskripsi: assignment.teacherNote,
+    deadline: toIsoDate(assignment.deadline),
+    jumlahMengumpulkan: assignment.submittedCount,
+    statusPenilaian:
+      assignment.reviewStatus === "Selesai"
+        ? "Sudah Dinilai"
+        : "Belum Dinilai",
+  }));
+}
+
+export function createInitialNilai(activeClass: ClassDetailData): NilaiSiswa[] {
+  return activeClass.participants.map((student) => ({
+    studentId: student.id,
+    tugas: student.scores.tugas,
+    kuis: student.scores.kuis,
+    uts: student.scores.uts,
+    uas: student.scores.uas,
+  }));
+}
+
+export function createEmptyMateri(
+  kelasId: string,
+  pertemuanKe: number,
+): MateriPertemuan {
+  return {
+    id: createLocalId("materi"),
+    kelasId,
+    pertemuanKe,
+    tanggal: "",
+    judulMateri: "",
+    deskripsi: "",
+    linkMateri: "",
+    statusMateri: "Draft",
+  };
+}
+
+export function createEmptyTugas(
+  kelasId: string,
+  pertemuanKe: number,
+): TugasPertemuan {
+  return {
+    id: createLocalId("tugas"),
+    kelasId,
+    pertemuanKe,
+    judulTugas: "",
+    deskripsi: "",
+    deadline: "",
+    jumlahMengumpulkan: 0,
+    statusPenilaian: "Belum Dinilai",
+  };
+}
+
+export function createEmptyNilai(studentId: string): NilaiSiswa {
+  return {
+    studentId,
+    tugas: 0,
+    kuis: 0,
+    uts: 0,
+    uas: 0,
+  };
+}
+
+export { hasGuruClassDetail, resolveGuruClassDetail };

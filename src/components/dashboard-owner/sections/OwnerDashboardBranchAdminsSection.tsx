@@ -1,0 +1,606 @@
+"use client";
+
+import {
+  Eye,
+  EyeOff,
+  FilterX,
+  KeyRound,
+  LoaderCircle,
+  Mail,
+  PencilLine,
+  Plus,
+  Search,
+  ShieldCheck,
+  Trash2,
+  UserCog,
+  X,
+} from "lucide-react";
+import { useState } from "react";
+
+import type { OwnerDashboardBranchAdminManager } from "@/components/dashboard-owner/hooks/useOwnerBranchAdmins";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+
+type OwnerDashboardBranchAdminsSectionProps = {
+  manager: OwnerDashboardBranchAdminManager;
+};
+
+const flashToneClasses = {
+  success: "border-emerald-200/80 bg-emerald-50/85 text-emerald-700",
+  warning: "border-amber-200/80 bg-amber-50/85 text-amber-700",
+  danger: "border-red-200/80 bg-red-50/85 text-red-700",
+  info: "border-orange-200/80 bg-orange-50/90 text-orange-700",
+} as const;
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
+function InputError({ message }: { message?: string }) {
+  if (!message) {
+    return null;
+  }
+
+  return <p className="text-xs leading-5 text-rose-600">{message}</p>;
+}
+
+export function OwnerDashboardBranchAdminsSection({
+  manager,
+}: OwnerDashboardBranchAdminsSectionProps) {
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
+  const hasActiveFilters =
+    manager.searchQuery.trim().length > 0 ||
+    manager.verificationFilter !== "Semua";
+  const emptyStateTitle = manager.isLoading
+    ? "Memuat data admin cabang..."
+    : hasActiveFilters
+      ? "Belum ada admin cabang yang cocok"
+      : "Belum ada akun admin cabang";
+  const emptyStateDescription = manager.isLoading
+    ? "Daftar akun admin cabang dari backend sedang diambil."
+    : hasActiveFilters
+      ? "Coba ubah kata kunci pencarian atau reset filter agar data kembali tampil."
+      : "Buat akun admin cabang baru agar bisa dipilih pada form cabang.";
+
+  function handleDeleteAdmin(adminId: string, adminName: string) {
+    const confirmed = window.confirm(
+      `Hapus akun admin ${adminName}? Cabang yang memakai admin ini akan kembali ke status Belum ditentukan.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    manager.removeAdmin(adminId);
+  }
+
+  return (
+    <TooltipProvider>
+      <div className="space-y-4">
+        <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
+              Admin Cabang
+            </h2>
+            <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-500">
+              Kelola akun admin cabang yang nanti dipakai pada dropdown admin di
+              form Cabang owner.
+            </p>
+          </div>
+
+          <Badge
+            variant="info"
+            className="w-fit rounded-full px-3 py-1.5 text-[11px] uppercase tracking-[0.18em]"
+          >
+            {manager.filteredAdminCount} dari {manager.totalAdmins} admin tampil
+          </Badge>
+        </div>
+
+        <section className="space-y-5 rounded-[30px] border border-orange-100/70 bg-white/92 px-6 py-6 shadow-[0_18px_42px_-28px_rgba(15,23,42,0.18),0_12px_26px_-22px_rgba(249,115,22,0.18)] backdrop-blur-sm">
+          <div className="space-y-5">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+              <div className="max-w-2xl">
+                <h3 className="text-xl font-semibold tracking-tight text-slate-950">
+                  Daftar akun admin cabang
+                </h3>
+                <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
+                  Owner membuat, mengubah, dan menghapus akun admin dari sini.
+                  Setelah akun dibuat, nama admin langsung tersedia pada dropdown
+                  admin cabang di halaman Cabang.
+                </p>
+              </div>
+
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full rounded-full xl:w-auto"
+                onClick={() => {
+                  setIsPasswordVisible(false);
+                  setIsConfirmPasswordVisible(false);
+                  manager.openCreateDialog();
+                }}
+              >
+                <Plus className="size-4" />
+                Tambah admin cabang
+              </Button>
+            </div>
+
+            <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px_auto]">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                <Input
+                  value={manager.searchQuery}
+                  onChange={(event) => manager.setSearchQuery(event.target.value)}
+                  placeholder="Cari nama atau email admin..."
+                  className="pl-10"
+                />
+              </div>
+
+              <Select
+                value={manager.verificationFilter}
+                onValueChange={(value) =>
+                  manager.setVerificationFilter(
+                    value as typeof manager.verificationFilter,
+                  )
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter verifikasi" />
+                </SelectTrigger>
+                <SelectContent>
+                  {manager.verificationFilterOptions.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <div className="flex justify-start lg:justify-end">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="rounded-full"
+                  onClick={manager.resetFilters}
+                  disabled={!hasActiveFilters}
+                >
+                  <FilterX className="size-4" />
+                  Reset filter
+                </Button>
+              </div>
+            </div>
+
+            {manager.flash ? (
+              <div
+                className={cn(
+                  "flex items-start justify-between gap-4 rounded-[24px] border px-4 py-3 text-sm",
+                  flashToneClasses[manager.flash.tone],
+                )}
+              >
+                <p className="leading-6">{manager.flash.message}</p>
+                <button
+                  type="button"
+                  className="rounded-full p-1 transition hover:bg-white/70"
+                  onClick={manager.dismissFlash}
+                >
+                  <X className="size-4" />
+                  <span className="sr-only">Tutup notifikasi admin cabang</span>
+                </button>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="-mx-6 overflow-hidden border-t border-slate-200/80">
+            <Table className="min-w-[980px]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-16 px-6">No</TableHead>
+                  <TableHead>Nama Admin</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead className="w-52">Status Email</TableHead>
+                  <TableHead className="w-40">Dibuat</TableHead>
+                  <TableHead className="w-40">Update Terakhir</TableHead>
+                  <TableHead className="w-32 px-6 text-center">Aksi</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {manager.admins.length > 0 ? (
+                  manager.admins.map((admin, index) => (
+                    <TableRow key={admin.id}>
+                      <TableCell className="px-6 text-sm font-semibold text-slate-500">
+                        {index + 1}
+                      </TableCell>
+                      <TableCell>
+                        <div className="inline-flex items-center gap-2">
+                          <span className="flex size-9 items-center justify-center rounded-full bg-orange-50 text-orange-600">
+                            <UserCog className="size-4" />
+                          </span>
+                          <div>
+                            <p className="font-semibold text-slate-900">
+                              {admin.name}
+                            </p>
+                            <p className="text-xs text-slate-400">
+                              Role admin cabang
+                            </p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-slate-500">
+                          {admin.email}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-2">
+                          <Badge
+                            variant={admin.isEmailVerified ? "success" : "warning"}
+                            className="rounded-full px-3 py-1.5"
+                          >
+                            <span
+                              className={cn(
+                                "size-2 rounded-full",
+                                admin.isEmailVerified
+                                  ? "bg-emerald-500"
+                                  : "bg-amber-500",
+                              )}
+                            />
+                            {admin.isEmailVerified
+                              ? "Terverifikasi"
+                              : "Belum Terverifikasi"}
+                          </Badge>
+
+                          {admin.emailVerifiedAt ? (
+                            <p className="text-xs leading-5 text-slate-500">
+                              Diverifikasi pada {formatDate(admin.emailVerifiedAt)}
+                            </p>
+                          ) : null}
+
+                          {!admin.isEmailVerified ? (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="rounded-full"
+                              onClick={() => manager.resendVerification(admin.id)}
+                              disabled={manager.resendingAdminId === admin.id}
+                            >
+                              {manager.resendingAdminId === admin.id ? (
+                                <LoaderCircle className="size-4 animate-spin" />
+                              ) : (
+                                <Mail className="size-4" />
+                              )}
+                              Kirim Ulang Verifikasi
+                            </Button>
+                          ) : null}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <p className="text-sm text-slate-500">
+                          {formatDate(admin.createdAt)}
+                        </p>
+                      </TableCell>
+                      <TableCell>
+                        <p className="text-sm text-slate-500">
+                          {formatDate(admin.updatedAt)}
+                        </p>
+                      </TableCell>
+                      <TableCell className="px-6">
+                        <div className="flex items-center justify-center gap-2">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="size-10 rounded-full"
+                                onClick={() => {
+                                  setIsPasswordVisible(false);
+                                  setIsConfirmPasswordVisible(false);
+                                  manager.openEditDialog(admin.id);
+                                }}
+                              >
+                                <PencilLine className="size-4" />
+                                <span className="sr-only">Edit admin cabang</span>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Edit admin cabang</TooltipContent>
+                          </Tooltip>
+
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="size-10 rounded-full text-red-500 hover:bg-red-50 hover:text-red-600"
+                                onClick={() => handleDeleteAdmin(admin.id, admin.name)}
+                              >
+                                <Trash2 className="size-4" />
+                                <span className="sr-only">Hapus admin cabang</span>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Hapus admin cabang</TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={7} className="px-6 py-14">
+                      <div className="flex flex-col items-center gap-3 text-center">
+                        <div className="flex size-14 items-center justify-center rounded-full bg-orange-50 text-orange-600">
+                          <ShieldCheck className="size-6" />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-base font-semibold text-slate-900">
+                            {emptyStateTitle}
+                          </p>
+                          <p className="max-w-md text-sm leading-6 text-slate-500">
+                            {emptyStateDescription}
+                          </p>
+                        </div>
+                        {!manager.isLoading ? (
+                          <Button
+                            type="button"
+                            variant="subtle"
+                            className="rounded-full"
+                            onClick={() => {
+                              setIsPasswordVisible(false);
+                              setIsConfirmPasswordVisible(false);
+                              manager.openCreateDialog();
+                            }}
+                          >
+                            <Plus className="size-4" />
+                            Tambah admin cabang
+                          </Button>
+                        ) : null}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </section>
+
+        <Dialog
+          open={manager.dialog.isOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              setIsPasswordVisible(false);
+              setIsConfirmPasswordVisible(false);
+              manager.closeDialog();
+            }
+          }}
+        >
+          <DialogContent className="max-w-lg">
+            <form
+              className="space-y-5"
+              onSubmit={(event) => {
+                event.preventDefault();
+                manager.submitForm();
+              }}
+            >
+              <DialogHeader>
+                <DialogTitle>{manager.dialog.title}</DialogTitle>
+                <DialogDescription>{manager.dialog.description}</DialogDescription>
+              </DialogHeader>
+
+              <div className="grid gap-4">
+                <div className="space-y-2">
+                  <label
+                    className="text-sm font-medium text-slate-700"
+                    htmlFor="owner-branch-admin-name"
+                  >
+                    Nama admin
+                  </label>
+                  <Input
+                    id="owner-branch-admin-name"
+                    value={manager.form.name}
+                    onChange={(event) =>
+                      manager.updateFormValue("name", event.target.value)
+                    }
+                    placeholder="Contoh: Admin Slawi Timur"
+                  />
+                  <InputError message={manager.dialog.fieldErrors.name} />
+                </div>
+
+                <div className="space-y-2">
+                  <label
+                    className="text-sm font-medium text-slate-700"
+                    htmlFor="owner-branch-admin-email"
+                  >
+                    Email admin
+                  </label>
+                  <div className="relative">
+                    <Mail className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                    <Input
+                      id="owner-branch-admin-email"
+                      type="email"
+                      value={manager.form.email}
+                      onChange={(event) =>
+                        manager.updateFormValue("email", event.target.value)
+                      }
+                      placeholder="admin@bimbel.com"
+                      className="pl-10"
+                    />
+                  </div>
+                  <InputError message={manager.dialog.fieldErrors.email} />
+                </div>
+
+                {manager.dialog.mode === "create" ? (
+                  <>
+                    <div className="space-y-2">
+                      <label
+                        className="text-sm font-medium text-slate-700"
+                        htmlFor="owner-branch-admin-password"
+                      >
+                        Password sementara
+                      </label>
+                      <div className="relative">
+                        <KeyRound className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                        <Input
+                          id="owner-branch-admin-password"
+                          type={isPasswordVisible ? "text" : "password"}
+                          value={manager.form.password}
+                          onChange={(event) =>
+                            manager.updateFormValue("password", event.target.value)
+                          }
+                          placeholder="Minimal 8 karakter"
+                          className="pl-10 pr-12"
+                        />
+                        <button
+                          type="button"
+                          className="absolute inset-y-0 right-0 inline-flex w-12 items-center justify-center text-slate-400 transition hover:text-orange-600"
+                          onClick={() =>
+                            setIsPasswordVisible((current) => !current)
+                          }
+                          aria-label={
+                            isPasswordVisible
+                              ? "Sembunyikan password"
+                              : "Tampilkan password"
+                          }
+                        >
+                          {isPasswordVisible ? (
+                            <EyeOff className="size-4" />
+                          ) : (
+                            <Eye className="size-4" />
+                          )}
+                        </button>
+                      </div>
+                      <InputError message={manager.dialog.fieldErrors.password} />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label
+                        className="text-sm font-medium text-slate-700"
+                        htmlFor="owner-branch-admin-confirm-password"
+                      >
+                        Konfirmasi password
+                      </label>
+                      <div className="relative">
+                        <KeyRound className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                        <Input
+                          id="owner-branch-admin-confirm-password"
+                          type={isConfirmPasswordVisible ? "text" : "password"}
+                          value={manager.form.confirmPassword}
+                          onChange={(event) =>
+                            manager.updateFormValue(
+                              "confirmPassword",
+                              event.target.value,
+                            )
+                          }
+                          placeholder="Ulangi password admin"
+                          className="pl-10 pr-12"
+                        />
+                        <button
+                          type="button"
+                          className="absolute inset-y-0 right-0 inline-flex w-12 items-center justify-center text-slate-400 transition hover:text-orange-600"
+                          onClick={() =>
+                            setIsConfirmPasswordVisible((current) => !current)
+                          }
+                          aria-label={
+                            isConfirmPasswordVisible
+                              ? "Sembunyikan konfirmasi password"
+                              : "Tampilkan konfirmasi password"
+                          }
+                        >
+                          {isConfirmPasswordVisible ? (
+                            <EyeOff className="size-4" />
+                          ) : (
+                            <Eye className="size-4" />
+                          )}
+                        </button>
+                      </div>
+                      <InputError
+                        message={manager.dialog.fieldErrors.confirmPassword}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div className="rounded-2xl border border-orange-100/80 bg-orange-50/45 px-4 py-3 text-xs leading-5 text-slate-500">
+                    Password tidak diubah dari form ini. Jika admin lupa password,
+                    gunakan flow reset password yang sudah ada.
+                  </div>
+                )}
+
+                {manager.dialog.error ? (
+                  <div className="rounded-2xl border border-red-200 bg-red-50/85 px-4 py-3 text-sm text-red-600">
+                    {manager.dialog.error}
+                  </div>
+                ) : null}
+              </div>
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="rounded-full"
+                  onClick={() => {
+                    setIsPasswordVisible(false);
+                    setIsConfirmPasswordVisible(false);
+                    manager.closeDialog();
+                  }}
+                >
+                  Batal
+                </Button>
+                <Button
+                  type="submit"
+                  variant="secondary"
+                  className="rounded-full"
+                  disabled={manager.isSubmitting}
+                >
+                  {manager.isSubmitting ? (
+                    <>
+                      <LoaderCircle className="size-4 animate-spin" />
+                      Menyimpan admin...
+                    </>
+                  ) : (
+                    manager.dialog.submitLabel
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </TooltipProvider>
+  );
+}

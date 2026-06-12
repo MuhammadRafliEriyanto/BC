@@ -19,6 +19,8 @@
 
 # production
 /build
+/backend/dist
+/backend/storage
 
 # misc
 .DS_Store
@@ -39,3 +41,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/backend
+/.tmp
+/backend-dev.err.log
+/backend-dev.out.log
+/backend-dev.log
+/backend-restart.err.log
+/backend-restart.out.log
+/DATA GURU BC.xlsx
+/dev-root.err.log
+/dev-root.out.log
+/owner-dashboard-dev.log
