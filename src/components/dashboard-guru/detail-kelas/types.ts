@@ -5,6 +5,8 @@ import type {
   ClassDetailData,
   ClassStudent,
 } from "@/components/dashboard-guru/data/guruClassData";
+import type { AcademicGradeScheme, AcademicScores } from "@/lib/academic-grades";
+import type { AcademicScoreKey } from "@/lib/academic-grades";
 
 export type DetailSection =
   | "peserta"
@@ -14,9 +16,16 @@ export type DetailSection =
   | "belum-dinilai"
   | "nilai";
 
-export type GradeStatus = "Sangat Baik" | "Baik" | "Perlu Bimbingan";
+export type GradeStatus =
+  | "Belum Dinilai"
+  | "Sangat Baik"
+  | "Baik"
+  | "Perlu Bimbingan";
 export type MateriStatus = "Draft" | "Dipublikasikan";
-export type TugasStatusPenilaian = "Sudah Dinilai" | "Belum Dinilai";
+export type TugasStatusPenilaian =
+  | "Belum Ada Pengumpulan"
+  | "Sudah Dinilai"
+  | "Belum Dinilai";
 export type DialogMode = "add" | "edit";
 
 export type LearningAttachmentMeta = {
@@ -48,22 +57,45 @@ export type TugasPertemuan = {
   statusPenilaian: TugasStatusPenilaian;
 } & LearningAttachmentMeta;
 
-export type NilaiSiswa = {
+export type TaskSubmissionMode = "file" | "text" | "drive";
+export type TaskSubmissionGradeStatus = "Belum Dinilai" | "Sudah Dinilai";
+
+export type TaskSubmissionListItem = {
+  id: string;
+  submissionId: string;
   studentId: string;
-  tugas: number;
-  kuis: number;
-  uts: number;
-  uas: number;
+  studentName: string;
+  submissionMode: TaskSubmissionMode;
+  submittedAt: string | null;
+  hasAttachment: boolean;
+  driveUrl: string;
+  answerTextPreview: string;
+  gradeStatus: TaskSubmissionGradeStatus;
+  score: number | null;
 };
 
-export type NilaiDraft = {
+export type TaskSubmissionDetail = TaskSubmissionListItem & {
+  classId: string;
+  taskId: string;
+  answerText: string;
+  note: string;
+  attachmentFileName?: string;
+  attachmentOriginalName?: string;
+  attachmentMimeType?: string;
+  attachmentSize?: number;
+  attachmentUrl?: string;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+};
+
+export type NilaiSiswa = {
   studentId: string;
-  tugas: number;
-  kuis: number;
-  uts: number;
-  uas: number;
+  tugas: number | null;
+  scores: AcademicScores;
   note: string;
 };
+
+export type NilaiDraft = NilaiSiswa;
 
 export type DetailSectionItem = {
   key: DetailSection;
@@ -105,6 +137,7 @@ export type TugasPertemuanTableProps = {
   onEdit: (task: TugasPertemuan) => void;
   onDelete: (taskId: string) => void;
   onGradeNow: (task: TugasPertemuan) => void;
+  onViewSubmissions: (task: TugasPertemuan) => void;
 };
 
 export type BelumDinilaiTableProps = {
@@ -117,6 +150,7 @@ export type TabelNilaiTableProps = {
   participants: ClassStudent[];
   nilaiRows: NilaiSiswa[];
   onEditNilai: (studentId: string) => void;
+  scheme: AcademicGradeScheme;
 };
 
 export type MateriFormDialogProps = {
@@ -153,6 +187,10 @@ export type NilaiFormDialogProps = {
   draft: NilaiDraft | null;
   mode: DialogMode;
   onChange: (field: keyof NilaiDraft, value: string | number) => void;
+  onAcademicScoreChange: (
+    field: AcademicScoreKey,
+    value: string | number,
+  ) => void;
   onOpenChange: (open: boolean) => void;
   onStudentChange: (studentId: string) => void;
   onTaskChange: (taskId: string) => void;
@@ -162,4 +200,18 @@ export type NilaiFormDialogProps = {
   selectedStudentId: string;
   selectedTask: TugasPertemuan | null;
   tasks: TugasPertemuan[];
+  scheme: AcademicGradeScheme;
+};
+
+export type TaskSubmissionReviewDialogProps = {
+  kelasName: string;
+  open: boolean;
+  task: TugasPertemuan | null;
+  submissions: TaskSubmissionListItem[];
+  selectedSubmissionId: string;
+  submissionDetail: TaskSubmissionDetail | null;
+  isListLoading: boolean;
+  isDetailLoading: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSelectSubmission: (submissionId: string) => void;
 };

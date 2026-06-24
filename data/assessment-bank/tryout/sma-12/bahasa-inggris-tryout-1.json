@@ -1,0 +1,216 @@
+{
+  "schemaVersion": "1.0.0",
+  "questionSetId": "TO1-SMA12-BING",
+  "assessmentType": "Tryout",
+  "stage": 1,
+  "className": "SMA 12",
+  "grade": 12,
+  "phase": "Fase F",
+  "subject": "Bahasa Inggris",
+  "questionCount": 10,
+  "suggestedDurationMinutes": 60,
+  "reviewStatus": "Perlu Review Guru",
+  "curriculumNote": "Draft orisinal berbasis kompetensi umum Kurikulum Merdeka; cocokkan kembali dengan ATP dan materi yang telah diajarkan di cabang.",
+  "questions": [
+    {
+      "questionId": "TO1-SMA12-BING-001",
+      "number": 1,
+      "competency": "Comprehending written texts",
+      "topic": "Reading comprehension",
+      "indicator": "Identifying the main idea of a short text",
+      "cognitiveLevel": "C2",
+      "difficulty": "Mudah",
+      "question": "Read the text \"Energy Audit\". The student council conducted an energy audit in the school building. Their data showed that lights and air conditioners were often left on in empty rooms. They proposed reminder labels and a weekly monitoring team to lower electricity consumption.\nWhat is the main idea of the text?",
+      "options": {
+        "A": "A list of objects owned by the student council",
+        "B": "A problem that has no solution",
+        "C": "An invitation to cancel an activity",
+        "D": "An audit leads to practical energy-saving actions"
+      },
+      "correctAnswer": "D",
+      "explanation": "The entire paragraph focuses on an audit leads to practical energy-saving actions.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO1-SMA12-BING-002",
+      "number": 2,
+      "competency": "Comprehending written texts",
+      "topic": "Explicit information",
+      "indicator": "Locating stated information",
+      "cognitiveLevel": "C2",
+      "difficulty": "Mudah",
+      "question": "According to the text, when does the activity happen?",
+      "options": {
+        "A": "once every ten years",
+        "B": "after the activity is cancelled",
+        "C": "during an energy audit",
+        "D": "only at midnight"
+      },
+      "correctAnswer": "C",
+      "explanation": "The text explicitly states: during an energy audit.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO1-SMA12-BING-003",
+      "number": 3,
+      "competency": "Language features",
+      "topic": "Vocabulary",
+      "indicator": "Inferring word meaning from context",
+      "cognitiveLevel": "C3",
+      "difficulty": "Mudah",
+      "question": "The word \"consumption\" is closest in meaning to ...",
+      "options": {
+        "A": "an action done without a reason",
+        "B": "the amount of something used",
+        "C": "something that is never used",
+        "D": "a place that cannot be entered"
+      },
+      "correctAnswer": "B",
+      "explanation": "In the paragraph, \"consumption\" means the amount of something used.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO1-SMA12-BING-004",
+      "number": 4,
+      "competency": "Language features",
+      "topic": "Reference",
+      "indicator": "Identifying a pronoun reference",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "In the sentence \"The activity helps achieve the goal,\" the reference is most closely related to ...",
+      "options": {
+        "A": "electricity use in the school",
+        "B": "an unrelated visitor",
+        "C": "the reader's family",
+        "D": "a cancelled plan"
+      },
+      "correctAnswer": "A",
+      "explanation": "The reference points back to electricity use in the school.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO1-SMA12-BING-005",
+      "number": 5,
+      "competency": "Grammar in context",
+      "topic": "Simple present",
+      "indicator": "Using the correct verb form for a habitual action",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "the student council ... the plan carefully every week.",
+      "options": {
+        "A": "review",
+        "B": "reviewed",
+        "C": "reviewing",
+        "D": "reviews"
+      },
+      "correctAnswer": "D",
+      "explanation": "A singular subject in a habitual action takes the simple-present form \"reviews\".",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO1-SMA12-BING-006",
+      "number": 6,
+      "competency": "Grammar in context",
+      "topic": "Simple past",
+      "indicator": "Using the correct verb for a completed event",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Last week, the group ... a similar activity.",
+      "options": {
+        "A": "conduct",
+        "B": "conducting",
+        "C": "conducted",
+        "D": "conducts"
+      },
+      "correctAnswer": "C",
+      "explanation": "\"Last week\" signals the simple past, so the correct verb is \"conducted\".",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO1-SMA12-BING-007",
+      "number": 7,
+      "competency": "Interpreting functional texts",
+      "topic": "Functional text",
+      "indicator": "Interpreting a notice",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Notice: \"Please complete the activity log before leaving.\" What should participants do?",
+      "options": {
+        "A": "Wait until next month to read it",
+        "B": "Fill in the log before they leave",
+        "C": "Leave without recording anything",
+        "D": "Take the log home permanently"
+      },
+      "correctAnswer": "B",
+      "explanation": "The notice asks participants to complete the log before leaving.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO1-SMA12-BING-008",
+      "number": 8,
+      "competency": "Comprehending written texts",
+      "topic": "Inference",
+      "indicator": "Drawing a logical inference from a text",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sedang",
+      "question": "Why is the action in the text useful?",
+      "options": {
+        "A": "to lower electricity consumption",
+        "B": "because it removes every rule",
+        "C": "because it prevents anyone from learning",
+        "D": "because it makes the activity impossible"
+      },
+      "correctAnswer": "A",
+      "explanation": "The benefit can be inferred from the stated purpose: to lower electricity consumption.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO1-SMA12-BING-009",
+      "number": 9,
+      "competency": "Comprehending written texts",
+      "topic": "Text purpose",
+      "indicator": "Identifying communicative purpose",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sulit",
+      "question": "The writer's main purpose is to ...",
+      "options": {
+        "A": "sell an unrelated luxury product",
+        "B": "describe a fictional monster",
+        "C": "forbid all school activities",
+        "D": "inform readers about an activity and its benefit"
+      },
+      "correctAnswer": "D",
+      "explanation": "The paragraph informs readers about the activity and explains its benefit.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO1-SMA12-BING-010",
+      "number": 10,
+      "competency": "Interpersonal communication",
+      "topic": "Response",
+      "indicator": "Selecting an appropriate response in a discussion",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sulit",
+      "question": "A friend says, \"We will present our findings tomorrow.\" What is the best response?",
+      "options": {
+        "A": "Tomorrow happened last year.",
+        "B": "The evidence should be hidden.",
+        "C": "Great. Let's check the evidence once more.",
+        "D": "I never listen to any findings."
+      },
+      "correctAnswer": "C",
+      "explanation": "\"Great. Let's check the evidence once more\" is relevant, polite, and supports preparation.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    }
+  ]
+}

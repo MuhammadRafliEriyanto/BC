@@ -1,0 +1,216 @@
+{
+  "schemaVersion": "1.0.0",
+  "questionSetId": "UAS-SMP8-BING",
+  "assessmentType": "UAS",
+  "stage": null,
+  "className": "SMP 8",
+  "grade": 8,
+  "phase": "Fase D",
+  "subject": "Bahasa Inggris",
+  "questionCount": 10,
+  "suggestedDurationMinutes": 60,
+  "reviewStatus": "Perlu Review Guru",
+  "curriculumNote": "Draft orisinal berbasis kompetensi umum Kurikulum Merdeka; cocokkan kembali dengan ATP dan materi yang telah diajarkan di cabang.",
+  "questions": [
+    {
+      "questionId": "UAS-SMP8-BING-001",
+      "number": 1,
+      "competency": "Comprehending written texts",
+      "topic": "Reading comprehension",
+      "indicator": "Identifying the main idea of a short text",
+      "cognitiveLevel": "C2",
+      "difficulty": "Mudah",
+      "question": "Read the text \"Digital Reading\". Nadia uses the city library application to borrow digital books. Before downloading a book, she reads its summary and checks the age recommendation. This habit helps her choose reliable and suitable reading material.\nWhat is the main idea of the text?",
+      "options": {
+        "A": "A list of objects owned by Nadia",
+        "B": "A problem that has no solution",
+        "C": "An invitation to cancel an activity",
+        "D": "Nadia selects digital books carefully"
+      },
+      "correctAnswer": "D",
+      "explanation": "The entire paragraph focuses on nadia selects digital books carefully.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMP8-BING-002",
+      "number": 2,
+      "competency": "Comprehending written texts",
+      "topic": "Explicit information",
+      "indicator": "Locating stated information",
+      "cognitiveLevel": "C2",
+      "difficulty": "Mudah",
+      "question": "In the text \"Digital Reading\", what object or activity is discussed?",
+      "options": {
+        "A": "a cancelled flight",
+        "B": "a secret competition",
+        "C": "digital books",
+        "D": "an unrelated sports match"
+      },
+      "correctAnswer": "C",
+      "explanation": "The text explicitly discusses digital books.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMP8-BING-003",
+      "number": 3,
+      "competency": "Language features",
+      "topic": "Vocabulary",
+      "indicator": "Inferring word meaning from context",
+      "cognitiveLevel": "C3",
+      "difficulty": "Mudah",
+      "question": "The word \"reliable\" is closest in meaning to ...",
+      "options": {
+        "A": "an action done without a reason",
+        "B": "able to be trusted",
+        "C": "something that is never used",
+        "D": "a place that cannot be entered"
+      },
+      "correctAnswer": "B",
+      "explanation": "In the paragraph, \"reliable\" means able to be trusted.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMP8-BING-004",
+      "number": 4,
+      "competency": "Language features",
+      "topic": "Reference",
+      "indicator": "Identifying a reference in context",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "In a summary of \"Digital Reading\", the phrase \"this careful action\" refers to ...",
+      "options": {
+        "A": "digital books",
+        "B": "an unrelated event outside the text",
+        "C": "a plan that was never mentioned",
+        "D": "the title without its content"
+      },
+      "correctAnswer": "A",
+      "explanation": "The phrase points to the main object or action discussed, namely digital books.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMP8-BING-005",
+      "number": 5,
+      "competency": "Grammar in context",
+      "topic": "Simple present",
+      "indicator": "Using the correct verb form for a habitual action",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Nadia ... the plan carefully every week.",
+      "options": {
+        "A": "review",
+        "B": "reviewed",
+        "C": "reviewing",
+        "D": "reviews"
+      },
+      "correctAnswer": "D",
+      "explanation": "A singular subject in a habitual action takes the simple-present form \"reviews\".",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMP8-BING-006",
+      "number": 6,
+      "competency": "Grammar in context",
+      "topic": "Present perfect",
+      "indicator": "Using a verb for an action connected to the present",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "The team ... three sources before publishing the report.",
+      "options": {
+        "A": "was check",
+        "B": "checking",
+        "C": "has checked",
+        "D": "check"
+      },
+      "correctAnswer": "C",
+      "explanation": "The singular collective subject takes \"has checked\" for a completed action relevant to the present.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMP8-BING-007",
+      "number": 7,
+      "competency": "Interpreting functional texts",
+      "topic": "Functional text",
+      "indicator": "Interpreting an announcement",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Announcement: \"The final review session starts at 2 p.m. in Room 3. Bring your draft and source list.\" What must students bring?",
+      "options": {
+        "A": "Only an empty folder",
+        "B": "Their draft and source list",
+        "C": "Sports equipment",
+        "D": "A meal for the teacher"
+      },
+      "correctAnswer": "B",
+      "explanation": "The announcement explicitly asks students to bring their draft and source list.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMP8-BING-008",
+      "number": 8,
+      "competency": "Comprehending written texts",
+      "topic": "Inference",
+      "indicator": "Drawing a logical inference from a text",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sedang",
+      "question": "Based on \"Digital Reading\", what attitude does Nadia show?",
+      "options": {
+        "A": "Responsible and thoughtful",
+        "B": "Careless and unwilling to learn",
+        "C": "Hostile toward every activity",
+        "D": "Unaware of the stated goal"
+      },
+      "correctAnswer": "A",
+      "explanation": "The actions described show a responsible and thoughtful attitude.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMP8-BING-009",
+      "number": 9,
+      "competency": "Comprehending written texts",
+      "topic": "Text purpose",
+      "indicator": "Identifying communicative purpose",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sulit",
+      "question": "Why does the writer present the text \"Digital Reading\"?",
+      "options": {
+        "A": "To provide an unrelated recipe",
+        "B": "To advertise an imaginary product",
+        "C": "To prohibit readers from studying",
+        "D": "To explain an activity and the reason it matters"
+      },
+      "correctAnswer": "D",
+      "explanation": "The paragraph explains the activity and its benefit or purpose.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMP8-BING-010",
+      "number": 10,
+      "competency": "Interpersonal communication",
+      "topic": "Response",
+      "indicator": "Selecting an appropriate response in an academic discussion",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sulit",
+      "question": "A classmate says, \"I found two sources with different conclusions.\" What is the best response?",
+      "options": {
+        "A": "Delete both sources immediately.",
+        "B": "Assume every conclusion is equally accurate.",
+        "C": "Let's compare their evidence and publication context.",
+        "D": "Choose the shorter source without reading it."
+      },
+      "correctAnswer": "C",
+      "explanation": "Comparing evidence and context is a relevant critical response.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    }
+  ]
+}

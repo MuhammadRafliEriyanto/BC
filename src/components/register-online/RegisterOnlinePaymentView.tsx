@@ -1,14 +1,16 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import type { LucideIcon } from "lucide-react";
 import {
   ArrowRight,
   BadgeCheck,
   Building2,
+  ChevronRight,
+  CreditCard,
+  ExternalLink,
+  Info,
   LoaderCircle,
   QrCode,
+  Receipt,
   Smartphone,
 } from "lucide-react";
 
@@ -17,12 +19,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   MembershipRequestError,
-  formatDateLabel,
   formatRupiah,
   membershipService,
+  getPriceByClass,
   type PaymentStatusResponse,
 } from "@/lib/subscription";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import type { LucideIcon } from "lucide-react";
 
 type RegisterOnlinePaymentViewProps = {
   paymentId: string;
@@ -45,22 +50,22 @@ const paymentMethods: PaymentMethodOption[] = [
   {
     id: "qris",
     label: "QRIS",
-    detail: "Cepat untuk scan dan bayar lewat aplikasi e-wallet atau mobile banking.",
-    helper: "Simulasi paling cepat",
+    detail: "Scan & bayar instan.",
+    helper: "Paling direkomendasikan",
     icon: QrCode,
   },
   {
     id: "virtual-account",
     label: "Virtual Account",
-    detail: "Cocok jika ingin transfer dari rekening bank dengan nomor VA khusus.",
-    helper: "Transfer bank otomatis",
+    detail: "Transfer bank otomatis.",
+    helper: "BCA, Mandiri, BNI, dll",
     icon: Building2,
   },
   {
     id: "e-wallet",
     label: "E-Wallet",
-    detail: "Mudah dipakai untuk pembayaran dari dompet digital yang sudah aktif.",
-    helper: "Praktis untuk mobile",
+    detail: "Bayar pakai dompet digital.",
+    helper: "GoPay, OVO, Dana",
     icon: Smartphone,
   },
 ];
@@ -79,22 +84,6 @@ function getStatusBadgeVariant(status: PaymentState["payment"]["status"] | undef
   }
 
   return "warning" as const;
-}
-
-function isXenditPaymentFlow(data: PaymentState | null) {
-  if (!data) {
-    return false;
-  }
-
-  return data.payment.provider === "xendit" || Boolean(data.payment.xenditPaymentSessionId);
-}
-
-function isWaitingForXenditWebhook(data: PaymentState | null) {
-  if (!data) {
-    return false;
-  }
-
-  return data.payment.status === "pending" && data.payment.xenditSessionStatus === "COMPLETED";
 }
 
 export default function RegisterOnlinePaymentView({
@@ -194,7 +183,7 @@ export default function RegisterOnlinePaymentView({
     setErrorMessage("");
 
     try {
-      if (isXenditPaymentFlow(paymentData)) {
+      if (paymentData?.payment.provider === "xendit" || paymentData?.payment.xenditPaymentSessionId) {
         const checkoutUrl = paymentData?.payment.checkoutUrl?.trim();
 
         if (!checkoutUrl) {
@@ -231,297 +220,269 @@ export default function RegisterOnlinePaymentView({
     }
   }
 
-  const selectedMethodMeta =
-    paymentMethods.find((method) => method.id === selectedMethod) ?? paymentMethods[0];
-  const SelectedMethodIcon = selectedMethodMeta.icon;
-  const statusPageHref = `/register-online/status?paymentId=${encodeURIComponent(paymentId)}`;
+  const statusPageHref = `/register/status?paymentId=${encodeURIComponent(paymentId)}`;
   const paymentStatus = paymentData?.payment.status;
-  const xenditPaymentFlow = isXenditPaymentFlow(paymentData);
-  const waitingForWebhook = isWaitingForXenditWebhook(paymentData);
+  const xenditPaymentFlow =
+    paymentData?.payment.provider === "xendit" ||
+    Boolean(paymentData?.payment.xenditPaymentSessionId);
+  const waitingForWebhook =
+    paymentData?.payment.status === "pending" &&
+    (paymentData?.payment.xenditSessionStatus === "PAID" ||
+      paymentData?.payment.xenditSessionStatus === "SETTLED");
   const checkoutUrl = paymentData?.payment.checkoutUrl?.trim() ?? "";
   const canOpenCheckout =
     xenditPaymentFlow && paymentStatus === "pending" && !waitingForWebhook && Boolean(checkoutUrl);
 
   return (
     <AuthShell
-      variant="immersive"
+      variant="split"
+      splitContentAlignment="start"
+      splitContentClassName="pt-8 lg:pt-10"
+      hideSplitVisualOnMobile
+      hideSplitTopBadge
+      allowDesktopScroll
       title={
         gatewayState === "success" || paymentStatus === "paid"
-          ? "Pembayaran berhasil diproses"
+          ? "Pembayaran Berhasil"
           : waitingForWebhook
-            ? "Menunggu verifikasi pembayaran"
-          : "Selesaikan pembayaran"
+            ? "Verifikasi Pembayaran"
+          : "Selesaikan Pembayaran"
       }
       description={
         gatewayState === "success" || paymentStatus === "paid"
-          ? "Tagihan sudah tercatat. Langkah berikutnya adalah cek status membership siswa."
+          ? "Pembayaran Anda telah dikonfirmasi. Membership Anda kini telah aktif."
           : waitingForWebhook
-            ? "Checkout di Xendit sudah selesai. Sistem sedang menunggu webhook resmi sebelum membership diaktifkan."
-            : xenditPaymentFlow
-              ? "Lanjutkan ke checkout Xendit. Status pembayaran akan diperbarui otomatis setelah webhook diterima."
-              : "Pilih metode pembayaran dan lanjutkan ke simulasi gateway tanpa mengubah alur pendaftaran."
+            ? "Kami telah menerima pembayaran Anda. Menunggu konfirmasi akhir dari sistem."
+            : "Silakan pilih metode pembayaran untuk menyelesaikan proses registrasi siswa."
       }
-      panelClassName="max-w-[900px]"
+      footer={
+        <div className="flex flex-col gap-5 text-center">
+          <Link
+            href="/register"
+            className="text-sm font-semibold text-slate-400 transition hover:text-orange-600"
+          >
+            Ganti paket atau ubah data pendaftaran
+          </Link>
+          <div className="flex items-center justify-center gap-6 border-t border-slate-100 pt-6">
+            <Link href="/" className="text-xs font-medium text-slate-400 hover:text-slate-600">Beranda</Link>
+            <Link href="/login" className="text-xs font-medium text-slate-400 hover:text-slate-600">Masuk Akun</Link>
+          </div>
+        </div>
+      }
     >
-      <div className="mx-auto max-w-[780px] space-y-3">
+      <div className="space-y-8">
         {loading ? (
-          <div className="rounded-[28px] border border-orange-100/80 bg-[linear-gradient(180deg,rgba(255,250,244,0.96),rgba(255,255,255,0.98))] p-6 text-center shadow-[0_26px_44px_-34px_rgba(249,115,22,0.22)]">
-            <div className="flex min-h-[220px] flex-col items-center justify-center gap-4">
-              <LoaderCircle className="size-7 animate-spin text-orange-500" />
-              <p className="text-sm text-slate-500">Memuat detail tagihan dan status pembayaran...</p>
+          <div className="flex min-h-[350px] flex-col items-center justify-center gap-4 text-center">
+            <div className="relative">
+              <div className="absolute inset-0 size-12 animate-ping rounded-full bg-orange-100 opacity-75" />
+              <LoaderCircle className="relative size-12 animate-spin text-orange-500" />
             </div>
+            <p className="text-sm font-medium text-slate-500">Memuat detail tagihan...</p>
           </div>
         ) : (
-          <>
-            <div className="rounded-[28px] border border-orange-100/80 bg-[linear-gradient(180deg,rgba(255,250,244,0.96),rgba(255,255,255,0.98))] p-4 shadow-[0_26px_44px_-34px_rgba(249,115,22,0.22)] sm:p-5">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center rounded-full border border-orange-100 bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-orange-600">
-                  Langkah 2 dari 3
-                </span>
-                <Badge variant={getStatusBadgeVariant(paymentStatus)} className="uppercase">
-                  {paymentStatus ?? "pending"}
-                </Badge>
-                <span className="inline-flex items-center rounded-full border border-orange-100 bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-700">
-                  Ref {paymentId}
-                </span>
-              </div>
-
-              <div className="mt-5 rounded-[24px] border border-orange-100/80 bg-white/88 p-4 shadow-[0_16px_28px_-26px_rgba(249,115,22,0.12)]">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-500">
-                      Ringkasan tagihan
-                    </p>
-                    <h3 className="mt-2 text-lg font-semibold text-slate-900">
-                      {paymentData?.subscription.packageName ?? "-"}
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-500">
-                      Untuk siswa {paymentData?.student.name ?? "-"}.
-                      {paymentData?.student.branch
-                        ? ` Cabang ${paymentData.student.branch}.`
-                        : null}
-                      {paymentData
-                        ? ` ${paymentData.student.program} - ${paymentData.student.className}.`
-                        : null}
-                    </p>
-                  </div>
-
-                  <div className="rounded-[18px] border border-orange-100 bg-orange-50/70 px-4 py-3 text-right">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                      Total bayar
-                    </p>
-                    <p className="mt-2 text-2xl font-bold text-slate-900">
-                      {paymentData ? formatRupiah(paymentData.payment.amount) : "-"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <span className="inline-flex items-center rounded-full border border-orange-100 bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-700">
-                    Dibuat {formatDateLabel(paymentData?.payment.createdAt ?? null)}
-                  </span>
-                  <span className="inline-flex items-center rounded-full border border-orange-100 bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-700">
-                    Cabang {paymentData?.student.branch ?? "-"}
-                  </span>
-                  <span className="inline-flex items-center rounded-full border border-orange-100 bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-700">
-                    Aktif {paymentData?.subscription.durationMonth ?? 0} bulan
-                  </span>
-                </div>
-              </div>
-
-              {errorMessage ? (
-                <div className="mt-5 rounded-[22px] border border-red-100 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700">
-                  {errorMessage}
-                </div>
-              ) : null}
-
-              {gatewayState === "success" || paymentStatus === "paid" ? (
-                <div className="mt-5 rounded-[24px] border border-emerald-100 bg-[linear-gradient(180deg,rgba(236,253,245,0.92),rgba(255,255,255,0.98))] p-5 shadow-[0_22px_36px_-30px_rgba(16,185,129,0.18)]">
-                  <div className="flex items-start gap-3">
-                    <div className="flex size-11 shrink-0 items-center justify-center rounded-[18px] bg-emerald-100 text-emerald-700">
-                      <BadgeCheck className="size-5" />
+          <div className="space-y-8 pb-8">
+            {/* Digital Receipt Card */}
+            <div className="group relative overflow-hidden rounded-[2rem] border border-slate-200/60 bg-white p-8 shadow-sm transition-all duration-500 hover:shadow-xl hover:shadow-orange-500/10">
+              {/* Decorative background elements */}
+              <div className="absolute -right-12 -top-12 size-40 rounded-full bg-orange-100/40 blur-3xl transition-transform duration-700 group-hover:scale-150" />
+              <div className="absolute -left-12 -bottom-12 size-40 rounded-full bg-blue-50/60 blur-3xl transition-transform duration-700 group-hover:scale-150" />
+              
+              <div className="relative space-y-6">
+                <div className="flex items-center justify-between border-b border-dashed border-slate-200 pb-5">
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-10 items-center justify-center rounded-full bg-orange-50 text-orange-600 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
+                      <Receipt className="size-5" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-emerald-700">Pembayaran selesai</p>
-                      <p className="mt-1 text-sm leading-6 text-slate-600">
-                        Tagihan sudah tervalidasi dan tercatat pada{" "}
-                        {formatDateLabel(paymentData?.payment.paidAt ?? null)}.
-                      </p>
+                      <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">Ringkasan</span>
+                      <span className="block text-sm font-bold text-slate-700">Tagihan Anda</span>
                     </div>
                   </div>
+                  <Badge 
+                    variant={getStatusBadgeVariant(paymentStatus)} 
+                    className="rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider shadow-sm"
+                  >
+                    {paymentStatus ?? "pending"}
+                  </Badge>
+                </div>
+                
+                <div className="space-y-2 rounded-2xl bg-slate-50/50 p-5 border border-slate-100/80">
+                  <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Paket Membership</p>
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline gap-2">
+                    <h3 className="text-xl font-black text-slate-900 bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600">{paymentData ? "Paket 1 Tahun (2 Semester)" : ""}</h3>
+                    <span className="text-3xl font-black text-orange-600 tracking-tight">{paymentData ? formatRupiah(getPriceByClass(paymentData.student.className)) : "-"}</span>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 pt-4">
+                  <div className="space-y-1 rounded-xl bg-white p-3 border border-slate-100 shadow-sm transition-colors hover:border-orange-200">
+                    <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Nama Siswa</p>
+                    <p className="text-sm font-bold text-slate-900 truncate">{paymentData?.student.name}</p>
+                  </div>
+                  <div className="space-y-1 rounded-xl bg-white p-3 border border-slate-100 shadow-sm transition-colors hover:border-orange-200 text-right">
+                    <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Cabang</p>
+                    <p className="text-sm font-bold text-slate-900 truncate">{paymentData?.student.branch}</p>
+                  </div>
+                  <div className="space-y-1 rounded-xl bg-white p-3 border border-slate-100 shadow-sm transition-colors hover:border-orange-200">
+                    <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">ID Transaksi</p>
+                    <p className="text-xs font-mono font-semibold text-slate-600 uppercase">{paymentId.split('-')[0]}...</p>
+                  </div>
+                  <div className="space-y-1 rounded-xl bg-white p-3 border border-slate-100 shadow-sm transition-colors hover:border-orange-200 text-right">
+                    <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Provider</p>
+                    <p className="text-sm font-bold text-slate-900 uppercase">{paymentData?.payment.provider ?? "Internal"}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-                  <div className="mt-5 flex flex-wrap gap-3">
-                    <Link
-                      href={statusPageHref}
-                      className="inline-flex h-11 items-center justify-center gap-2 rounded-[16px] bg-[linear-gradient(135deg,#059669_0%,#10b981_100%)] px-5 text-sm font-semibold text-white shadow-[0_22px_34px_-24px_rgba(16,185,129,0.32)] transition hover:brightness-105"
-                    >
-                      Lanjut ke Status Membership
-                      <ArrowRight className="size-4" />
-                    </Link>
-                    <Link
-                      href="/login"
-                      className="inline-flex h-11 items-center justify-center rounded-[16px] border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:border-orange-200 hover:bg-orange-50 hover:text-orange-700"
-                    >
-                      Ke Halaman Login
+            {errorMessage ? (
+              <div className="flex items-start gap-3 rounded-xl border border-red-100 bg-red-50/50 p-4 text-sm leading-6 text-red-700">
+                <Info className="mt-1 size-4 shrink-0" />
+                <p>{errorMessage}</p>
+              </div>
+            ) : null}
+
+            {gatewayState === "success" || paymentStatus === "paid" ? (
+              <div className="group relative overflow-hidden rounded-3xl border border-emerald-100/60 bg-emerald-50/40 p-10 text-center transition-all duration-500 hover:shadow-[0_8px_30px_-4px_rgba(16,185,129,0.08)]">
+                <div className="absolute -left-4 -top-4 size-32 rounded-full bg-emerald-200/30 blur-3xl transition-transform duration-700 group-hover:scale-125" />
+                <div className="relative space-y-6">
+                  <div className="mx-auto flex size-20 items-center justify-center rounded-[2rem] bg-emerald-500 text-white shadow-lg shadow-emerald-200/50 ring-8 ring-white/60">
+                    <BadgeCheck className="size-10" />
+                  </div>
+                  <div className="space-y-2">
+                    <h4 className="text-2xl font-black text-emerald-950">Pembayaran Terverifikasi</h4>
+                    <p className="text-sm leading-relaxed text-emerald-800/70 mx-auto max-w-[240px]">
+                      Selamat! Akun Anda sudah aktif dan siap digunakan untuk belajar.
+                    </p>
+                  </div>
+                  <div className="pt-4">
+                    <Link href={statusPageHref}>
+                      <Button className="h-12 w-full rounded-xl bg-emerald-600 font-bold text-white shadow-md transition-all hover:bg-emerald-700 hover:shadow-lg active:scale-[0.98]">
+                        Lihat Status Membership
+                        <ArrowRight className="ml-2 size-4" />
+                      </Button>
                     </Link>
                   </div>
                 </div>
-              ) : (
-                <>
-                  <div className="mt-5 rounded-[24px] border border-orange-100/80 bg-white/88 p-4">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold text-slate-900">Pilih metode pembayaran</h3>
-                        <p className="mt-1 text-sm leading-6 text-slate-500">
-                          {xenditPaymentFlow
-                            ? "Pilihan di bawah hanya membantu user memahami opsi pembayaran. Metode akhir tetap dipilih di halaman checkout Xendit."
-                            : "Metode yang dipilih akan dipakai sebagai tampilan simulasi payment gateway."}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 grid gap-3">
-                      {paymentMethods.map((method) => {
-                        const Icon = method.icon;
-                        const isActive = selectedMethod === method.id;
-
-                        return (
-                          <button
-                            key={method.id}
-                            type="button"
-                            onClick={() => setSelectedMethod(method.id)}
-                            className={cn(
-                              "rounded-[22px] border p-4 text-left transition-all duration-300",
-                              isActive
-                                ? "border-orange-300 bg-[linear-gradient(180deg,rgba(255,247,237,0.98),rgba(255,255,255,0.98))] shadow-[0_22px_34px_-30px_rgba(249,115,22,0.26)]"
-                                : "border-slate-200/90 bg-white hover:border-orange-200 hover:bg-orange-50/40",
-                            )}
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="flex gap-3">
-                                <div
-                                  className={cn(
-                                    "flex size-11 items-center justify-center rounded-[18px] border",
-                                    isActive
-                                      ? "border-orange-200 bg-white text-orange-600"
-                                      : "border-slate-200 bg-slate-50 text-slate-400",
-                                  )}
-                                >
-                                  <Icon className="size-5" />
-                                </div>
-
-                                <div>
-                                  <p className="text-base font-semibold text-slate-900">{method.label}</p>
-                                  <p className="mt-1 text-sm leading-6 text-slate-500">{method.detail}</p>
-                                </div>
-                              </div>
-
-                              <span
-                                className={cn(
-                                  "inline-flex rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em]",
-                                  isActive
-                                    ? "bg-orange-100 text-orange-600"
-                                    : "bg-slate-100 text-slate-500",
-                                )}
-                              >
-                                {method.helper}
-                              </span>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
+              </div>
+            ) : (
+              <div className="space-y-8">
+                <div className="flex items-center gap-4">
+                  <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-100 to-orange-50 border border-orange-200/50 text-orange-600 shadow-inner">
+                    <CreditCard className="size-6" />
                   </div>
+                  <div>
+                    <h4 className="text-lg font-black tracking-tight text-slate-900">
+                      Pilih Metode Pembayaran
+                    </h4>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Pilih kanal pembayaran yang paling memudahkan Anda.
+                    </p>
+                  </div>
+                </div>
 
-                  <div className="mt-5 rounded-[24px] border border-orange-100/80 bg-orange-50/75 p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="flex size-11 shrink-0 items-center justify-center rounded-[18px] bg-white text-orange-600 shadow-[0_14px_26px_-24px_rgba(249,115,22,0.24)]">
-                        {gatewayState === "processing" ? (
-                          <LoaderCircle className="size-5 animate-spin" />
-                        ) : (
-                          <SelectedMethodIcon className="size-5" />
+                <div className="grid gap-4">
+                  {paymentMethods.map((method) => {
+                    const Icon = method.icon;
+                    const isActive = selectedMethod === method.id;
+
+                    return (
+                      <button
+                        key={method.id}
+                        type="button"
+                        onClick={() => setSelectedMethod(method.id)}
+                        className={cn(
+                          "group relative flex items-center gap-5 rounded-[1.5rem] border p-5 text-left transition-all duration-300",
+                          isActive
+                            ? "border-orange-500 bg-orange-50/40 shadow-md shadow-orange-500/10 ring-1 ring-orange-500 scale-[1.01]"
+                            : "border-slate-200/60 bg-white hover:-translate-y-1 hover:border-orange-300 hover:shadow-xl hover:shadow-orange-500/10",
                         )}
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">
-                          {gatewayState === "processing"
-                            ? xenditPaymentFlow
-                              ? "Menunggu penyelesaian checkout Xendit"
-                              : "Sedang menghubungkan ke payment gateway"
-                            : `Metode aktif: ${selectedMethodMeta.label}`}
-                        </p>
-                        <p className="mt-1 text-sm leading-6 text-slate-600">
-                          {gatewayState === "processing"
-                            ? xenditPaymentFlow
-                              ? "Selesaikan pembayaran di halaman checkout yang dibuka, lalu status di halaman ini akan tersinkron otomatis."
-                              : "Status pembayaran akan diperbarui otomatis setelah simulasi selesai."
-                            : waitingForWebhook
-                              ? "Checkout sudah completed di Xendit. Sistem sedang menunggu webhook resmi sebelum status lokal berubah menjadi lunas."
-                              : selectedMethodMeta.detail}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                      >
+                        <div
+                          className={cn(
+                            "flex size-14 shrink-0 items-center justify-center rounded-[1.25rem] border transition-all duration-300",
+                            isActive
+                              ? "border-orange-200 bg-gradient-to-br from-white to-orange-50 text-orange-600 shadow-sm"
+                              : "border-slate-100 bg-slate-50 text-slate-400 group-hover:border-orange-200 group-hover:bg-orange-50 group-hover:text-orange-500 group-hover:scale-110 group-hover:rotate-3",
+                          )}
+                        >
+                          <Icon className="size-6" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-3">
+                            <p
+                              className={cn(
+                                "text-base font-bold transition-colors",
+                                isActive ? "text-orange-950" : "text-slate-900 group-hover:text-orange-900",
+                              )}
+                            >
+                              {method.label}
+                            </p>
+                            {method.id === "qris" ? (
+                              <span className="rounded-full bg-gradient-to-r from-orange-500 to-amber-500 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-sm animate-pulse">
+                                Disarankan
+                              </span>
+                            ) : null}
+                          </div>
+                          <p className="mt-1.5 flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
+                            {method.detail}
+                            <span className="size-1 rounded-full bg-slate-300" />
+                            <span className={cn(isActive ? "text-orange-600 font-semibold" : "text-slate-400")}>
+                              {method.helper}
+                            </span>
+                          </p>
+                        </div>
+                        
+                        <div className={cn(
+                          "flex size-7 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-300",
+                          isActive 
+                            ? "border-orange-500 bg-orange-500 text-white scale-110 shadow-sm shadow-orange-500/30" 
+                            : "border-slate-200 bg-transparent text-transparent group-hover:border-orange-300"
+                        )}>
+                          <div className={cn("size-2.5 rounded-full bg-white transition-all duration-300", isActive ? "scale-100" : "scale-0")} />
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
 
-                  <div className="mt-5 flex flex-wrap gap-3">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      className="h-11 flex-1 justify-center rounded-[16px] bg-[linear-gradient(135deg,#f97316_0%,#f59e0b_100%)] text-sm shadow-[0_18px_34px_-24px_rgba(249,115,22,0.48)] hover:brightness-105 sm:min-w-[240px]"
-                      disabled={
-                        confirmingPayment ||
-                        (xenditPaymentFlow && (!canOpenCheckout || waitingForWebhook))
-                      }
-                      onClick={handlePaymentAction}
-                    >
-                      {confirmingPayment ? (
-                        <>
-                          <LoaderCircle className="size-4 animate-spin" />
-                          {xenditPaymentFlow ? "Membuka checkout..." : "Menghubungkan ke gateway..."}
-                        </>
-                      ) : waitingForWebhook ? (
-                        <>
-                          <LoaderCircle className="size-4 animate-spin" />
-                          Menunggu Verifikasi Webhook
-                        </>
-                      ) : xenditPaymentFlow ? (
-                        <>
-                          Lanjut ke Checkout Xendit
-                          <ArrowRight className="size-4" />
-                        </>
-                      ) : (
-                        <>
-                          Bayar Sekarang
-                          <ArrowRight className="size-4" />
-                        </>
-                      )}
-                    </Button>
-                    <Link
-                      href={statusPageHref}
-                      className="inline-flex h-11 items-center justify-center rounded-[16px] border border-orange-100/80 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:border-orange-200 hover:bg-orange-50 hover:text-orange-700"
-                    >
-                      Cek Status Dulu
-                    </Link>
-                  </div>
-                </>
-              )}
-            </div>
+                <div className="space-y-5 pt-6 border-t border-slate-100/60 mt-8">
+                  <Button
+                    className="group relative h-16 w-full overflow-hidden rounded-[1.25rem] bg-[linear-gradient(135deg,#ea580c_0%,#dc2626_100%)] text-base font-bold text-white shadow-[0_12px_24px_-8px_rgba(234,88,12,0.5)] transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_16px_32px_-8px_rgba(234,88,12,0.6)] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
+                    disabled={
+                      confirmingPayment ||
+                      (xenditPaymentFlow && (!canOpenCheckout || waitingForWebhook))
+                    }
+                    onClick={handlePaymentAction}
+                  >
+                    {confirmingPayment ? (
+                      <>
+                        <LoaderCircle className="mr-2 size-6 animate-spin" />
+                        Menghubungkan ke Gateway...
+                      </>
+                    ) : waitingForWebhook ? (
+                      <>
+                        <LoaderCircle className="mr-2 size-6 animate-spin" />
+                        Menunggu Verifikasi...
+                      </>
+                    ) : xenditPaymentFlow ? (
+                      <div className="flex items-center justify-center gap-2">
+                        Bayar Sekarang
+                        <ExternalLink className="size-5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                      </div>
+                    ) : (
+                      "Konfirmasi Pembayaran"
+                    )}
+                  </Button>
 
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              <Link
-                href="/register-online"
-                className="inline-flex h-11 items-center justify-center rounded-[16px] border border-slate-200 bg-white px-5 text-sm font-medium text-slate-700 transition hover:border-orange-200 hover:bg-orange-50 hover:text-orange-700"
-              >
-                Ubah Paket Lagi
-              </Link>
-              <Link
-                href="/"
-                className="inline-flex h-11 items-center justify-center rounded-[16px] border border-slate-200 bg-white px-5 text-sm font-medium text-slate-700 transition hover:border-orange-200 hover:bg-orange-50 hover:text-orange-700"
-              >
-                Kembali ke Landing
-              </Link>
-            </div>
-          </>
+                  <Link href={statusPageHref} className="flex items-center justify-center gap-2 py-2 text-xs font-bold text-slate-400 hover:text-orange-600 transition-colors">
+                    Lihat Status Transaksi Saat Ini
+                    <ChevronRight className="size-4" />
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </AuthShell>

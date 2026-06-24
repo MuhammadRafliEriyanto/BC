@@ -5,21 +5,16 @@ import { useMemo, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowRight,
-  Award,
   BookOpen,
   Eye,
   FileText,
   Send,
   TimerReset,
 } from "lucide-react";
-
-import {
-  studentQuizzes,
-} from "../data/learning-data";
 import { useStudentLearningData } from "../data/useStudentLearningData";
-import { studentTryoutSession } from "../data/tryout-data";
+import { useStudentTryouts } from "../data/useStudentTryouts";
 
-type TabKey = "materi" | "tugas" | "kuis" | "tryout";
+type TabKey = "materi" | "tugas" | "tryout";
 
 type TabConfig = {
   key: TabKey;
@@ -45,18 +40,11 @@ const tabs: TabConfig[] = [
     href: "/dashboard-siswa/tugas",
   },
   {
-    key: "kuis",
-    label: "Daftar Kuis",
-    shortLabel: "Kuis",
-    icon: Award,
-    href: "/dashboard-siswa/kuis",
-  },
-  {
     key: "tryout",
-    label: "Sesi Tryout",
-    shortLabel: "Tryout",
+    label: "Sesi Ujian",
+    shortLabel: "Ujian",
     icon: TimerReset,
-    href: "/dashboard-siswa/tryout",
+    href: "/dashboard-siswa/ujian",
   },
 ];
 
@@ -98,6 +86,7 @@ function SectionAction({
 export default function PelajaranSection() {
   const [activeTab, setActiveTab] = useState<TabKey>("materi");
   const { materials, tasks, isLoading, loadError } = useStudentLearningData();
+  const { tryouts, isLoading: isTryoutsLoading, loadError: tryoutsError } = useStudentTryouts();
 
   const activeTabConfig = useMemo(
     () => tabs.find((tab) => tab.key === activeTab) ?? tabs[0],
@@ -112,9 +101,8 @@ export default function PelajaranSection() {
     if (activeTab === "materi")
       return `${materials.length} materi tersedia`;
     if (activeTab === "tugas") return `${tasks.length} tugas aktif`;
-    if (activeTab === "kuis") return `${studentQuizzes.length} kuis tersedia`;
-    return `${studentTryoutSession.totalQuestions} soal tryout aktif`;
-  }, [activeTab, isLoading, materials.length, tasks.length]);
+    return `${tryouts.length} ujian tersedia`;
+  }, [activeTab, isLoading, materials.length, tasks.length, tryouts.length]);
 
   const renderMateri = () => {
     if (isLoading) {
@@ -143,7 +131,7 @@ export default function PelajaranSection() {
         {materials.map((item) => (
           <article
             key={item.id}
-            className="flex flex-col gap-3 rounded-2xl border border-orange-100/80 px-4 py-4 transition hover:border-orange-200 hover:bg-orange-50/30 sm:flex-row sm:items-center sm:justify-between"
+            className="flex flex-col gap-3 rounded-2xl border border-slate-100 px-4 py-4 transition hover:border-orange-200 hover:bg-orange-50/50 sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
@@ -168,7 +156,7 @@ export default function PelajaranSection() {
 
             <Link
               href={item.href}
-              className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-red-800 via-orange-600 to-amber-500 px-4 text-xs font-semibold text-white shadow-sm transition hover:-translate-y-px"
+              className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-orange-500 px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-orange-600"
             >
               <Eye className="h-3.5 w-3.5" />
               Baca Materi
@@ -206,7 +194,7 @@ export default function PelajaranSection() {
         {tasks.map((item) => (
           <article
             key={item.id}
-            className="flex flex-col gap-3 rounded-2xl border border-orange-100/80 px-4 py-4 transition hover:border-orange-200 hover:bg-orange-50/30 sm:flex-row sm:items-center sm:justify-between"
+            className="flex flex-col gap-3 rounded-2xl border border-slate-100 px-4 py-4 transition hover:border-orange-100 hover:bg-orange-50/30 sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
@@ -236,7 +224,7 @@ export default function PelajaranSection() {
               </Link>
               <Link
                 href={item.submitHref}
-                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-red-800 via-orange-600 to-amber-500 px-4 text-xs font-semibold text-white shadow-sm transition hover:-translate-y-px"
+                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-orange-500 px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-orange-600"
               >
                 <Send className="h-3.5 w-3.5" />
                 Kirim Tugas
@@ -248,129 +236,110 @@ export default function PelajaranSection() {
     );
   };
 
-  const renderKuis = () => {
-    if (studentQuizzes.length === 0) {
+  const renderTryout = () => {
+    if (isTryoutsLoading) {
       return (
         <EmptyState
-          title="Belum ada kuis"
-          description="Kuis, ujian, atau latihan berkala akan muncul di sini saat dirilis oleh guru."
+          title="Memuat sesi ujian"
+          description="Sistem sedang mengambil sesi ujian atau tryout terbaru dari kelas kamu."
+        />
+      );
+    }
+
+    if (tryouts.length === 0) {
+      return (
+        <EmptyState
+          title="Belum ada sesi ujian"
+          description={
+            tryoutsError ??
+            "Belum ada sesi ujian atau tryout yang diterbitkan untuk kelas kamu saat ini."
+          }
         />
       );
     }
 
     return (
       <div className="space-y-3 bg-white p-4 md:p-5">
-        {studentQuizzes.map((quiz) => (
-          <article
-            key={quiz.id}
-            className="flex flex-col gap-3 rounded-2xl border border-orange-100/80 px-4 py-4 transition hover:border-orange-200 hover:bg-orange-50/30 sm:flex-row sm:items-center sm:justify-between"
-          >
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-orange-50 px-2.5 py-1 text-[11px] font-semibold text-orange-700">
-                  {quiz.mapel}
+        {tryouts.map((tryout) => {
+          const assessmentType = tryout.assessmentType || "Ujian";
+          const assessmentLabel =
+            assessmentType === "Tryout" && tryout.stage
+              ? `Tryout ${tryout.stage}`
+              : assessmentType;
+          const totalQ = Math.max(
+            tryout.totalQuestions ?? 0,
+            tryout.questionCount ?? 0
+          );
+          const title = tryout.title || `${assessmentLabel} ${tryout.subject || ""}`;
+
+          return (
+            <article key={tryout.id || tryout.tryoutId} className="flex flex-col gap-4 rounded-2xl border border-slate-100 px-4 py-4 transition hover:border-orange-200 hover:bg-orange-50/50">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-orange-50 px-2.5 py-1 text-[11px] font-semibold text-orange-700">
+                      {tryout.subject || "Campuran"}
+                    </span>
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] text-slate-500">
+                      {totalQ} soal
+                    </span>
+                    <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+                      {tryout.durationMinutes ?? 90} menit
+                    </span>
+                  </div>
+
+                  <h4 className="mt-2 text-sm font-semibold text-slate-800">
+                    {title}
+                  </h4>
+                  <p className="mt-1 text-xs leading-6 text-slate-500">
+                    {tryout.availability || "Status ujian belum tersedia"}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl bg-orange-50 px-3 py-2 text-right">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-orange-600">
+                    Kode
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-orange-700">
+                    {tryout.tryoutId || tryout.id || "-"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                <span className="rounded-full bg-slate-100 px-2.5 py-1">
+                  {tryout.questionSource === "bank" ? "CBT Bank Soal" : "CBT Terjadwal"}
                 </span>
-                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] text-slate-500">
-                  {quiz.jumlahSoal} soal
+                <span className="rounded-full bg-slate-100 px-2.5 py-1">
+                  {tryout.branch || "Pusat"}
                 </span>
               </div>
 
-              <h4 className="mt-2 text-sm font-semibold text-slate-800">
-                {quiz.judul}
-              </h4>
-              <p className="mt-1 text-xs text-slate-500">
-                {quiz.jadwal}
-              </p>
-            </div>
-
-            <Link
-              href={quiz.href}
-              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-red-800 via-orange-600 to-amber-500 px-4 text-xs font-semibold text-white shadow-sm transition hover:-translate-y-px"
-            >
-              <Award className="h-3.5 w-3.5" />
-              Lihat Kuis
-            </Link>
-          </article>
-        ))}
-      </div>
-    );
-  };
-
-  const renderTryout = () => {
-    return (
-      <div className="space-y-3 bg-white p-4 md:p-5">
-        <article className="flex flex-col gap-4 rounded-2xl border border-orange-100/80 px-4 py-4 transition hover:border-orange-200 hover:bg-orange-50/30">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-orange-50 px-2.5 py-1 text-[11px] font-semibold text-orange-700">
-                  {studentTryoutSession.subject}
-                </span>
-                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] text-slate-500">
-                  {studentTryoutSession.totalQuestions} soal
-                </span>
-                <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
-                  {studentTryoutSession.durationMinutes} menit
-                </span>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  href="/dashboard-siswa/ujian"
+                  className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-orange-500 px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-orange-600"
+                >
+                  <TimerReset className="h-3.5 w-3.5" />
+                  Buka Menu Ujian
+                </Link>
               </div>
-
-              <h4 className="mt-2 text-sm font-semibold text-slate-800">
-                {studentTryoutSession.title}
-              </h4>
-              <p className="mt-1 text-xs leading-6 text-slate-500">
-                {studentTryoutSession.availability}
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-orange-50 px-3 py-2 text-right">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-orange-500">
-                Target
-              </p>
-              <p className="mt-1 text-sm font-semibold text-orange-700">
-                {studentTryoutSession.targetScore}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-            <span className="rounded-full bg-slate-100 px-2.5 py-1">
-              {studentTryoutSession.code}
-            </span>
-            <span className="rounded-full bg-slate-100 px-2.5 py-1">
-              {studentTryoutSession.mode}
-            </span>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href={studentTryoutSession.href}
-              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-red-800 via-orange-600 to-amber-500 px-4 text-xs font-semibold text-white shadow-sm transition hover:-translate-y-px"
-            >
-              <TimerReset className="h-3.5 w-3.5" />
-              Masuk Tryout
-            </Link>
-            <Link
-              href={studentTryoutSession.href}
-              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
-            >
-              <Eye className="h-3.5 w-3.5" />
-              Lihat UI
-            </Link>
-          </div>
-        </article>
+            </article>
+          );
+        })}
       </div>
     );
   };
 
   return (
-    <section className="rounded-[24px] border border-orange-100/90 bg-white p-4 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.18),0_12px_24px_-22px_rgba(249,115,22,0.12)] md:p-5">
+    <section className="rounded-[24px] border border-slate-100 bg-white p-4 shadow-sm md:p-5">
       <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-orange-600">
             Aktivitas Belajar
           </p>
           <h3 className="mt-1 text-base font-semibold text-slate-800">
-            Materi, tugas, kuis, dan tryout siswa
+            Materi, tugas, dan tryout siswa
           </h3>
         </div>
 
@@ -385,8 +354,8 @@ export default function PelajaranSection() {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-[22px] border border-orange-100 bg-[linear-gradient(180deg,rgba(255,247,237,0.9),rgba(255,255,255,1))]">
-        <div className="flex flex-wrap border-b border-orange-100 bg-orange-50/60">
+      <div className="overflow-hidden rounded-[22px] border border-slate-100 bg-slate-50/50">
+        <div className="flex flex-wrap border-b border-slate-100 bg-slate-50">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.key;
             const Icon = tab.icon;
@@ -396,10 +365,10 @@ export default function PelajaranSection() {
                 key={tab.key}
                 type="button"
                 onClick={() => setActiveTab(tab.key)}
-                className={`inline-flex items-center gap-2 border-r border-orange-100 px-4 py-3 text-sm font-medium transition last:border-r-0 ${
+                className={`inline-flex items-center gap-2 border-r border-slate-100 px-4 py-3 text-sm font-medium transition last:border-r-0 ${
                   isActive
                     ? "border-t-[3px] border-t-orange-500 bg-white text-orange-700"
-                    : "border-t-[3px] border-t-transparent text-slate-600 hover:bg-white/70 hover:text-orange-700"
+                    : "border-t-[3px] border-t-transparent text-slate-500 hover:bg-slate-100 hover:text-orange-600"
                 }`}
               >
                 <Icon className="h-4 w-4" />
@@ -412,7 +381,6 @@ export default function PelajaranSection() {
 
         {activeTab === "materi" && renderMateri()}
         {activeTab === "tugas" && renderTugas()}
-        {activeTab === "kuis" && renderKuis()}
         {activeTab === "tryout" && renderTryout()}
       </div>
     </section>

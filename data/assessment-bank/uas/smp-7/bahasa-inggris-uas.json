@@ -1,0 +1,216 @@
+{
+  "schemaVersion": "1.0.0",
+  "questionSetId": "UAS-SMP7-BING",
+  "assessmentType": "UAS",
+  "stage": null,
+  "className": "SMP 7",
+  "grade": 7,
+  "phase": "Fase D",
+  "subject": "Bahasa Inggris",
+  "questionCount": 10,
+  "suggestedDurationMinutes": 60,
+  "reviewStatus": "Perlu Review Guru",
+  "curriculumNote": "Draft orisinal berbasis kompetensi umum Kurikulum Merdeka; cocokkan kembali dengan ATP dan materi yang telah diajarkan di cabang.",
+  "questions": [
+    {
+      "questionId": "UAS-SMP7-BING-001",
+      "number": 1,
+      "competency": "Comprehending written texts",
+      "topic": "Reading comprehension",
+      "indicator": "Identifying the main idea of a short text",
+      "cognitiveLevel": "C2",
+      "difficulty": "Mudah",
+      "question": "Read the text \"Recycling Project\". Our class started a recycling project last month. Students separate paper, plastic, and metal into different bins. The collected materials are sent to a recycling center every Friday, reducing waste around the school.\nWhat is the main idea of the text?",
+      "options": {
+        "A": "A class recycling project reduces school waste",
+        "B": "A list of objects owned by the students",
+        "C": "A problem that has no solution",
+        "D": "An invitation to cancel an activity"
+      },
+      "correctAnswer": "A",
+      "explanation": "The entire paragraph focuses on a class recycling project reduces school waste.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMP7-BING-002",
+      "number": 2,
+      "competency": "Comprehending written texts",
+      "topic": "Explicit information",
+      "indicator": "Locating stated information",
+      "cognitiveLevel": "C2",
+      "difficulty": "Mudah",
+      "question": "In the text \"Recycling Project\", what object or activity is discussed?",
+      "options": {
+        "A": "an unrelated sports match",
+        "B": "a cancelled flight",
+        "C": "a secret competition",
+        "D": "paper, plastic, and metal"
+      },
+      "correctAnswer": "D",
+      "explanation": "The text explicitly discusses paper, plastic, and metal.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMP7-BING-003",
+      "number": 3,
+      "competency": "Language features",
+      "topic": "Vocabulary",
+      "indicator": "Inferring word meaning from context",
+      "cognitiveLevel": "C3",
+      "difficulty": "Mudah",
+      "question": "The word \"separate\" is closest in meaning to ...",
+      "options": {
+        "A": "a place that cannot be entered",
+        "B": "an action done without a reason",
+        "C": "put into different groups",
+        "D": "something that is never used"
+      },
+      "correctAnswer": "C",
+      "explanation": "In the paragraph, \"separate\" means put into different groups.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMP7-BING-004",
+      "number": 4,
+      "competency": "Language features",
+      "topic": "Reference",
+      "indicator": "Identifying a reference in context",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "In a summary of \"Recycling Project\", the phrase \"this careful action\" refers to ...",
+      "options": {
+        "A": "the title without its content",
+        "B": "paper, plastic, and metal",
+        "C": "an unrelated event outside the text",
+        "D": "a plan that was never mentioned"
+      },
+      "correctAnswer": "B",
+      "explanation": "The phrase points to the main object or action discussed, namely paper, plastic, and metal.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMP7-BING-005",
+      "number": 5,
+      "competency": "Grammar in context",
+      "topic": "Simple present",
+      "indicator": "Using the correct verb form for a habitual action",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Each student ... the plan carefully every week.",
+      "options": {
+        "A": "reviews",
+        "B": "review",
+        "C": "reviewed",
+        "D": "reviewing"
+      },
+      "correctAnswer": "A",
+      "explanation": "A singular subject in a habitual action takes the simple-present form \"reviews\".",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMP7-BING-006",
+      "number": 6,
+      "competency": "Grammar in context",
+      "topic": "Present perfect",
+      "indicator": "Using a verb for an action connected to the present",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "The team ... three sources before publishing the report.",
+      "options": {
+        "A": "check",
+        "B": "was check",
+        "C": "checking",
+        "D": "has checked"
+      },
+      "correctAnswer": "D",
+      "explanation": "The singular collective subject takes \"has checked\" for a completed action relevant to the present.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMP7-BING-007",
+      "number": 7,
+      "competency": "Interpreting functional texts",
+      "topic": "Functional text",
+      "indicator": "Interpreting an announcement",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Announcement: \"The final review session starts at 2 p.m. in Room 3. Bring your draft and source list.\" What must students bring?",
+      "options": {
+        "A": "A meal for the teacher",
+        "B": "Only an empty folder",
+        "C": "Their draft and source list",
+        "D": "Sports equipment"
+      },
+      "correctAnswer": "C",
+      "explanation": "The announcement explicitly asks students to bring their draft and source list.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMP7-BING-008",
+      "number": 8,
+      "competency": "Comprehending written texts",
+      "topic": "Inference",
+      "indicator": "Drawing a logical inference from a text",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sedang",
+      "question": "Based on \"Recycling Project\", what attitude do the students show?",
+      "options": {
+        "A": "Unaware of the stated goal",
+        "B": "Responsible and thoughtful",
+        "C": "Careless and unwilling to learn",
+        "D": "Hostile toward every activity"
+      },
+      "correctAnswer": "B",
+      "explanation": "The actions described show a responsible and thoughtful attitude.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMP7-BING-009",
+      "number": 9,
+      "competency": "Comprehending written texts",
+      "topic": "Text purpose",
+      "indicator": "Identifying communicative purpose",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sulit",
+      "question": "Why does the writer present the text \"Recycling Project\"?",
+      "options": {
+        "A": "To explain an activity and the reason it matters",
+        "B": "To provide an unrelated recipe",
+        "C": "To advertise an imaginary product",
+        "D": "To prohibit readers from studying"
+      },
+      "correctAnswer": "A",
+      "explanation": "The paragraph explains the activity and its benefit or purpose.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMP7-BING-010",
+      "number": 10,
+      "competency": "Interpersonal communication",
+      "topic": "Response",
+      "indicator": "Selecting an appropriate response in an academic discussion",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sulit",
+      "question": "A classmate says, \"I found two sources with different conclusions.\" What is the best response?",
+      "options": {
+        "A": "Choose the shorter source without reading it.",
+        "B": "Delete both sources immediately.",
+        "C": "Assume every conclusion is equally accurate.",
+        "D": "Let's compare their evidence and publication context."
+      },
+      "correctAnswer": "D",
+      "explanation": "Comparing evidence and context is a relevant critical response.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    }
+  ]
+}

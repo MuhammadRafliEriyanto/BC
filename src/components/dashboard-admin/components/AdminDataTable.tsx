@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 import { adminPoppins } from "./admin-font";
@@ -29,6 +30,7 @@ type AdminDataTableProps<T> = {
   getRowClassName?: (row: T, index: number, data: T[]) => string | undefined;
   renderBeforeRow?: (row: T, index: number, data: T[]) => ReactNode;
   square?: boolean;
+  isLoading?: boolean;
 };
 
 export function AdminDataTable<T>({
@@ -41,7 +43,43 @@ export function AdminDataTable<T>({
   getRowClassName,
   renderBeforeRow,
   square = false,
+  isLoading = false,
 }: AdminDataTableProps<T>) {
+  if (isLoading) {
+    return (
+      <div
+        className={cn(
+          adminPoppins.className,
+          "overflow-hidden border border-slate-200/80 bg-white shadow-[0_18px_34px_-28px_rgba(15,23,42,0.14)]",
+          square ? "rounded-none" : "rounded-[22px]",
+        )}
+      >
+        <Table className={minWidthClassName}>
+          <TableHeader className="bg-gradient-to-r from-slate-50/95 via-white to-slate-50/70">
+            <TableRow className="hover:bg-transparent">
+              {columns.map((column) => (
+                <TableHead key={column.key} className={column.className}>
+                  {column.header}
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Array.from({ length: 5 }).map((_, index) => (
+              <TableRow key={`skeleton-${index}`} className={index % 2 === 0 ? "bg-white" : "bg-slate-50/30"}>
+                {columns.map((column) => (
+                  <TableCell key={column.key} className={column.className}>
+                    <Skeleton className="h-4 w-full max-w-[80%]" />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  }
+
   if (!data.length) {
     return (
       <div

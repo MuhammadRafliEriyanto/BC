@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type AdminPaginationFooterProps = {
   page: number;
@@ -29,15 +30,24 @@ export function AdminPaginationFooter({
   return (
     <div className="flex flex-col gap-3 rounded-[22px] border border-slate-200/80 bg-white px-4 py-3 text-sm text-slate-600 shadow-[0_12px_22px_-26px_rgba(15,23,42,0.14)] sm:flex-row sm:items-center sm:justify-between">
       <div className="space-y-1">
-        <p className="font-medium text-slate-800">
-          Halaman {page} dari {totalPages}
-        </p>
-        <p className="text-xs text-slate-500">
-          Menampilkan {visibleCount} {label} pada halaman ini.
-          {totalItems > 0 && pageEnd > 0
-            ? ` Rentang data ${pageStart}-${pageEnd} dari total ${totalItems} ${label}.`
-            : ` Belum ada ${label} yang cocok dengan filter aktif.`}
-        </p>
+        {isLoading && totalItems === 0 ? (
+          <>
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-72 max-w-full" />
+          </>
+        ) : (
+          <>
+            <p className="font-medium text-slate-800">
+              Halaman {page} dari {totalPages}
+            </p>
+            <p className="text-xs text-slate-500">
+              Menampilkan {visibleCount} {label} pada halaman ini.
+              {totalItems > 0 && pageEnd > 0
+                ? ` Rentang data ${pageStart}-${pageEnd} dari total ${totalItems} ${label}.`
+                : ` Belum ada ${label} yang cocok dengan filter aktif.`}
+            </p>
+          </>
+        )}
       </div>
 
       <div className="flex items-center gap-2 self-end sm:self-auto">

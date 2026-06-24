@@ -57,7 +57,7 @@ const menuLinks: FooterLink[] = [
     label: item.label,
     href: item.href,
   })),
-  { label: "Daftar Online", href: "/register-online" },
+  { label: "Daftar Online", href: "/register" },
 ];
 
 const linkGroups: FooterLink[] = [

@@ -108,7 +108,7 @@ export default function LandingRegistrationSection() {
 
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
-                href="/register-online"
+                href="/register"
                 className="group inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[linear-gradient(135deg,#b91c1c_0%,#ea580c_100%)] px-6 text-sm font-semibold text-white shadow-[0_22px_34px_-24px_rgba(185,28,28,0.38)] transition duration-300 hover:-translate-y-px hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
               >
                 Mulai Pendaftaran

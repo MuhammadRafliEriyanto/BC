@@ -1,6 +1,7 @@
 import {
   ClipboardCheck,
   Download,
+  Eye,
   FileText,
   Pencil,
   Plus,
@@ -19,6 +20,10 @@ function getTaskStatusClass(status: TugasPertemuanTableProps["tasks"][number]["s
     return "border-emerald-200 bg-emerald-50 text-emerald-700";
   }
 
+  if (status === "Belum Ada Pengumpulan") {
+    return "border-slate-200 bg-slate-50 text-slate-600";
+  }
+
   return "border-orange-200 bg-orange-50 text-orange-700";
 }
 
@@ -28,6 +33,7 @@ export default function TugasPertemuanTable({
   onDelete,
   onEdit,
   onGradeNow,
+  onViewSubmissions,
   tasks,
 }: TugasPertemuanTableProps) {
   const sortedTasks = [...tasks].sort(
@@ -123,6 +129,15 @@ export default function TugasPertemuanTable({
                     </td>
                     <td className="px-4 py-4 align-middle text-center">
                       <div className="mx-auto flex w-fit items-center justify-center gap-2">
+                        <button
+                          type="button"
+                          title="Lihat Submission"
+                          aria-label="Lihat Submission"
+                          onClick={() => onViewSubmissions(task)}
+                          className={`${ACTION_BUTTON_CLASS} border-sky-200 bg-sky-50 text-sky-700 hover:border-sky-300 hover:bg-sky-100`}
+                        >
+                          <Eye className={ACTION_ICON_CLASS} />
+                        </button>
                         <button
                           type="button"
                           title="Nilai Sekarang"

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import Script from "next/script";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
-import { Eye, EyeOff, LoaderCircle, LockKeyhole, Mail } from "lucide-react";
+import { Eye, EyeOff, LoaderCircle } from "lucide-react";
 
 import { AuthShell } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/button";
@@ -179,7 +179,7 @@ export function LoginForm() {
       return;
     }
 
-    const targetWidth = Math.max(260, Math.min(googleButtonRef.current.clientWidth || 340, 360));
+    const targetWidth = Math.max(280, Math.min(googleButtonRef.current.clientWidth || 360, 390));
 
     googleApi.initialize({
       client_id: googleClientId,
@@ -195,7 +195,7 @@ export function LoginForm() {
       theme: "outline",
       size: "large",
       text: "continue_with",
-      shape: "pill",
+      shape: "rectangular",
       width: targetWidth,
       logo_alignment: "left",
     });
@@ -203,17 +203,24 @@ export function LoginForm() {
 
   return (
     <AuthShell
-      variant="immersive"
-      eyebrow="Masuk"
-      title="Selamat datang, silakan login"
-      description="Masuk dengan email utama Anda atau lanjutkan lewat Google."
+      variant="split"
+      splitContentAlignment="start"
+      splitContentClassName="pt-4 lg:pt-14 xl:pt-16"
+      splitInnerClassName="max-w-[430px]"
+      hideSplitVisualOnMobile
+      hideSplitTopBadge
+      title="Welcome Back to Bina Cendekia!"
+      description="Masuk ke akun Anda untuk membuka dashboard belajar, jadwal, dan progres terbaru."
       footer={
-        <p className="text-center text-sm leading-7 text-slate-500">
+        <div className="text-center text-sm text-slate-500">
           Belum punya akun?{" "}
-          <Link href="/register" className="font-semibold text-orange-600 transition hover:text-orange-700">
+          <Link
+            href="/register"
+            className="font-semibold text-[#c2410c] transition hover:text-[#9a3412] underline-offset-4 hover:underline"
+          >
             Daftar sekarang
           </Link>
-        </p>
+        </div>
       }
     >
       {isGoogleLoginEnabled ? (
@@ -223,48 +230,44 @@ export function LoginForm() {
           onReady={() => setGoogleScriptReady(true)}
           onError={() => {
             setGoogleScriptReady(false);
-            setErrorMessage("Google Sign-In gagal dimuat. Silakan pakai login email atau muat ulang halaman.");
+            setErrorMessage("Google Sign-In gagal dimuat. Silakan gunakan login email.");
           }}
         />
       ) : null}
 
-      <form className="mx-auto max-w-[520px] space-y-3" onSubmit={handleSubmit}>
-        <div className="rounded-[28px] border border-orange-100/80 bg-[linear-gradient(180deg,rgba(255,250,244,0.96),rgba(255,255,255,0.98))] p-4 shadow-[0_26px_44px_-34px_rgba(249,115,22,0.22)] sm:p-5">
-          <div className="space-y-3">
-            <div>
-              <label htmlFor="email" className="text-sm font-medium text-orange-700">
-                E-mail
+      <div className="space-y-7">
+        <form className="space-y-5" onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-sm font-medium text-slate-700">
+                Your Email
               </label>
-              <div className="relative mt-2">
-                <Mail className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-orange-400" />
-                <Input
-                  id="email"
-                  type="email"
-                  value={formValues.email}
-                  onChange={(event) => {
-                    setErrorMessage("");
-                    clearFieldError("email");
-                    setFormValues((current) => ({
-                      ...current,
-                      email: event.target.value,
-                    }));
-                  }}
-                  placeholder="Enter Your E-mail Address"
-                  className="h-[52px] rounded-[20px] border-orange-100 bg-white pl-11"
-                  autoComplete="email"
-                  required
-                  disabled={loading || googleLoading}
-                />
-              </div>
+              <Input
+                id="email"
+                type="email"
+                value={formValues.email}
+                onChange={(event) => {
+                  setErrorMessage("");
+                  clearFieldError("email");
+                  setFormValues((current) => ({
+                    ...current,
+                    email: event.target.value,
+                  }));
+                }}
+                placeholder="name@example.com"
+                className="h-12 rounded-xl border-[#f2c7b3] bg-white px-4 shadow-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
+                autoComplete="email"
+                required
+                disabled={loading || googleLoading}
+              />
               <InputError message={fieldErrors.email} />
             </div>
 
-            <div>
-              <label htmlFor="password" className="text-sm font-medium text-orange-700">
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-sm font-medium text-slate-700">
                 Password
               </label>
-              <div className="relative mt-2">
-                <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-orange-400" />
+              <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
@@ -277,8 +280,8 @@ export function LoginForm() {
                       password: event.target.value,
                     }));
                   }}
-                  placeholder="Enter Your Password"
-                  className="h-[52px] rounded-[20px] border-orange-100 bg-white pl-11 pr-12"
+                  placeholder="********"
+                  className="h-12 rounded-xl border-[#f2c7b3] bg-white px-4 pr-12 shadow-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
                   autoComplete="current-password"
                   required
                   disabled={loading || googleLoading}
@@ -287,7 +290,7 @@ export function LoginForm() {
                   type="button"
                   onClick={() => setShowPassword((current) => !current)}
                   className="absolute inset-y-0 right-0 inline-flex w-12 items-center justify-center text-slate-400 transition hover:text-orange-600"
-                  aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                   disabled={loading || googleLoading}
                 >
                   {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -297,71 +300,77 @@ export function LoginForm() {
             </div>
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-            <label className="inline-flex items-center gap-3 text-sm text-slate-600">
+          <div className="flex items-center justify-between gap-3">
+            <label className="group flex cursor-pointer items-center gap-2.5 text-sm text-slate-600 transition hover:text-slate-900">
               <input
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(event) => setRememberMe(event.target.checked)}
-                className="size-4 rounded border-slate-300 text-orange-600 focus:ring-orange-500/20"
+                className="size-4 rounded border-slate-300 accent-orange-600 transition focus:ring-orange-500/10"
                 disabled={loading || googleLoading}
+                suppressHydrationWarning
               />
-              Ingat sesi saya
+              Remember Me
             </label>
-            <p className="text-xs text-slate-400">Email harus sudah diverifikasi.</p>
+            <Link
+              href="/reset-password"
+              className="text-sm font-medium text-slate-400 transition hover:text-orange-600"
+            >
+              Forgot Password?
+            </Link>
           </div>
+
+          {errorMessage ? (
+            <div className="rounded-2xl border border-red-200 bg-red-50/90 px-4 py-3 text-sm leading-6 text-red-700">
+              {errorMessage}
+            </div>
+          ) : null}
 
           <Button
             type="submit"
-            variant="secondary"
-            size="lg"
-            className="mt-4 h-11 w-full rounded-[16px] bg-[linear-gradient(135deg,#f97316_0%,#f59e0b_100%)] text-sm shadow-[0_18px_34px_-24px_rgba(249,115,22,0.48)] hover:brightness-105"
+            className="h-12 w-full rounded-xl bg-[linear-gradient(135deg,#ea580c_0%,#dc2626_100%)] text-sm font-semibold text-white shadow-[0_20px_34px_-24px_rgba(220,38,38,0.45)] transition hover:brightness-105 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
             disabled={loading || googleLoading}
           >
             {loading || googleLoading ? (
               <>
-                <LoaderCircle className="size-4 animate-spin" />
-                {loading ? "Memproses login..." : "Memverifikasi Google..."}
+                <LoaderCircle className="mr-2 size-4 animate-spin" />
+                Memproses...
               </>
             ) : (
-              "Continue"
+              "Login"
             )}
           </Button>
+        </form>
 
-        </div>
-
-        <div className="rounded-[24px] border border-orange-100/80 bg-white/94 px-4 py-4 shadow-[0_18px_38px_-30px_rgba(15,23,42,0.12)] sm:px-5">
-          <p className="text-sm font-semibold text-slate-900">Lanjutkan dengan Google</p>
-          <p className="mt-1 text-xs leading-5 text-slate-500">
-            Pakai email Google yang sama dengan akun LMS Anda.
-          </p>
-
-          <div className="mt-4">
-            {isGoogleLoginEnabled ? (
-              <>
-                <div ref={googleButtonRef} className="flex min-h-11 items-center justify-center" />
-                {!googleScriptReady ? (
-                  <div className="flex h-11 items-center justify-center gap-2 text-sm text-slate-500">
-                    <LoaderCircle className="size-4 animate-spin text-orange-500" />
-                    Menyiapkan Google Sign-In...
-                  </div>
-                ) : null}
-              </>
-            ) : (
-              <div className="rounded-2xl border border-dashed border-orange-200/80 bg-orange-50/70 px-4 py-3 text-center text-sm leading-6 text-slate-600">
-                Login Google akan muncul setelah `NEXT_PUBLIC_GOOGLE_CLIENT_ID` dan
-                `GOOGLE_CLIENT_ID` diaktifkan.
-              </div>
-            )}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-slate-200/80" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-[#fff8f1] px-4 font-medium tracking-[0.18em] text-slate-400">
+              Atau lanjut dengan
+            </span>
           </div>
         </div>
 
-        {errorMessage ? (
-          <div className="rounded-[22px] border border-red-100 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700">
-            {errorMessage}
-          </div>
-        ) : null}
-      </form>
+        <div>
+          {isGoogleLoginEnabled ? (
+            <div className="rounded-2xl border border-[#f3d6c4] bg-white p-3 shadow-[0_16px_30px_-28px_rgba(194,65,12,0.2)]">
+              <div ref={googleButtonRef} className="w-full min-h-[44px]" />
+              {!googleScriptReady ? (
+                <div className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 text-sm text-slate-500">
+                  <LoaderCircle className="size-4 animate-spin text-orange-600" />
+                  Menyiapkan Google Sign-In...
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <div className="w-full rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-center text-sm text-slate-500">
+              Login Google belum diaktifkan pada aplikasi ini.
+            </div>
+          )}
+        </div>
+      </div>
     </AuthShell>
   );
 }

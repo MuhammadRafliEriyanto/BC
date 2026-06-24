@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 const Textarea = React.forwardRef<
   HTMLTextAreaElement,
   React.TextareaHTMLAttributes<HTMLTextAreaElement>
->(({ className, ...props }, ref) => {
+>(({ className, suppressHydrationWarning, ...props }, ref) => {
   return (
     <textarea
       className={cn(
@@ -13,6 +13,8 @@ const Textarea = React.forwardRef<
         className,
       )}
       ref={ref}
+      // Browser extensions can inject attributes into form fields before React hydrates.
+      suppressHydrationWarning={suppressHydrationWarning ?? true}
       {...props}
     />
   );

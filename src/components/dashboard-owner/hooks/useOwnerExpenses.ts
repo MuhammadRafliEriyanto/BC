@@ -7,28 +7,27 @@ import { AdminApiRequestError } from "@/lib/admin-api";
 import {
   createOwnerExpense,
   deleteOwnerExpense,
-  fetchOwnerExpenseAdminOptionsFromApi,
   fetchOwnerExpenseBranchDirectoryFromApi,
-  fetchOwnerExpenseTeacherOptionsFromApi,
   fetchOwnerExpensesFromApi,
-  ownerExpenseVisibleCategoryOptions,
+  isOwnerExpenseLegacyCategory,
+  normalizeOwnerExpenseFormCategory,
   ownerExpenseStatusOptions,
+  ownerExpenseVisibleCategoryOptions,
   updateOwnerExpense,
   type OwnerExpense,
-  type OwnerExpenseCategory,
   type OwnerExpenseMutationPayload,
-  type OwnerExpenseRecipientOption,
   type OwnerExpenseStatus,
+  type OwnerExpenseUiCategory,
 } from "@/lib/owner-expenses";
 
 export type OwnerExpenseBranchFilter = "Semua Cabang" | string;
-export type OwnerExpenseCategoryFilter = "Semua" | OwnerExpenseCategory;
+export type OwnerExpenseCategoryFilter = "Semua" | OwnerExpenseUiCategory;
 export type OwnerExpenseStatusFilter = "Semua" | OwnerExpenseStatus;
 
 export type OwnerExpenseForm = {
   title: string;
   branch: string;
-  category: OwnerExpenseCategory;
+  category: OwnerExpenseUiCategory;
   vendorOrRecipient: string;
   amount: string;
   paymentMethod: string;
@@ -50,6 +49,7 @@ export type OwnerExpenseDialogState = {
   submitLabel: string;
   error: string | null;
   fieldErrors: OwnerExpenseFieldErrors;
+  legacyCategoryLabel: string | null;
 };
 
 export type OwnerExpenseFlashTone = "success" | "warning" | "danger" | "info";
@@ -77,10 +77,8 @@ export type OwnerExpensesManager = {
   categoryFilterOptions: readonly OwnerExpenseCategoryFilter[];
   statusFilterOptions: readonly OwnerExpenseStatusFilter[];
   formBranchOptions: string[];
-  categoryOptions: readonly OwnerExpenseCategory[];
+  categoryOptions: readonly OwnerExpenseUiCategory[];
   statusOptions: readonly OwnerExpenseStatus[];
-  teacherRecipientOptions: OwnerExpenseRecipientOption[];
-  adminRecipientOptions: OwnerExpenseRecipientOption[];
   flash: OwnerExpenseFlash | null;
   dismissFlash: () => void;
   dialog: OwnerExpenseDialogState;
@@ -89,7 +87,6 @@ export type OwnerExpensesManager = {
   openEditDialog: (expenseId: string) => void;
   closeDialog: () => void;
   updateFormValue: (field: keyof OwnerExpenseForm, value: string) => void;
-  applyRecipientSuggestion: (value: string) => void;
   submitForm: () => void;
   removeExpense: (expenseId: string) => void;
   resetFilters: () => void;
@@ -104,39 +101,28 @@ const statusFilterOptions = [
   "Semua",
   ...ownerExpenseStatusOptions,
 ] as const satisfies readonly OwnerExpenseStatusFilter[];
-const visibleExpenseCategorySet = new Set<OwnerExpenseCategory>(
-  ownerExpenseVisibleCategoryOptions as readonly OwnerExpenseCategory[],
-);
 
 function normalizeText(value: string) {
   return value.trim().replace(/\s+/g, " ");
 }
 
-function normalizeLookupKey(value: string) {
-  return normalizeText(value).toLowerCase();
-}
-
 function selectRelevantBranchOptions(branches: string[]) {
-  const preferredBranchKeys = new Set(["slawi", "adiwerna"]);
   const normalizedUniqueBranches = Array.from(
     new Set(branches.map((branch) => normalizeText(branch)).filter(Boolean)),
   );
-  const preferredBranches = normalizedUniqueBranches.filter((branch) =>
-    preferredBranchKeys.has(normalizeLookupKey(branch)),
-  );
 
-  return preferredBranches.length > 0 ? preferredBranches : normalizedUniqueBranches;
+  return normalizedUniqueBranches.length > 0 ? normalizedUniqueBranches : ["Pusat"];
 }
 
 function resolveDefaultBranch(branchOptions: string[]) {
-  return selectRelevantBranchOptions(branchOptions)[0] ?? "Slawi";
+  return selectRelevantBranchOptions(branchOptions)[0] ?? "Pusat";
 }
 
 function buildDefaultExpenseForm(branchOptions: string[]): OwnerExpenseForm {
   return {
     title: "",
     branch: resolveDefaultBranch(branchOptions),
-    category: "Gaji Guru",
+    category: "Listrik",
     vendorOrRecipient: "",
     amount: "",
     paymentMethod: "",
@@ -145,27 +131,6 @@ function buildDefaultExpenseForm(branchOptions: string[]): OwnerExpenseForm {
     dueDate: "",
     note: "",
   };
-}
-
-function resolveBranchFromRecipient(
-  category: OwnerExpenseCategory,
-  recipient: string,
-  teacherRecipientOptions: OwnerExpenseRecipientOption[],
-  adminRecipientOptions: OwnerExpenseRecipientOption[],
-  fallbackBranch: string,
-) {
-  const normalizedRecipient = normalizeLookupKey(recipient);
-  const recipientOptions =
-    category === "Gaji Guru"
-      ? teacherRecipientOptions
-      : category === "Gaji Admin"
-        ? adminRecipientOptions
-        : [];
-  const matchedOption = recipientOptions.find(
-    (option) => normalizeLookupKey(option.name) === normalizedRecipient,
-  );
-
-  return matchedOption?.branch?.trim() || fallbackBranch;
 }
 
 function buildExpenseMutationPayload(form: OwnerExpenseForm): OwnerExpenseMutationPayload {
@@ -195,13 +160,7 @@ function readExpenseFieldErrors(
 
 export function useOwnerExpenses() {
   const [expenses, setExpenses] = useState<OwnerExpense[]>([]);
-  const [branchOptions, setBranchOptions] = useState<string[]>(["Slawi", "Adiwerna"]);
-  const [teacherRecipientOptions, setTeacherRecipientOptions] = useState<
-    OwnerExpenseRecipientOption[]
-  >([]);
-  const [adminRecipientOptions, setAdminRecipientOptions] = useState<
-    OwnerExpenseRecipientOption[]
-  >([]);
+  const [branchOptions, setBranchOptions] = useState<string[]>(["Pusat"]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -212,8 +171,11 @@ export function useOwnerExpenses() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<OwnerExpenseDialogMode>("create");
   const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
+  const [editingLegacyCategory, setEditingLegacyCategory] = useState<string | null>(
+    null,
+  );
   const [form, setForm] = useState<OwnerExpenseForm>(
-    buildDefaultExpenseForm(["Slawi", "Adiwerna"]),
+    buildDefaultExpenseForm(["Pusat"]),
   );
   const [dialogError, setDialogError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<OwnerExpenseFieldErrors>({});
@@ -225,11 +187,6 @@ export function useOwnerExpenses() {
       ...expenses.map((expense) => normalizeText(expense.branch)).filter(Boolean),
     ]);
   }, [branchOptions, expenses]);
-
-  const visibleExpenses = useMemo(
-    () => expenses.filter((expense) => visibleExpenseCategorySet.has(expense.category)),
-    [expenses],
-  );
 
   async function refreshExpenses(notifyListeners = false) {
     const nextExpenses = await fetchOwnerExpensesFromApi();
@@ -262,44 +219,14 @@ export function useOwnerExpenses() {
         const nextBranchOptions = selectRelevantBranchOptions(
           nextBranchDirectory.map((branch) => branch.name),
         );
-        setBranchOptions(
-          nextBranchOptions.length > 0 ? nextBranchOptions : ["Slawi", "Adiwerna"],
-        );
-
-        try {
-          const [nextTeachers, nextAdmins] = await Promise.all([
-            fetchOwnerExpenseTeacherOptionsFromApi(),
-            fetchOwnerExpenseAdminOptionsFromApi(nextBranchDirectory),
-          ]);
-
-          if (isCancelled) {
-            return;
-          }
-
-          setTeacherRecipientOptions(nextTeachers);
-          setAdminRecipientOptions(nextAdmins);
-        } catch {
-          if (isCancelled) {
-            return;
-          }
-
-          setTeacherRecipientOptions([]);
-          setAdminRecipientOptions([]);
-          setFlash({
-            tone: "info",
-            message:
-              "Opsi penerima guru/admin belum bisa dimuat. Form Pengeluaran tetap bisa dipakai dengan input penerima manual.",
-          });
-        }
+        setBranchOptions(nextBranchOptions);
       } catch {
         if (isCancelled) {
           return;
         }
 
         setExpenses([]);
-        setBranchOptions(["Slawi", "Adiwerna"]);
-        setTeacherRecipientOptions([]);
-        setAdminRecipientOptions([]);
+        setBranchOptions(["Pusat"]);
         setFlash({
           tone: "warning",
           message:
@@ -322,7 +249,7 @@ export function useOwnerExpenses() {
   const filteredExpenses = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
 
-    return visibleExpenses.filter((expense) => {
+    return expenses.filter((expense) => {
       const matchesQuery = normalizedQuery
         ? expense.title.toLowerCase().includes(normalizedQuery) ||
           expense.branch.toLowerCase().includes(normalizedQuery) ||
@@ -339,17 +266,17 @@ export function useOwnerExpenses() {
 
       return matchesQuery && matchesBranch && matchesCategory && matchesStatus;
     });
-  }, [branchFilter, categoryFilter, searchQuery, statusFilter, visibleExpenses]);
+  }, [branchFilter, categoryFilter, expenses, searchQuery, statusFilter]);
 
   const branchFilterOptions = useMemo(() => {
     return Array.from(
       new Set([
         allBranchFilter,
         ...formBranchOptions,
-        ...filteredExpenses.map((expense) => expense.branch).filter(Boolean),
+        ...expenses.map((expense) => expense.branch).filter(Boolean),
       ]),
     );
-  }, [filteredExpenses, formBranchOptions]);
+  }, [expenses, formBranchOptions]);
 
   function dismissFlash() {
     setFlash(null);
@@ -360,6 +287,7 @@ export function useOwnerExpenses() {
     setDialogError(null);
     setFieldErrors({});
     setEditingExpenseId(null);
+    setEditingLegacyCategory(null);
     setDialogMode("create");
   }
 
@@ -377,10 +305,13 @@ export function useOwnerExpenses() {
 
     setDialogMode("edit");
     setEditingExpenseId(expense.id);
+    setEditingLegacyCategory(
+      isOwnerExpenseLegacyCategory(expense.category) ? expense.category : null,
+    );
     setForm({
       title: expense.title,
       branch: expense.branch,
-      category: expense.category,
+      category: normalizeOwnerExpenseFormCategory(expense.category),
       vendorOrRecipient: expense.vendorOrRecipient,
       amount: String(expense.amount),
       paymentMethod: expense.paymentMethod,
@@ -411,44 +342,20 @@ export function useOwnerExpenses() {
     }));
   }
 
-  function applyRecipientSuggestion(value: string) {
-    const resolvedBranch = resolveBranchFromRecipient(
-      form.category,
-      value,
-      teacherRecipientOptions,
-      adminRecipientOptions,
-      normalizeText(form.branch) || resolveDefaultBranch(formBranchOptions),
-    );
-
-    setDialogError(null);
-    setFieldErrors((current) => ({
-      ...current,
-      vendorOrRecipient: undefined,
-      branch: undefined,
-    }));
-    setForm((current) => ({
-      ...current,
-      vendorOrRecipient: value,
-      branch: resolvedBranch,
-    }));
-  }
-
   async function submitExpenseForm() {
     const nextErrors: OwnerExpenseFieldErrors = {};
     const title = normalizeText(form.title);
+    const branch = normalizeText(form.branch);
     const vendorOrRecipient = normalizeText(form.vendorOrRecipient);
     const paymentMethod = normalizeText(form.paymentMethod);
     const amount = Number(form.amount);
-    const branch = resolveBranchFromRecipient(
-      form.category,
-      vendorOrRecipient,
-      teacherRecipientOptions,
-      adminRecipientOptions,
-      normalizeText(form.branch) || resolveDefaultBranch(formBranchOptions),
-    );
 
     if (!title) {
       nextErrors.title = "Judul pengeluaran wajib diisi.";
+    }
+
+    if (!branch) {
+      nextErrors.branch = "Cabang wajib dipilih.";
     }
 
     if (!vendorOrRecipient) {
@@ -554,19 +461,28 @@ export function useOwnerExpenses() {
   const dialog: OwnerExpenseDialogState = {
     isOpen: isDialogOpen,
     mode: dialogMode,
-    title: dialogMode === "create" ? "Tambah pengeluaran" : "Edit pengeluaran",
+    title:
+      dialogMode === "create"
+        ? "Tambah Pengeluaran Operasional"
+        : "Edit Pengeluaran Operasional",
     description:
       dialogMode === "create"
-        ? "Catat pengeluaran baru agar langsung masuk ke monitoring owner."
-        : "Perbarui data pengeluaran tanpa mengubah alur backend yang sudah berjalan.",
-    submitLabel: dialogMode === "create" ? "Simpan pengeluaran" : "Simpan perubahan",
+        ? "Catat biaya operasional cabang agar langsung masuk ke monitoring owner dan perhitungan saldo bersih."
+        : editingLegacyCategory
+          ? `Data lama dengan kategori legacy "${editingLegacyCategory}" bisa diperbarui ke kategori operasional baru tanpa mengubah flow pembayaran.`
+          : "Perbarui data pengeluaran operasional tanpa mengubah alur backend yang sudah berjalan.",
+    submitLabel:
+      dialogMode === "create"
+        ? "Simpan pengeluaran"
+        : "Simpan perubahan",
     error: dialogError,
     fieldErrors,
+    legacyCategoryLabel: editingLegacyCategory,
   };
 
   const manager: OwnerExpensesManager = {
     expenses: filteredExpenses,
-    totalExpenses: visibleExpenses.length,
+    totalExpenses: expenses.length,
     filteredExpenseCount: filteredExpenses.length,
     isLoading,
     isSubmitting,
@@ -584,8 +500,6 @@ export function useOwnerExpenses() {
     formBranchOptions,
     categoryOptions: ownerExpenseVisibleCategoryOptions,
     statusOptions: ownerExpenseStatusOptions,
-    teacherRecipientOptions,
-    adminRecipientOptions,
     flash,
     dismissFlash,
     dialog,
@@ -594,7 +508,6 @@ export function useOwnerExpenses() {
     openEditDialog,
     closeDialog,
     updateFormValue,
-    applyRecipientSuggestion,
     submitForm,
     removeExpense,
     resetFilters,

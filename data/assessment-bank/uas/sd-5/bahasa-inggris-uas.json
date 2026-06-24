@@ -1,0 +1,216 @@
+{
+  "schemaVersion": "1.0.0",
+  "questionSetId": "UAS-SD5-BING",
+  "assessmentType": "UAS",
+  "stage": null,
+  "className": "SD 5",
+  "grade": 5,
+  "phase": "Fase C",
+  "subject": "Bahasa Inggris",
+  "questionCount": 10,
+  "suggestedDurationMinutes": 60,
+  "reviewStatus": "Perlu Review Guru",
+  "curriculumNote": "Draft orisinal berbasis kompetensi umum Kurikulum Merdeka; cocokkan kembali dengan ATP dan materi yang telah diajarkan di cabang.",
+  "questions": [
+    {
+      "questionId": "UAS-SD5-BING-001",
+      "number": 1,
+      "competency": "Comprehending written texts",
+      "topic": "Reading comprehension",
+      "indicator": "Identifying the main idea of a short text",
+      "cognitiveLevel": "C2",
+      "difficulty": "Mudah",
+      "question": "Read the text \"Class Garden\". The students water their class garden every morning. They grow spinach, tomatoes, and chilies. The garden looks fresh because everyone takes turns caring for it.\nWhat is the main idea of the text?",
+      "options": {
+        "A": "A problem that has no solution",
+        "B": "An invitation to cancel an activity",
+        "C": "Students caring for their class garden",
+        "D": "A list of objects owned by the students"
+      },
+      "correctAnswer": "C",
+      "explanation": "The entire paragraph focuses on students caring for their class garden.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SD5-BING-002",
+      "number": 2,
+      "competency": "Comprehending written texts",
+      "topic": "Explicit information",
+      "indicator": "Locating stated information",
+      "cognitiveLevel": "C2",
+      "difficulty": "Mudah",
+      "question": "In the text \"Class Garden\", what object or activity is discussed?",
+      "options": {
+        "A": "a secret competition",
+        "B": "the class garden",
+        "C": "an unrelated sports match",
+        "D": "a cancelled flight"
+      },
+      "correctAnswer": "B",
+      "explanation": "The text explicitly discusses the class garden.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SD5-BING-003",
+      "number": 3,
+      "competency": "Language features",
+      "topic": "Vocabulary",
+      "indicator": "Inferring word meaning from context",
+      "cognitiveLevel": "C3",
+      "difficulty": "Mudah",
+      "question": "The word \"fresh\" is closest in meaning to ...",
+      "options": {
+        "A": "healthy and full of life",
+        "B": "something that is never used",
+        "C": "a place that cannot be entered",
+        "D": "an action done without a reason"
+      },
+      "correctAnswer": "A",
+      "explanation": "In the paragraph, \"fresh\" means healthy and full of life.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SD5-BING-004",
+      "number": 4,
+      "competency": "Language features",
+      "topic": "Reference",
+      "indicator": "Identifying a reference in context",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "In a summary of \"Class Garden\", the phrase \"this careful action\" refers to ...",
+      "options": {
+        "A": "an unrelated event outside the text",
+        "B": "a plan that was never mentioned",
+        "C": "the title without its content",
+        "D": "the class garden"
+      },
+      "correctAnswer": "D",
+      "explanation": "The phrase points to the main object or action discussed, namely the class garden.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SD5-BING-005",
+      "number": 5,
+      "competency": "Grammar in context",
+      "topic": "Simple present",
+      "indicator": "Using the correct verb form for a habitual action",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Each student ... the plan carefully every week.",
+      "options": {
+        "A": "reviewed",
+        "B": "reviewing",
+        "C": "reviews",
+        "D": "review"
+      },
+      "correctAnswer": "C",
+      "explanation": "A singular subject in a habitual action takes the simple-present form \"reviews\".",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SD5-BING-006",
+      "number": 6,
+      "competency": "Grammar in context",
+      "topic": "Present continuous",
+      "indicator": "Using a verb for an action happening now",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Look! The students ... their assignment now.",
+      "options": {
+        "A": "will checked",
+        "B": "are checking",
+        "C": "checks",
+        "D": "checked"
+      },
+      "correctAnswer": "B",
+      "explanation": "\"Now\" and a plural subject require \"are checking\".",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SD5-BING-007",
+      "number": 7,
+      "competency": "Interpreting functional texts",
+      "topic": "Functional text",
+      "indicator": "Interpreting an announcement",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Announcement: \"The final review session starts at 2 p.m. in Room 3. Bring your draft and source list.\" What must students bring?",
+      "options": {
+        "A": "Their draft and source list",
+        "B": "Sports equipment",
+        "C": "A meal for the teacher",
+        "D": "Only an empty folder"
+      },
+      "correctAnswer": "A",
+      "explanation": "The announcement explicitly asks students to bring their draft and source list.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SD5-BING-008",
+      "number": 8,
+      "competency": "Comprehending written texts",
+      "topic": "Inference",
+      "indicator": "Drawing a logical inference from a text",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sedang",
+      "question": "Based on \"Class Garden\", what attitude do the students show?",
+      "options": {
+        "A": "Careless and unwilling to learn",
+        "B": "Hostile toward every activity",
+        "C": "Unaware of the stated goal",
+        "D": "Responsible and thoughtful"
+      },
+      "correctAnswer": "D",
+      "explanation": "The actions described show a responsible and thoughtful attitude.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SD5-BING-009",
+      "number": 9,
+      "competency": "Comprehending written texts",
+      "topic": "Text purpose",
+      "indicator": "Identifying communicative purpose",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sulit",
+      "question": "Why does the writer present the text \"Class Garden\"?",
+      "options": {
+        "A": "To advertise an imaginary product",
+        "B": "To prohibit readers from studying",
+        "C": "To explain an activity and the reason it matters",
+        "D": "To provide an unrelated recipe"
+      },
+      "correctAnswer": "C",
+      "explanation": "The paragraph explains the activity and its benefit or purpose.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SD5-BING-010",
+      "number": 10,
+      "competency": "Interpersonal communication",
+      "topic": "Response",
+      "indicator": "Selecting an appropriate response in an academic discussion",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sulit",
+      "question": "A classmate says, \"I found two sources with different conclusions.\" What is the best response?",
+      "options": {
+        "A": "Assume every conclusion is equally accurate.",
+        "B": "Let's compare their evidence and publication context.",
+        "C": "Choose the shorter source without reading it.",
+        "D": "Delete both sources immediately."
+      },
+      "correctAnswer": "B",
+      "explanation": "Comparing evidence and context is a relevant critical response.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    }
+  ]
+}

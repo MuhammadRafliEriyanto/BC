@@ -43,6 +43,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -69,6 +70,7 @@ import {
   type AdminColumnDefinition,
 } from "./components/AdminDataTable";
 import { AdminPaginationFooter } from "./components/AdminPaginationFooter";
+import { AdminSummaryLineSkeleton } from "./components/AdminLoadingState";
 import { AdminSectionCard } from "./components/AdminSectionCard";
 import { AdminStatusBadge } from "./components/AdminStatusBadge";
 
@@ -564,7 +566,7 @@ export function AdminSchedule({
   const [formError, setFormError] = useState<string | null>(null);
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
-  const [importNotice, setImportNotice] = useState<string | null>(null);
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
   const [importInputVersion, setImportInputVersion] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -820,6 +822,7 @@ export function AdminSchedule({
       ),
     );
     setFormError(null);
+    setActionNotice(null);
     setIsFormOpen(true);
     void refreshTeacherDirectory();
     void refreshRoomDirectory();
@@ -835,6 +838,7 @@ export function AdminSchedule({
       ),
     );
     setFormError(null);
+    setActionNotice(null);
     setIsFormOpen(true);
     void refreshTeacherDirectory();
     void refreshRoomDirectory();
@@ -1000,6 +1004,11 @@ export function AdminSchedule({
 
       await refreshScheduleViews();
       closeFormDialog();
+      setActionNotice(
+        editingScheduleId
+          ? "Jadwal berhasil diperbarui."
+          : "Jadwal berhasil ditambahkan."
+      );
     } catch (requestError) {
       setFormError(
         getScheduleRequestErrorMessage(
@@ -1084,6 +1093,7 @@ export function AdminSchedule({
       });
       await refreshScheduleViews();
       setScheduleToDelete(null);
+      setActionNotice("Jadwal berhasil dihapus.");
     } catch (requestError) {
       setFormError(
         getScheduleRequestErrorMessage(
@@ -1152,7 +1162,7 @@ export function AdminSchedule({
       }
 
       await refreshScheduleViews();
-      setImportNotice(
+      setActionNotice(
         `${result.summary.successCount} jadwal berhasil diimpor${
           result.summary.failedCount
             ? `, ${result.summary.failedCount} baris gagal`
@@ -1285,6 +1295,9 @@ export function AdminSchedule({
           </div>
         }
       >
+        {isLoading ? (
+          <AdminSummaryLineSkeleton className="mb-4" />
+        ) : (
         <div className="mb-4 flex flex-wrap items-center gap-2 text-sm text-slate-500">
           <span>
             Menampilkan {filteredSchedules.length} dari {totalItems} jadwal.
@@ -1299,22 +1312,17 @@ export function AdminSchedule({
             Bentrok {conflictCount}
           </Badge>
         </div>
+        )}
 
-        {importNotice ? (
+        {actionNotice ? (
           <div className="mb-4 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-            {importNotice}
+            {actionNotice}
           </div>
         ) : null}
 
         {error ? (
           <div className="mb-4 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">
             {error}
-          </div>
-        ) : null}
-
-        {isLoading ? (
-          <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-            Menyinkronkan data jadwal terbaru dari server...
           </div>
         ) : null}
 
@@ -1409,6 +1417,7 @@ export function AdminSchedule({
           }
           emptyTitle="Tidak ada jadwal yang cocok"
           emptyDescription="Coba ubah kata kunci pencarian atau kombinasi filter."
+          isLoading={isLoading}
           square
           getRowClassName={(schedule) =>
             schedule.status === "Bentrok"
@@ -1643,9 +1652,7 @@ export function AdminSchedule({
                   </SelectContent>
                 </Select>
                 {isTeacherDirectoryLoading ? (
-                  <p className="text-xs text-slate-500">
-                    Memuat daftar guru aktif dari database...
-                  </p>
+                  <Skeleton className="h-3 w-56" />
                 ) : null}
                 {teacherDirectoryError ? (
                   <p className="text-xs text-rose-600">
@@ -1702,9 +1709,7 @@ export function AdminSchedule({
                   </SelectContent>
                 </Select>
                 {isRoomDirectoryLoading ? (
-                  <p className="text-xs text-slate-500">
-                    Memuat master ruangan dari database...
-                  </p>
+                  <Skeleton className="h-3 w-52" />
                 ) : null}
                 {roomDirectoryError ? (
                   <p className="text-xs text-rose-600">{roomDirectoryError}</p>

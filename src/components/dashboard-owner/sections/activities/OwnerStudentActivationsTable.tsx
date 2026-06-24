@@ -26,12 +26,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import { OwnerActivitySectionPanel } from "./OwnerActivitySummaryCards";
 import type {
   BranchFilter,
   MembershipActivationFilter,
-  OwnerActivityActivationOverview,
   OwnerStudentActivationRecord,
   StudentClassFilter,
   StudentLevelFilter,
@@ -53,10 +53,10 @@ type OwnerStudentActivationsTableProps = {
   emptyDescription: string;
   hasActiveFilters: boolean;
   levelFilter: StudentLevelFilter;
-  overview: OwnerActivityActivationOverview;
   panelNote: string;
   searchQuery: string;
   students: OwnerStudentActivationRecord[];
+  isLoading: boolean;
   onActivationBranchFilterChange: (value: BranchFilter) => void;
   onActivationStatusFilterChange: (value: MembershipActivationFilter) => void;
   onClassFilterChange: (value: StudentClassFilter) => void;
@@ -76,10 +76,10 @@ export function OwnerStudentActivationsTable({
   emptyDescription,
   hasActiveFilters,
   levelFilter,
-  overview,
   panelNote,
   searchQuery,
   students,
+  isLoading,
   onActivationBranchFilterChange,
   onActivationStatusFilterChange,
   onClassFilterChange,
@@ -95,26 +95,6 @@ export function OwnerStudentActivationsTable({
       badgeLabel="Aktivasi siswa"
       title="Ringkasan aktivasi siswa"
       description="Pantau status membership siswa yang aktif, menunggu, atau expired."
-      metrics={[
-        {
-          tone: "emerald",
-          label: "Siswa",
-          value: `${overview.totalCount} siswa`,
-          hint: "Data yang tampil di tabel.",
-        },
-        {
-          tone: "emerald",
-          label: "Aktif",
-          value: `${overview.activeCount} siswa`,
-          hint: "Membership aktif.",
-        },
-        {
-          tone: "emerald",
-          label: "Tindak lanjut",
-          value: `${overview.pendingCount + overview.expiredCount + overview.failedCount} siswa`,
-          hint: "Menunggu pembayaran, gagal, atau sudah expired.",
-        },
-      ]}
       actions={
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="relative xl:max-w-2xl xl:flex-1">
@@ -335,8 +315,29 @@ export function OwnerStudentActivationsTable({
                   </div>
                 </TableCell>
               </TableRow>
-            ))
-          ) : (
+                ))
+              ) : isLoading ? (
+                Array.from({ length: 5 }).map((_, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="px-6 py-4"><Skeleton className="h-4 w-6" /></TableCell>
+                    <TableCell className="px-4 py-4">
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-3 w-40" />
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-4 py-4"><Skeleton className="h-4 w-28" /></TableCell>
+                    <TableCell className="px-4 py-4"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                    <TableCell className="px-4 py-4"><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell className="px-4 py-4"><Skeleton className="h-6 w-24 rounded-full" /></TableCell>
+                    <TableCell className="px-4 py-4"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                    <TableCell className="px-4 py-4"><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell className="px-4 py-4">
+                      <Skeleton className="size-9 rounded-full" />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
             <TableRow>
               <TableCell colSpan={9} className="px-6 py-14">
                 <div className="flex flex-col items-center gap-3 text-center">

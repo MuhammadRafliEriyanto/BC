@@ -12,10 +12,17 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import { useEffect, useEffectEvent, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useState,
+  useTransition,
+} from "react";
 
 import { SiswaUserProfileDialog } from "@/components/dashboard-siswa/SiswaUserProfileDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,8 +53,18 @@ const menus = [
     exact: true,
   },
   {
+    name: "Absensi",
+    path: "/dashboard-siswa/absensi",
+    exact: false,
+  },
+  {
+    name: "Nilai",
+    path: "/dashboard-siswa/nilai",
+    exact: false,
+  },
+  {
     name: "Tagihan",
-    path: "/dashboard-siswa/",
+    path: "/dashboard-siswa/tagihan",
     exact: true,
   },
 ] as const;
@@ -59,6 +76,25 @@ type SiswaTopbarProfile = {
 };
 
 type MembershipStudentProfile = NonNullable<MembershipStatusData["student"]>;
+
+type StudentNotificationItem = {
+  id: string;
+  title: string;
+  message: string;
+  type: "schedule" | "task" | "material" | "billing" | "grade";
+  createdAt: string;
+  read: boolean;
+  href?: string;
+};
+
+type StudentNotificationsResponse = {
+  success: boolean;
+  message: string;
+  data?: {
+    notifications?: StudentNotificationItem[];
+    unreadCount?: number;
+  };
+};
 
 const fallbackProfile: SiswaTopbarProfile = {
   nama: "Siswa",
@@ -150,6 +186,55 @@ function mergeProfileWithAuthUser(
   };
 }
 
+function formatNotificationTime(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Baru saja";
+  }
+
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function getNotificationTypeLabel(type: StudentNotificationItem["type"]) {
+  switch (type) {
+    case "schedule":
+      return "Jadwal";
+    case "task":
+      return "Tugas";
+    case "material":
+      return "Materi";
+    case "billing":
+      return "Tagihan";
+    case "grade":
+      return "Nilai";
+    default:
+      return "Info";
+  }
+}
+
+function getNotificationBadgeVariant(type: StudentNotificationItem["type"]) {
+  switch (type) {
+    case "schedule":
+      return "warning";
+    case "task":
+      return "danger";
+    case "material":
+      return "info";
+    case "billing":
+      return "secondary";
+    case "grade":
+      return "success";
+    default:
+      return "secondary";
+  }
+}
+
 export default function SiswaTopbar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -157,16 +242,20 @@ export default function SiswaTopbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profile, setProfile] = useState<SiswaTopbarProfile>(fallbackProfile);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const [notifications, setNotifications] = useState<StudentNotificationItem[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationsError, setNotificationsError] = useState<string | null>(null);
+  const [isNotificationsLoading, setIsNotificationsLoading] = useState(true);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isUserLoading, setIsUserLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const redirectToLogin = useEffectEvent(() => {
+  const redirectToLogin = useCallback(() => {
     startTransition(() => {
       router.replace("/login");
       router.refresh();
     });
-  });
+  }, [router, startTransition]);
 
   const loadCurrentUser = useEffectEvent(async () => {
     try {
@@ -195,6 +284,8 @@ export default function SiswaTopbar() {
         clearAuthClientState();
         setCurrentUser(null);
         setProfile(fallbackProfile);
+        setNotifications([]);
+        setUnreadCount(0);
         redirectToLogin();
         return;
       }
@@ -221,6 +312,8 @@ export default function SiswaTopbar() {
         clearAuthClientState();
         setCurrentUser(null);
         setProfile(fallbackProfile);
+        setNotifications([]);
+        setUnreadCount(0);
         redirectToLogin();
         return;
       }
@@ -228,6 +321,67 @@ export default function SiswaTopbar() {
       console.error("[siswa-topbar] load_membership_profile_failed", error);
     }
   });
+
+  const loadNotifications = useCallback(async () => {
+    setIsNotificationsLoading(true);
+
+    try {
+      const response = await fetch("/api/student/me/notifications", {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | StudentNotificationsResponse
+        | null;
+
+      if (response.ok && payload?.success) {
+        const nextNotifications = payload.data?.notifications ?? [];
+
+        setNotifications(nextNotifications);
+        setUnreadCount(
+          payload.data?.unreadCount ??
+            nextNotifications.filter((notification) => !notification.read).length,
+        );
+        setNotificationsError(null);
+        return;
+      }
+
+      if (response.status === 401 || response.status === 403) {
+        clearAuthClientState();
+        setCurrentUser(null);
+        setProfile(fallbackProfile);
+        setNotifications([]);
+        setUnreadCount(0);
+        redirectToLogin();
+        return;
+      }
+
+      setNotifications([]);
+      setUnreadCount(0);
+      setNotificationsError(
+        payload?.message ?? "Notifikasi siswa belum bisa dimuat saat ini.",
+      );
+    } catch (error) {
+      console.error("[siswa-topbar] load_notifications_failed", error);
+      setNotifications([]);
+      setUnreadCount(0);
+      setNotificationsError("Notifikasi siswa belum bisa dimuat saat ini.");
+    } finally {
+      setIsNotificationsLoading(false);
+    }
+  }, [redirectToLogin]);
+
+  const navigateTo = useCallback(
+    (href: string) => {
+      setMobileOpen(false);
+
+      startTransition(() => {
+        router.push(href);
+      });
+    },
+    [router, startTransition],
+  );
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -240,8 +394,9 @@ export default function SiswaTopbar() {
 
       void loadCurrentUser();
       void loadStudentProfile();
+      void loadNotifications();
     });
-  }, []);
+  }, [loadNotifications]);
 
   async function handleLogout() {
     if (isLoggingOut) {
@@ -258,6 +413,8 @@ export default function SiswaTopbar() {
       clearAuthClientState();
       setCurrentUser(null);
       setProfile(fallbackProfile);
+      setNotifications([]);
+      setUnreadCount(0);
       setIsProfileOpen(false);
 
       startTransition(() => {
@@ -271,10 +428,15 @@ export default function SiswaTopbar() {
   const displayRole = profile.role;
   const avatarFallback = getInitials(displayName || "Siswa");
   const avatarSrc = currentUser?.avatar ?? null;
+  const notificationBadgeLabel =
+    unreadCount > 99 ? "99+" : unreadCount.toString();
+  const notificationUpdatedLabel = notifications[0]
+    ? formatNotificationTime(notifications[0].createdAt)
+    : null;
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-gradient-to-r from-red-800/95 via-orange-600/95 to-amber-500/95 shadow-[0_6px_30px_rgba(255,140,0,0.35)] backdrop-blur-xl">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-gradient-to-r from-red-600 to-orange-500 shadow-sm backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
           <div className="flex items-center gap-6 md:gap-10">
             <Link
@@ -291,8 +453,8 @@ export default function SiswaTopbar() {
               />
 
               <div className="hidden leading-tight sm:block">
-                <p className="text-sm font-bold text-yellow-300">Bina</p>
-                <p className="-mt-1 text-xs text-yellow-200">Cendekia</p>
+                <p className="text-sm font-bold text-white">Bina</p>
+                <p className="-mt-1 text-xs text-white/80">Cendekia</p>
               </div>
             </Link>
 
@@ -306,8 +468,8 @@ export default function SiswaTopbar() {
                   <Link
                     key={menu.path}
                     href={menu.path}
-                    className={`rounded-md px-3 py-1.5 text-sm font-medium transition-all hover:scale-[1.05] hover:bg-white/10 hover:text-yellow-300 ${
-                      isActive ? "bg-white/10 text-yellow-300" : "text-white/80"
+                    className={`rounded-md px-3 py-1.5 text-sm font-medium transition-all hover:scale-[1.05] hover:bg-white/10 hover:text-white ${
+                      isActive ? "bg-white/15 text-white" : "text-white/80"
                     }`}
                   >
                     {menu.name}
@@ -318,29 +480,139 @@ export default function SiswaTopbar() {
           </div>
 
           <div className="flex items-center gap-4 md:gap-6">
-            <button
-              type="button"
-              className="relative text-white/80 transition hover:text-yellow-300"
-              aria-label="Notifikasi siswa"
+            <DropdownMenu
+              onOpenChange={(open) => {
+                if (open) {
+                  void loadNotifications();
+                }
+              }}
             >
-              <Bell className="h-5 w-5" />
-              <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-yellow-300" />
-            </button>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="relative text-white/80 transition hover:text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/20"
+                  aria-label="Notifikasi siswa"
+                >
+                  <Bell className="h-5 w-5" />
+                  {unreadCount > 0 ? (
+                    <span className="absolute -right-2 -top-2 min-w-5 rounded-full bg-yellow-300 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-orange-900 ring-2 ring-red-500/30">
+                      {notificationBadgeLabel}
+                    </span>
+                  ) : null}
+                  <span className="sr-only">Notifikasi siswa</span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[360px] p-0 sm:w-[380px]">
+                <div className="border-b border-slate-100 px-4 py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-950">
+                        Notifikasi Siswa
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Ringkasan jadwal, tugas, materi, nilai, dan tagihanmu.
+                      </p>
+                    </div>
+                    {unreadCount > 0 ? (
+                      <span className="rounded-full border border-orange-100 bg-orange-50 px-2.5 py-1 text-[11px] font-semibold text-orange-700">
+                        {notificationBadgeLabel}
+                      </span>
+                    ) : null}
+                  </div>
+                  {notificationUpdatedLabel ? (
+                    <p className="mt-2 text-[11px] text-slate-400">
+                      Diperbarui {notificationUpdatedLabel}
+                    </p>
+                  ) : null}
+                </div>
+
+                <div className="max-h-[340px] overflow-y-auto">
+                  {isNotificationsLoading ? (
+                    <div className="flex items-center gap-2 px-4 py-4 text-sm text-slate-500">
+                      <LoaderCircle className="size-4 animate-spin text-orange-500" />
+                      Memuat notifikasi siswa...
+                    </div>
+                  ) : notificationsError ? (
+                    <div className="px-4 py-4 text-sm leading-6 text-red-600">
+                      {notificationsError}
+                    </div>
+                  ) : notifications.length ? (
+                    <div className="divide-y divide-slate-100">
+                      {notifications.map((notification) => {
+                        const content = (
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <p className="text-sm font-semibold text-slate-900">
+                                  {notification.title}
+                                </p>
+                                <Badge
+                                  variant={getNotificationBadgeVariant(notification.type)}
+                                  className="px-2.5 py-1 text-[10px]"
+                                >
+                                  {getNotificationTypeLabel(notification.type)}
+                                </Badge>
+                                {!notification.read ? (
+                                  <span className="size-2 rounded-full bg-orange-400" />
+                                ) : null}
+                              </div>
+                              <p className="mt-1 text-sm leading-6 text-slate-600">
+                                {notification.message}
+                              </p>
+                              <p className="mt-2 text-[11px] text-slate-400">
+                                {formatNotificationTime(notification.createdAt)}
+                              </p>
+                            </div>
+                          </div>
+                        );
+
+                        if (notification.href) {
+                          return (
+                            <DropdownMenuItem
+                              key={notification.id}
+                              className="cursor-pointer rounded-none px-4 py-3 focus:bg-slate-50 data-[highlighted]:bg-slate-50"
+                              onSelect={() => {
+                                navigateTo(notification.href!);
+                              }}
+                            >
+                              {content}
+                            </DropdownMenuItem>
+                          );
+                        }
+
+                        return (
+                          <div
+                            key={notification.id}
+                            className="px-4 py-3 transition-colors hover:bg-slate-50/70"
+                          >
+                            {content}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="px-4 py-4 text-sm leading-6 text-slate-500">
+                      Belum ada notifikasi siswa saat ini.
+                    </div>
+                  )}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="flex items-center gap-2 text-white transition-all duration-200 hover:text-yellow-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/15"
+                  className="flex items-center gap-2 text-white transition-all duration-200 hover:text-white/90 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/20"
                 >
-                  <Avatar className="size-9 border border-white/25 bg-white/10">
+                  <Avatar className="size-9 border border-white/20 bg-white/10">
                     {avatarSrc ? (
                       <AvatarImage
                         src={avatarSrc}
                         alt={`Foto profil ${displayName}`}
                       />
                     ) : null}
-                    <AvatarFallback className="bg-white text-sm font-bold text-orange-700">
+                    <AvatarFallback className="bg-white/10 text-sm font-bold text-white">
                       {avatarFallback}
                     </AvatarFallback>
                   </Avatar>
@@ -349,12 +621,12 @@ export default function SiswaTopbar() {
                     <p className="truncate text-sm font-medium text-white">
                       {displayName}
                     </p>
-                    <p className="truncate text-[11px] text-white/70">
+                    <p className="truncate text-[11px] text-white/80">
                       {displayRole}
                     </p>
                   </div>
 
-                  <ChevronDown className="hidden size-4 text-white/70 transition-transform duration-200 md:block" />
+                  <ChevronDown className="hidden size-4 text-white/80 transition-transform duration-200 md:block" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64">
@@ -405,8 +677,8 @@ export default function SiswaTopbar() {
                   onClick={() => setMobileOpen(false)}
                   className={`block rounded-md px-3 py-2 text-sm transition ${
                     isActive
-                      ? "bg-white/10 text-yellow-300"
-                      : "text-white/80 hover:bg-white/10 hover:text-yellow-300"
+                      ? "bg-white/15 text-white"
+                      : "text-white/80 hover:bg-white/10 hover:text-white"
                   }`}
                 >
                   {menu.name}

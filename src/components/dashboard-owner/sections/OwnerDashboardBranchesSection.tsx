@@ -59,6 +59,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 type OwnerDashboardBranchesSectionProps = {
@@ -462,6 +463,25 @@ export function OwnerDashboardBranchesSection({
                       </TableRow>
                     );
                   })
+                ) : manager.isLoading ? (
+                  Array.from({ length: 5 }).map((_, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="px-6 py-4"><Skeleton className="h-4 w-6" /></TableCell>
+                      <TableCell className="px-4 py-4"><Skeleton className="h-4 w-32" /></TableCell>
+                      <TableCell className="px-4 py-4"><Skeleton className="h-4 w-28" /></TableCell>
+                      <TableCell className="px-4 py-4"><Skeleton className="h-4 w-24" /></TableCell>
+                      <TableCell className="px-4 py-4"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                      <TableCell className="px-4 py-4"><Skeleton className="h-4 w-16" /></TableCell>
+                      <TableCell className="px-4 py-4"><Skeleton className="h-4 w-20" /></TableCell>
+                      <TableCell className="px-4 py-4"><Skeleton className="h-4 w-24" /></TableCell>
+                      <TableCell className="px-4 py-4">
+                        <div className="flex gap-1">
+                          <Skeleton className="size-9 rounded-full" />
+                          <Skeleton className="size-9 rounded-full" />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
                 ) : (
                   <TableRow>
                     <TableCell colSpan={9} className="px-6 py-14">

@@ -1,0 +1,216 @@
+{
+  "schemaVersion": "1.0.0",
+  "questionSetId": "UAS-SD4-MAT",
+  "assessmentType": "UAS",
+  "stage": null,
+  "className": "SD 4",
+  "grade": 4,
+  "phase": "Fase B",
+  "subject": "Matematika",
+  "questionCount": 10,
+  "suggestedDurationMinutes": 60,
+  "reviewStatus": "Perlu Review Guru",
+  "curriculumNote": "Draft orisinal berbasis kompetensi umum Kurikulum Merdeka; cocokkan kembali dengan ATP dan materi yang telah diajarkan di cabang.",
+  "questions": [
+    {
+      "questionId": "UAS-SD4-MAT-001",
+      "number": 1,
+      "competency": "Operasi bilangan",
+      "topic": "Operasi bilangan",
+      "indicator": "Menghitung operasi campuran bilangan cacah",
+      "cognitiveLevel": "C2",
+      "difficulty": "Mudah",
+      "question": "Hasil dari 255 + 68 x 3 adalah ...",
+      "options": {
+        "A": "459",
+        "B": "833",
+        "C": "326",
+        "D": "969"
+      },
+      "correctAnswer": "A",
+      "explanation": "Perkalian dikerjakan lebih dahulu: 68 x 3 = 204, lalu ditambah 255, sehingga hasilnya 459.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SD4-MAT-002",
+      "number": 2,
+      "competency": "Pecahan",
+      "topic": "Pecahan",
+      "indicator": "Menentukan bagian dari suatu jumlah",
+      "cognitiveLevel": "C2",
+      "difficulty": "Mudah",
+      "question": "3/8 dari 120 buku adalah ... buku.",
+      "options": {
+        "A": "45",
+        "B": "48",
+        "C": "39",
+        "D": "42"
+      },
+      "correctAnswer": "A",
+      "explanation": "3/8 x 120 = 45.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SD4-MAT-003",
+      "number": 3,
+      "competency": "Persen",
+      "topic": "Persen",
+      "indicator": "Menghitung harga setelah diskon",
+      "cognitiveLevel": "C3",
+      "difficulty": "Mudah",
+      "question": "Harga sebuah tas Rp17.000 mendapat diskon 10%. Harga yang harus dibayar adalah ...",
+      "options": {
+        "A": "Rp17.000,1",
+        "B": "Rp15.300",
+        "C": "Rp1.700",
+        "D": "Rp16.990"
+      },
+      "correctAnswer": "B",
+      "explanation": "Potongan = 10% x Rp17.000, sehingga harga akhir Rp15.300.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SD4-MAT-004",
+      "number": 4,
+      "competency": "FPB",
+      "topic": "FPB",
+      "indicator": "Menentukan FPB untuk pembagian kelompok",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "34 pensil dan 51 penghapus akan dimasukkan ke paket dengan isi sama banyak tanpa sisa. Paket terbanyak yang dapat dibuat adalah ...",
+      "options": {
+        "A": "15",
+        "B": "17",
+        "C": "19",
+        "D": "34"
+      },
+      "correctAnswer": "B",
+      "explanation": "Jumlah paket terbanyak adalah FPB dari 34 dan 51, yaitu 17.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SD4-MAT-005",
+      "number": 5,
+      "competency": "KPK",
+      "topic": "KPK",
+      "indicator": "Menentukan waktu kejadian berulang",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Bel A berbunyi setiap 9 menit dan bel B setiap 11 menit. Jika berbunyi bersama sekarang, keduanya akan berbunyi bersama lagi setelah ... menit.",
+      "options": {
+        "A": "9",
+        "B": "99",
+        "C": "198",
+        "D": "11"
+      },
+      "correctAnswer": "B",
+      "explanation": "Waktu bersamaan berikutnya adalah KPK dari 9 dan 11, yaitu 99 menit.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SD4-MAT-006",
+      "number": 6,
+      "competency": "Geometri",
+      "topic": "Geometri",
+      "indicator": "Menghitung luas persegi panjang",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Sebuah taman berbentuk persegi panjang berukuran 15 m x 11 m. Luas taman adalah ...",
+      "options": {
+        "A": "26 m2",
+        "B": "330 m2",
+        "C": "52 m2",
+        "D": "165 m2"
+      },
+      "correctAnswer": "D",
+      "explanation": "Luas persegi panjang = panjang x lebar = 15 x 11 = 165 m2.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SD4-MAT-007",
+      "number": 7,
+      "competency": "Pengukuran",
+      "topic": "Pengukuran",
+      "indicator": "Mengonversi satuan panjang",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "7 km 550 m sama dengan ... m.",
+      "options": {
+        "A": "70550",
+        "B": "7550",
+        "C": "1250",
+        "D": "7055"
+      },
+      "correctAnswer": "B",
+      "explanation": "1 km = 1.000 m, jadi hasilnya 7550 m.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SD4-MAT-008",
+      "number": 8,
+      "competency": "Data",
+      "topic": "Data",
+      "indicator": "Menghitung rata-rata data tunggal",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sedang",
+      "question": "Nilai lima siswa adalah 75, 80, 85, 90, 95. Rata-ratanya adalah ...",
+      "options": {
+        "A": "80",
+        "B": "85",
+        "C": "90",
+        "D": "425"
+      },
+      "correctAnswer": "B",
+      "explanation": "Jumlah nilai 425 dibagi 5 = 85.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SD4-MAT-009",
+      "number": 9,
+      "competency": "Pola bilangan",
+      "topic": "Pola bilangan",
+      "indicator": "Menganalisis pola bertambah teratur",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sulit",
+      "question": "Perhatikan pola 7, 10, 13, 16, .... Bilangan ke-8 adalah ...",
+      "options": {
+        "A": "26",
+        "B": "27",
+        "C": "28",
+        "D": "25"
+      },
+      "correctAnswer": "C",
+      "explanation": "Pola bertambah 3. Suku ke-8 = 7 + 7 x 3 = 28.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SD4-MAT-010",
+      "number": 10,
+      "competency": "Pemecahan masalah",
+      "topic": "Pemecahan masalah",
+      "indicator": "Menyelesaikan masalah multilangkah",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sulit",
+      "question": "Ibu membeli 9 kotak kue. Setiap kotak berisi 17 kue. Setelah dibagikan 20 kue, sisanya adalah ...",
+      "options": {
+        "A": "173",
+        "B": "331",
+        "C": "133",
+        "D": "6"
+      },
+      "correctAnswer": "C",
+      "explanation": "Jumlah awal 153, lalu dikurangi 20; sisanya 133.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    }
+  ]
+}

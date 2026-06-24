@@ -6,6 +6,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   ArrowLeft,
   BookOpen,
+  Building2,
   CalendarDays,
   ChevronRight,
   ClipboardCheck,
@@ -18,6 +19,7 @@ import {
 import { clearAuthClientState } from "@/lib/auth";
 import {
   CLASS_FILTERS,
+  DEFAULT_SEMESTER_MEETING_TARGET,
   JENJANG_ITEMS,
   type ClassStatus,
   type GuruClassSummary,
@@ -25,6 +27,7 @@ import {
 } from "@/components/dashboard-guru/data/guruClassData";
 
 type FilterKey = "all" | "weekly" | "pending";
+type GuruClassSummaryWithBranch = GuruClassSummary & { branch: string };
 
 const FILTER_ITEMS: Array<{ key: FilterKey; label: string }> = [
   { key: "all", label: "Semua Kelas" },
@@ -51,6 +54,8 @@ type TeacherClassApiItem = {
   studentCount?: number;
   scheduleCount?: number;
   completedMeetingCount?: number;
+  targetMeetingCount?: number;
+  pendingTaskCount?: number;
   nextSchedule?: TeacherClassApiNextSchedule;
   status?: string;
 };
@@ -165,14 +170,15 @@ function buildScheduleLabel(nextSchedule: TeacherClassApiNextSchedule) {
 function mapTeacherClassToSummary(
   item: TeacherClassApiItem,
   index: number,
-): GuruClassSummary {
+): GuruClassSummaryWithBranch {
   const kelasId = normalizeText(item.id) || `class-${index + 1}`;
   const namaKelas = normalizeText(item.className) || `Kelas ${index + 1}`;
   const tingkat = normalizeText(item.level) || inferTingkat(namaKelas);
   const mapel = normalizeText(item.subject) || "Mapel belum diatur";
   const branch = normalizeText(item.branch);
   const nextSchedule = item.nextSchedule ?? null;
-  const totalPertemuan = Math.max(toSafeNumber(item.scheduleCount), 0);
+  const configuredTotalPertemuan = DEFAULT_SEMESTER_MEETING_TARGET;
+  const totalPertemuan = configuredTotalPertemuan;
   const pertemuanSelesai = Math.max(toSafeNumber(item.completedMeetingCount), 0);
 
   return {
@@ -182,6 +188,7 @@ function mapTeacherClassToSummary(
     jenjang: inferJenjang(namaKelas, tingkat),
     tingkat,
     mapel,
+    branch: branch || "Cabang belum diatur",
     program: branch || `${mapel} - ${namaKelas}`,
     jadwal: buildScheduleLabel(nextSchedule),
     ruangan:
@@ -191,7 +198,7 @@ function mapTeacherClassToSummary(
     totalSiswa: Math.max(toSafeNumber(item.studentCount), 0),
     totalPertemuan,
     pertemuanSelesai,
-    tugasBelumDinilai: 0,
+    tugasBelumDinilai: Math.max(toSafeNumber(item.pendingTaskCount), 0),
     aktifMingguIni: Boolean(nextSchedule),
     status: toClassStatus(item.status),
   };
@@ -248,30 +255,6 @@ function SummaryCard({
   );
 }
 
-function FilterButton({
-  active,
-  label,
-  onClick,
-}: {
-  active: boolean;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`border px-4 py-2 text-sm font-semibold transition-all ${
-        active
-          ? "border-orange-500 bg-orange-500 text-white shadow-[0_16px_28px_-20px_rgba(249,115,22,0.6)]"
-          : "border-orange-100 bg-white text-slate-600 hover:-translate-y-px hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 hover:shadow-[0_14px_28px_-24px_rgba(249,115,22,0.35)]"
-      }`}
-    >
-      {label}
-    </button>
-  );
-}
-
 function LoadingClassCards({ count = 3 }: { count?: number }) {
   return (
     <>
@@ -324,7 +307,8 @@ export default function SemuaKelasGuruSection() {
   const [selectedJenjang, setSelectedJenjang] =
     useState<JenjangFilter>("Semua");
   const [selectedTingkat, setSelectedTingkat] = useState<string>("Semua");
-  const [allClasses, setAllClasses] = useState<GuruClassSummary[]>([]);
+  const [selectedBranch, setSelectedBranch] = useState("Semua");
+  const [allClasses, setAllClasses] = useState<GuruClassSummaryWithBranch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -379,17 +363,37 @@ export default function SemuaKelasGuruSection() {
     });
   }, []);
 
+  const branchOptions = useMemo(
+    () => [
+      "Semua",
+      ...Array.from(
+        new Set(allClasses.map((item) => item.branch).filter(Boolean)),
+      ).sort((left, right) => left.localeCompare(right, "id-ID")),
+    ],
+    [allClasses],
+  );
+  const branchScopedClasses = useMemo(
+    () =>
+      selectedBranch === "Semua"
+        ? allClasses
+        : allClasses.filter((item) => item.branch === selectedBranch),
+    [allClasses, selectedBranch],
+  );
   const stats = useMemo(
     () => ({
-      totalKelas: allClasses.length,
-      totalSiswa: allClasses.reduce((total, item) => total + item.totalSiswa, 0),
-      tugasBelumDinilai: allClasses.reduce(
+      totalKelas: branchScopedClasses.length,
+      totalSiswa: branchScopedClasses.reduce(
+        (total, item) => total + item.totalSiswa,
+        0,
+      ),
+      tugasBelumDinilai: branchScopedClasses.reduce(
         (total, item) => total + item.tugasBelumDinilai,
         0,
       ),
-      jadwalAktif: allClasses.filter((item) => item.aktifMingguIni).length,
+      jadwalAktif: branchScopedClasses.filter((item) => item.aktifMingguIni)
+        .length,
     }),
-    [allClasses],
+    [branchScopedClasses],
   );
 
   const tingkatOptions = useMemo(() => {
@@ -403,7 +407,7 @@ export default function SemuaKelasGuruSection() {
   const filteredClasses = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
-    return allClasses.filter((item) => {
+    return branchScopedClasses.filter((item) => {
       const matchesSearch =
         !query ||
         item.namaKelas.toLowerCase().includes(query) ||
@@ -427,7 +431,13 @@ export default function SemuaKelasGuruSection() {
         matchesSearch && matchesFilter && matchesJenjang && matchesTingkat
       );
     });
-  }, [activeFilter, allClasses, searchQuery, selectedJenjang, selectedTingkat]);
+  }, [
+    activeFilter,
+    branchScopedClasses,
+    searchQuery,
+    selectedJenjang,
+    selectedTingkat,
+  ]);
 
   function handleJenjangChange(jenjang: JenjangFilter) {
     setSelectedJenjang(jenjang);
@@ -445,7 +455,7 @@ export default function SemuaKelasGuruSection() {
           Kembali ke Jadwal
         </Link>
 
-        <section className="border border-orange-100 bg-white shadow-[0_28px_60px_-42px_rgba(15,23,42,0.28)]">
+        <section className="overflow-hidden rounded-2xl border border-orange-100 bg-white shadow-[0_28px_60px_-42px_rgba(15,23,42,0.28)]">
           <div className="grid gap-px bg-orange-100 lg:grid-cols-[1.15fr_0.85fr]">
             <div className="bg-gradient-to-br from-orange-50 via-white to-amber-50 px-5 py-5 md:px-6 md:py-6">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-500">
@@ -455,9 +465,8 @@ export default function SemuaKelasGuruSection() {
                 Semua Kelas Saya
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
-                Daftar kelas guru diambil dari backend agar alur menuju detail
-                kelas berikutnya mulai memakai `class.id` yang stabil tanpa
-                mengubah desain utama halaman.
+                Kelola kelas Slawi dan Adiwerna dari satu tempat dengan data
+                peserta, jadwal, dan progres yang tetap terpisah per cabang.
               </p>
             </div>
 
@@ -490,7 +499,7 @@ export default function SemuaKelasGuruSection() {
           </div>
         </section>
 
-        <section className="border border-orange-100 bg-white px-5 py-5 shadow-[0_22px_48px_-38px_rgba(15,23,42,0.26)] md:px-6">
+        <section className="rounded-2xl border border-orange-100 bg-white px-5 py-5 shadow-[0_22px_48px_-38px_rgba(15,23,42,0.26)] md:px-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h2 className="text-xl font-semibold text-slate-800">
@@ -509,74 +518,93 @@ export default function SemuaKelasGuruSection() {
                   type="text"
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder="Cari nama kelas, mapel, program, atau jenjang..."
+                  placeholder="Cari kelas, mapel, cabang, atau jenjang..."
                   className="w-full bg-transparent text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
                 />
               </div>
             </div>
           </div>
 
-          <div className="mt-5 grid gap-4">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                Status Tampilan
-              </p>
-              <div className="mt-2 flex flex-wrap gap-2">
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <label className="grid gap-2 text-sm font-medium text-slate-700">
+              Cabang
+              <select
+                value={selectedBranch}
+                onChange={(event) => setSelectedBranch(event.target.value)}
+                className="min-h-11 rounded-lg border border-orange-100 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+              >
+                {branchOptions.map((branch) => (
+                  <option key={branch} value={branch}>
+                    {branch === "Semua"
+                      ? `Semua Cabang (${allClasses.length})`
+                      : `${branch} (${allClasses.filter((item) => item.branch === branch).length})`}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="grid gap-2 text-sm font-medium text-slate-700">
+              Status
+              <select
+                value={activeFilter}
+                onChange={(event) =>
+                  setActiveFilter(event.target.value as FilterKey)
+                }
+                className="min-h-11 rounded-lg border border-orange-100 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+              >
                 {FILTER_ITEMS.map((item) => (
-                  <FilterButton
-                    key={item.key}
-                    active={item.key === activeFilter}
-                    label={item.label}
-                    onClick={() => setActiveFilter(item.key)}
-                  />
+                  <option key={item.key} value={item.key}>
+                    {item.label}
+                  </option>
                 ))}
-              </div>
-            </div>
+              </select>
+            </label>
 
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                Filter Program / Jenjang
-              </p>
-              <div className="mt-2 flex flex-wrap gap-2">
+            <label className="grid gap-2 text-sm font-medium text-slate-700">
+              Jenjang
+              <select
+                value={selectedJenjang}
+                onChange={(event) =>
+                  handleJenjangChange(event.target.value as JenjangFilter)
+                }
+                className="min-h-11 rounded-lg border border-orange-100 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+              >
                 {JENJANG_ITEMS.map((item) => (
-                  <FilterButton
-                    key={item}
-                    active={selectedJenjang === item}
-                    label={item}
-                    onClick={() => handleJenjangChange(item)}
-                  />
+                  <option key={item} value={item}>
+                    {item === "Semua" ? "Semua Jenjang" : item}
+                  </option>
                 ))}
-              </div>
-            </div>
+              </select>
+            </label>
 
-            {selectedJenjang !== "Semua" ? (
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Filter Tingkat
-                </p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  <FilterButton
-                    active={selectedTingkat === "Semua"}
-                    label="Semua"
-                    onClick={() => setSelectedTingkat("Semua")}
-                  />
-                  {tingkatOptions.map((item) => (
-                    <FilterButton
-                      key={item}
-                      active={selectedTingkat === item}
-                      label={item}
-                      onClick={() => setSelectedTingkat(item)}
-                    />
-                  ))}
-                </div>
-              </div>
-            ) : null}
+            <label className="grid gap-2 text-sm font-medium text-slate-700">
+              Tingkat
+              <select
+                value={selectedTingkat}
+                disabled={selectedJenjang === "Semua"}
+                onChange={(event) => setSelectedTingkat(event.target.value)}
+                className="min-h-11 rounded-lg border border-orange-100 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
+              >
+                <option value="Semua">Semua Tingkat</option>
+                {tingkatOptions.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
 
           <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-orange-100 pt-4">
             <span className="text-sm font-semibold text-slate-700">
               {filteredClasses.length} kelas ditemukan
             </span>
+            {selectedBranch !== "Semua" ? (
+              <span className="inline-flex items-center gap-1 border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                <Building2 className="h-3.5 w-3.5" />
+                Cabang {selectedBranch}
+              </span>
+            ) : null}
             {selectedJenjang !== "Semua" ? (
               <span className="inline-flex items-center border border-orange-200 bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-700">
                 {selectedJenjang}
@@ -636,7 +664,7 @@ export default function SemuaKelasGuruSection() {
               return (
                 <article
                   key={kelas.kelasId}
-                  className="group relative overflow-hidden border border-orange-100 bg-[linear-gradient(180deg,#fffdf9_0%,#ffffff_22%,#fffaf5_100%)] p-5 shadow-[0_22px_46px_-36px_rgba(15,23,42,0.26)] transition-all duration-300 hover:-translate-y-1 hover:border-orange-300 hover:shadow-[0_32px_58px_-34px_rgba(249,115,22,0.28)]"
+                  className="group relative overflow-hidden rounded-2xl border border-orange-100 bg-[linear-gradient(180deg,#fffdf9_0%,#ffffff_22%,#fffaf5_100%)] p-5 shadow-[0_22px_46px_-36px_rgba(15,23,42,0.26)] transition-all duration-300 hover:-translate-y-1 hover:border-orange-300 hover:shadow-[0_32px_58px_-34px_rgba(249,115,22,0.28)]"
                 >
                   <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-orange-400 via-orange-500 to-amber-400" />
 
@@ -661,6 +689,10 @@ export default function SemuaKelasGuruSection() {
                   </div>
 
                   <div className="mt-4 flex flex-wrap gap-2">
+                    <span className="inline-flex items-center gap-1 border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                      <Building2 className="h-3.5 w-3.5" />
+                      Cabang {kelas.branch}
+                    </span>
                     <span
                       className={`inline-flex items-center border px-2.5 py-1 text-[11px] font-semibold ${getJenjangClass(kelas.jenjang)}`}
                     >
@@ -715,7 +747,7 @@ export default function SemuaKelasGuruSection() {
                         <Clock3 className="h-3.5 w-3.5 text-orange-500" />
                         {kelas.pertemuanSelesai}/{kelas.totalPertemuan} sesi
                       </span>
-                      <span>Update progres minggu ini</span>
+                      <span>Selesai / target kelas</span>
                     </div>
 
                     <div className="mt-5 grid gap-2 sm:grid-cols-2">

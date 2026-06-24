@@ -14,6 +14,12 @@ export type AdminPaymentCancelReason =
   | "replaced_by_new_session"
   | "provider_canceled";
 
+export type AdminPaymentBranchScope = {
+  role: "owner" | "admin";
+  isScopedToManagedBranches: boolean;
+  managedBranches: string[];
+};
+
 export type AdminPaymentListItem = {
   id: string;
   paymentId: string;
@@ -62,6 +68,7 @@ export type AdminPaymentListItem = {
 };
 
 export type AdminPaymentsListData = {
+  scope?: AdminPaymentBranchScope;
   items: AdminPaymentListItem[];
   summary: {
     totalItems: number;
@@ -103,6 +110,7 @@ export type AdminPaymentSummaryPoint = {
 };
 
 export type AdminPaymentSummaryData = {
+  scope?: AdminPaymentBranchScope;
   period: "week" | "month" | "year";
   range: {
     dateFrom: string;
@@ -139,6 +147,7 @@ export type FetchAdminPaymentActivationsParams = {
 };
 
 export type AdminPaymentActivationsData = {
+  scope?: AdminPaymentBranchScope;
   items: OwnerActivityStudentActivation[];
   summary: {
     totalItems: number;
@@ -196,6 +205,39 @@ export type CancelAdminPaymentData = {
   subscriptionCode: string;
   subscriptionStatus: MembershipSubscription["status"];
   subscriptionPaymentStatus: MembershipSubscription["paymentStatus"];
+};
+
+export type UpdateAdminPaymentStatusPayload = {
+  status: Extract<PaymentStatus, "paid">;
+  paidAt?: string;
+};
+
+export type UpdateAdminPaymentStatusData = {
+  paymentId: string;
+  status: PaymentStatus;
+  paidAt: string | null;
+  subscriptionCode: string;
+  subscriptionStatus: MembershipSubscription["status"];
+  subscriptionPaymentStatus: MembershipSubscription["paymentStatus"];
+};
+
+export type ReplaceAdminPaymentPayload = {
+  packageKey: string;
+  expiresAt?: string;
+};
+
+export type ReplaceAdminPaymentData = {
+  replacedPaymentId: string;
+  student: MembershipStudent;
+  subscription: MembershipSubscription;
+  payment: MembershipPayment;
+  statusPagePath: string;
+};
+
+export type ArchiveAdminPaymentData = {
+  paymentId: string;
+  archivedAt: string;
+  archiveReason: string;
 };
 
 export type AdminBatchPaymentReasonCode =
@@ -417,4 +459,46 @@ export async function cancelAdminPayment(paymentId: string) {
   );
 
   return response.data as CancelAdminPaymentData;
+}
+
+export async function updateAdminPaymentStatus(
+  paymentId: string,
+  payload: UpdateAdminPaymentStatusPayload,
+) {
+  const response = await requestAdminApi<UpdateAdminPaymentStatusData>(
+    `/api/payments/admin/${encodeURIComponent(paymentId)}/status`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    },
+  );
+
+  return response.data as UpdateAdminPaymentStatusData;
+}
+
+export async function replaceAdminPayment(
+  paymentId: string,
+  payload: ReplaceAdminPaymentPayload,
+) {
+  const response = await requestAdminApi<ReplaceAdminPaymentData>(
+    `/api/payments/admin/${encodeURIComponent(paymentId)}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    },
+  );
+
+  return response.data as ReplaceAdminPaymentData;
+}
+
+export async function archiveAdminPayment(paymentId: string, reason?: string) {
+  const response = await requestAdminApi<ArchiveAdminPaymentData>(
+    `/api/payments/admin/${encodeURIComponent(paymentId)}`,
+    {
+      method: "DELETE",
+      body: JSON.stringify({ reason }),
+    },
+  );
+
+  return response.data as ArchiveAdminPaymentData;
 }

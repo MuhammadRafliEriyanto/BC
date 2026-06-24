@@ -9,12 +9,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  ACADEMIC_SCORE_LABELS,
+  getAcademicScoreKeys,
+} from "@/lib/academic-grades";
 
 import type { NilaiFormDialogProps } from "./types";
 
 export default function NilaiFormDialog({
   draft,
   mode,
+  onAcademicScoreChange,
   onChange,
   onOpenChange,
   onStudentChange,
@@ -25,24 +30,28 @@ export default function NilaiFormDialog({
   selectedStudentId,
   selectedTask,
   tasks,
+  scheme,
 }: NilaiFormDialogProps) {
+  const academicScoreKeys = getAcademicScoreKeys(scheme);
   const activeStudent =
     participants.find((student) => student.id === selectedStudentId) ?? null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl rounded-none border border-orange-100 bg-white p-0 shadow-[0_28px_72px_-42px_rgba(15,23,42,0.4)]">
-        <DialogHeader className="border-b border-orange-100 bg-gradient-to-r from-orange-50/90 via-white to-amber-50/70 px-5 py-4 text-left">
+      <DialogContent className="top-2 flex max-h-[calc(100dvh-1rem)] max-w-2xl translate-y-0 flex-col gap-0 rounded-none border border-orange-100 bg-white p-0 shadow-[0_28px_72px_-42px_rgba(15,23,42,0.4)] sm:top-[50%] sm:max-h-[calc(100dvh-3rem)] sm:translate-y-[-50%]">
+        <DialogHeader className="shrink-0 border-b border-orange-100 bg-gradient-to-r from-orange-50/90 via-white to-amber-50/70 px-5 py-4 pr-14 text-left">
           <DialogTitle className="text-lg font-semibold text-slate-800">
             {mode === "add" ? "Input Nilai Siswa" : "Edit Nilai Siswa"}
           </DialogTitle>
           <DialogDescription className="text-sm text-slate-500">
-            Simpan nilai tugas per siswa ke backend. Kolom kuis, UTS, dan UAS
-            tetap ditampilkan untuk integrasi lanjutan berikutnya.
+            {scheme === "tryout"
+              ? "Simpan nilai tugas dan hasil Tryout 1 sampai Tryout 3."
+              : "Simpan nilai tugas, UTS, dan UAS siswa."}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 px-5 py-5">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
+          <div className="grid gap-4 px-5 py-5">
           {tasks.length > 0 ? (
             <label className="grid gap-2 text-sm font-medium text-slate-700">
               Pilih Tugas
@@ -109,55 +118,37 @@ export default function NilaiFormDialog({
                 type="number"
                 min={0}
                 max={100}
-                value={draft?.tugas ?? 0}
-                onChange={(event) => onChange("tugas", Number(event.target.value))}
+                value={draft?.tugas ?? ""}
+                onChange={(event) => onChange("tugas", event.target.value)}
+                placeholder="Belum dinilai"
                 className="border border-orange-100 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
               />
             </label>
 
-            <label className="grid gap-2 text-sm font-medium text-slate-700">
-              Nilai Kuis
-              <input
-                type="number"
-                min={0}
-                max={100}
-                value={draft?.kuis ?? 0}
-                disabled
-                readOnly
-                className="border border-orange-100 bg-slate-50 px-3 py-3 text-sm text-slate-400 outline-none"
-              />
-            </label>
-
-            <label className="grid gap-2 text-sm font-medium text-slate-700">
-              Nilai UTS
-              <input
-                type="number"
-                min={0}
-                max={100}
-                value={draft?.uts ?? 0}
-                disabled
-                readOnly
-                className="border border-orange-100 bg-slate-50 px-3 py-3 text-sm text-slate-400 outline-none"
-              />
-            </label>
-
-            <label className="grid gap-2 text-sm font-medium text-slate-700">
-              Nilai UAS
-              <input
-                type="number"
-                min={0}
-                max={100}
-                value={draft?.uas ?? 0}
-                disabled
-                readOnly
-                className="border border-orange-100 bg-slate-50 px-3 py-3 text-sm text-slate-400 outline-none"
-              />
-            </label>
+            {academicScoreKeys.map((scoreKey) => (
+              <label
+                key={scoreKey}
+                className="grid gap-2 text-sm font-medium text-slate-700"
+              >
+                Nilai {ACADEMIC_SCORE_LABELS[scoreKey]}
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={draft?.scores[scoreKey] ?? ""}
+                  onChange={(event) =>
+                    onAcademicScoreChange(scoreKey, event.target.value)
+                  }
+                  placeholder="Belum dinilai"
+                  className="border border-orange-100 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                />
+              </label>
+            ))}
           </div>
 
           <p className="text-xs leading-5 text-slate-400">
-            Nilai kuis, UTS, dan UAS belum disambungkan ke backend pada tahap
-            ini.
+            Kosongkan kolom yang belum dinilai. Sistem tidak akan mengubahnya
+            menjadi nilai nol.
           </p>
 
           <label className="grid gap-2 text-sm font-medium text-slate-700">
@@ -170,9 +161,10 @@ export default function NilaiFormDialog({
               className="border border-orange-100 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
             />
           </label>
+          </div>
         </div>
 
-        <DialogFooter className="border-t border-orange-100 px-5 py-4">
+        <DialogFooter className="shrink-0 border-t border-orange-100 bg-white px-5 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <DialogClose asChild>
             <button
               type="button"

@@ -34,6 +34,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   AuthRequestError,
   authService,
@@ -47,7 +48,6 @@ import { requestAdminApi } from "@/lib/admin-api";
 
 import { type AdminTab } from "./admin-data";
 import { type AdminSidebarBadgeCounts } from "./AdminSidebar";
-import { AdminUserProfileDialog } from "./AdminUserProfileDialog";
 
 type AdminTopbarProps = {
   activeTab: AdminTab;
@@ -132,6 +132,19 @@ function formatNotificationGeneratedAt(value: string | null) {
   }).format(date);
 }
 
+function resolveAdminNotificationTab(key: string): AdminTab {
+  switch (key) {
+    case "subscriptions_pending":
+    case "payments":
+      return "payments";
+    case "schedule_conflicts":
+    case "rooms_empty":
+      return "schedule";
+    default:
+      return "overview";
+  }
+}
+
 function getSearchPlaceholder(activeTab: AdminTab) {
   switch (activeTab) {
     case "students":
@@ -141,7 +154,7 @@ function getSearchPlaceholder(activeTab: AdminTab) {
     case "schedule":
       return "Cari kelas, mapel, guru, hari, atau ruangan...";
     case "payments":
-      return "Cari payment ID, nama siswa, email, paket, atau status...";
+      return "Cari payment ID, siswa, paket, pengeluaran, atau aktivasi...";
     case "overview":
     default:
       return "Cari siswa, guru, jadwal, atau pembayaran...";
@@ -160,7 +173,6 @@ export function AdminTopbar({
   const [, startTransition] = useTransition();
   const [mounted, setMounted] = useState(false);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isUserLoading, setIsUserLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [notificationTotal, setNotificationTotal] = useState(0);
@@ -174,6 +186,7 @@ export function AdminTopbar({
     string | null
   >(null);
   const [isNotificationsLoading, setIsNotificationsLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const loadCurrentUser = useEffectEvent(async () => {
     try {
@@ -328,7 +341,7 @@ export function AdminTopbar({
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 shadow-[0_18px_34px_-30px_rgba(15,23,42,0.18)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/90">
         <div className="flex h-[72px] items-center justify-between px-4 lg:px-6">
           <div className="flex min-w-0 flex-1 items-center gap-3">
-            <Sheet>
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button variant="outline" size="icon" className="lg:hidden">
                   <Menu className="size-5" />
@@ -347,7 +360,10 @@ export function AdminTopbar({
                 </SheetHeader>
                 <AdminSidebar
                   activeTab={activeTab}
-                  onSelect={onSelectTab}
+                  onSelect={(tab) => {
+                    onSelectTab(tab);
+                    setMobileMenuOpen(false);
+                  }}
                   badgeCounts={sidebarBadgeCounts}
                   mobile
                 />
@@ -430,9 +446,18 @@ export function AdminTopbar({
 
                 <div className="max-h-[340px] overflow-y-auto">
                   {isNotificationsLoading ? (
-                    <div className="flex items-center gap-2 px-4 py-4 text-sm text-slate-500">
-                      <LoaderCircle className="size-4 animate-spin text-orange-500" />
-                      Memuat ringkasan notifikasi...
+                    <div className="divide-y divide-slate-100">
+                      {Array.from({ length: 3 }).map((_, index) => (
+                        <div key={index} className="px-4 py-3">
+                          <div className="flex w-full items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1 space-y-2">
+                              <Skeleton className="h-4 w-32" />
+                              <Skeleton className="h-3 w-48" />
+                            </div>
+                            <Skeleton className="h-6 w-8 rounded-full" />
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   ) : notificationsError ? (
                     <div className="px-4 py-4 text-sm leading-6 text-red-600">
@@ -441,11 +466,15 @@ export function AdminTopbar({
                   ) : notificationItems.length ? (
                     <div className="divide-y divide-slate-100">
                       {notificationItems.map((item) => (
-                        <div
+                        <DropdownMenuItem
                           key={item.key}
-                          className="px-4 py-3 transition-colors hover:bg-slate-50/70"
+                          className="cursor-pointer px-4 py-3 focus:bg-slate-50 data-[highlighted]:bg-slate-50"
+                          onSelect={() => {
+                            const targetTab = resolveAdminNotificationTab(item.key);
+                            onSelectTab(targetTab);
+                          }}
                         >
-                          <div className="flex items-start justify-between gap-3">
+                          <div className="flex w-full items-start justify-between gap-3">
                             <div className="min-w-0">
                               <p className="text-sm font-semibold text-slate-900">
                                 {item.title}
@@ -460,7 +489,7 @@ export function AdminTopbar({
                               {item.count > 0 ? item.count : "!"}
                             </span>
                           </div>
-                        </div>
+                        </DropdownMenuItem>
                       ))}
                     </div>
                   ) : (
@@ -478,20 +507,33 @@ export function AdminTopbar({
                   type="button"
                   className="flex items-center gap-3 rounded-[20px] border border-slate-200 bg-white px-3 py-2 shadow-sm shadow-slate-950/5 transition-all duration-200 hover:-translate-y-px hover:border-slate-300 hover:bg-slate-50 hover:shadow-md hover:shadow-slate-200/70 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-900/10"
                 >
-                  <Avatar className="size-9">
-                    {resolvedUser?.avatar ? (
-                      <AvatarImage
-                        src={resolvedUser.avatar}
-                        alt={`Foto profil ${resolvedUser.nama}`}
-                      />
-                    ) : null}
-                    <AvatarFallback>{avatarFallback}</AvatarFallback>
-                  </Avatar>
+                  {isUserLoading ? (
+                    <Skeleton className="size-9 rounded-full" />
+                  ) : (
+                    <Avatar className="size-9">
+                      {resolvedUser?.avatar ? (
+                        <AvatarImage
+                          src={resolvedUser.avatar}
+                          alt={`Foto profil ${resolvedUser.nama}`}
+                        />
+                      ) : null}
+                      <AvatarFallback>{avatarFallback}</AvatarFallback>
+                    </Avatar>
+                  )}
                   <div className="hidden text-left md:block">
-                    <p className="text-sm font-semibold text-slate-950">
-                      {displayName}
-                    </p>
-                    <p className="text-xs text-slate-500">{displayRole}</p>
+                    {isUserLoading ? (
+                      <div className="space-y-1">
+                        <Skeleton className="h-4 w-20" />
+                        <Skeleton className="h-3 w-16" />
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-sm font-semibold text-slate-950">
+                          {displayName}
+                        </p>
+                        <p className="text-xs text-slate-500">{displayRole}</p>
+                      </>
+                    )}
                   </div>
                   <ChevronDown className="hidden size-4 text-slate-400 md:block" />
                 </button>
@@ -499,7 +541,7 @@ export function AdminTopbar({
               <DropdownMenuContent align="end" className="w-64">
                 <DropdownMenuLabel>Akun admin</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => setIsProfileOpen(true)}>
+                <DropdownMenuItem onSelect={() => onSelectTab("profile")}>
                   <UserRound className="size-4" />
                   Profil Pengguna
                 </DropdownMenuItem>
@@ -522,16 +564,6 @@ export function AdminTopbar({
         </div>
       </header>
 
-      <AdminUserProfileDialog
-        key={currentUser?._id ?? "anonymous-admin"}
-        open={isProfileOpen}
-        onOpenChange={setIsProfileOpen}
-        user={currentUser}
-        isUserLoading={isUserLoading}
-        onProfileUpdated={(updatedUser) => {
-          setCurrentUser(updatedUser);
-        }}
-      />
     </>
   );
 }

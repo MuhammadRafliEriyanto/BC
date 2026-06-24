@@ -1,6 +1,12 @@
 import { requestAdminApi } from "@/lib/admin-api";
 import type { PaymentStatus } from "@/lib/subscription";
 
+export type OwnerActivityPaymentSource = "register_online" | "admin";
+export type OwnerActivityPaymentCancelReason =
+  | "admin_cancelled"
+  | "replaced_by_new_session"
+  | "provider_canceled";
+
 export type OwnerActivityActivationStatus =
   | "Aktif"
   | "Menunggu Pembayaran"
@@ -42,6 +48,21 @@ export type OwnerActivityStudentActivation = {
   registeredAt: string;
   activeUntil: string | null;
   paymentId: string | null;
+  paymentSource?: OwnerActivityPaymentSource | null;
+  paymentAmount?: number | null;
+  paymentProvider?: string | null;
+  paymentMethod?: string | null;
+  paymentCheckoutUrl?: string | null;
+  paymentExpiresAt?: string | null;
+  paymentPaidAt?: string | null;
+  paymentCreatedAt?: string | null;
+  paymentUpdatedAt?: string | null;
+  paymentCheckoutLastSentAt?: string | null;
+  paymentCheckoutSendCount?: number;
+  paymentCancelReason?: OwnerActivityPaymentCancelReason | null;
+  paymentCanceledAt?: string | null;
+  paymentCanResendLink?: boolean;
+  paymentCanCancel?: boolean;
   subscriptionCode: string;
 };
 
@@ -78,6 +99,14 @@ type OwnerActivitiesApiPayload = {
   studentBranchAvailable?: boolean;
 };
 
+type OwnerActivityBranchApiItem = {
+  name?: string | null;
+};
+
+function normalizeText(value: string | null | undefined) {
+  return value?.trim().replace(/\s+/g, " ") ?? "";
+}
+
 export async function fetchOwnerActivities() {
   const payload = await requestAdminApi<OwnerActivitiesApiPayload>(
     "/api/payments/owner-activities",
@@ -99,4 +128,23 @@ export async function fetchOwnerActivities() {
     outgoingPaymentsAvailable: payload.data?.outgoingPaymentsAvailable === true,
     studentBranchAvailable: payload.data?.studentBranchAvailable === true,
   } satisfies OwnerActivitiesData;
+}
+
+export async function fetchOwnerActivityBranchOptions() {
+  const payload = await requestAdminApi<{ branches?: OwnerActivityBranchApiItem[] }>(
+    "/api/branches",
+    {
+      method: "GET",
+    },
+  );
+
+  const branchNames = Array.isArray(payload.data?.branches)
+    ? payload.data.branches
+        .map((branch) => normalizeText(branch.name))
+        .filter(Boolean)
+    : [];
+
+  return Array.from(new Set(branchNames)).sort((first, second) =>
+    first.localeCompare(second, "id-ID"),
+  );
 }

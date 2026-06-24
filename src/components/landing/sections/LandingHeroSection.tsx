@@ -44,7 +44,7 @@ export default function LandingHeroSection() {
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
             <Link
-              href="/register-online"
+              href="/register"
               className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-[linear-gradient(135deg,#f97316_0%,#ea580c_100%)] px-7 text-sm font-semibold text-white shadow-[0_24px_36px_-24px_rgba(249,115,22,0.4)] transition hover:-translate-y-px hover:brightness-105"
             >
               Mulai Daftar Online

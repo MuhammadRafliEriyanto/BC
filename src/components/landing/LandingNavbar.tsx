@@ -219,7 +219,7 @@ export default function LandingNavbar() {
                 </p>
                 <SheetClose asChild>
                   <Link
-                    href="/register-online"
+                    href="/register"
                     className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-full border border-white/16 bg-[linear-gradient(135deg,rgba(255,255,255,0.16),rgba(251,146,60,0.18),rgba(190,24,93,0.16))] px-5 text-sm font-semibold text-white transition hover:-translate-y-px hover:border-white/26 hover:text-yellow-100"
                   >
                     Daftar Sekarang
@@ -231,7 +231,7 @@ export default function LandingNavbar() {
 
           <div className="hidden rounded-full border border-white/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.12),rgba(251,146,60,0.14))] p-1 shadow-[0_16px_28px_-18px_rgba(124,45,18,0.5)] backdrop-blur-md md:block">
             <Link
-              href="/register-online"
+              href="/register"
               className="inline-flex h-11 items-center justify-center rounded-full border border-white/20 bg-[linear-gradient(135deg,rgba(255,255,255,0.2),rgba(251,146,60,0.2),rgba(190,24,93,0.14))] px-5 text-sm font-semibold text-amber-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.28),0_14px_24px_-20px_rgba(124,45,18,0.5)] backdrop-blur-md transition-all duration-200 hover:-translate-y-px hover:border-white/30 hover:bg-[linear-gradient(135deg,rgba(255,255,255,0.24),rgba(251,146,60,0.28),rgba(190,24,93,0.18))] hover:text-white"
             >
               Daftar Sekarang

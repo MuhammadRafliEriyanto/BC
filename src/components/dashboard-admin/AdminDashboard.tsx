@@ -4,11 +4,9 @@ import type { LucideIcon } from "lucide-react";
 import {
   ArrowDownRight,
   ArrowUpRight,
-  Building2,
   CalendarDays,
   ChevronRight,
   GraduationCap,
-  LoaderCircle,
   Search,
   Users,
   WalletCards,
@@ -19,6 +17,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -38,6 +37,10 @@ import {
   type AdminDashboardConfigData,
 } from "@/lib/admin-dashboard-config";
 import {
+  fetchAdminFinanceSummary,
+  type AdminFinanceSummaryData,
+} from "@/lib/admin-finances";
+import {
   fetchAdminSchedules,
   fetchAdminStudents,
   fetchAdminTeachers,
@@ -48,11 +51,17 @@ import {
 import { cn, formatCurrency } from "@/lib/utils";
 
 import { adminPoppins } from "./components/admin-font";
+import {
+  AdminChartSkeleton,
+  AdminDonutSkeleton,
+  AdminListPanelSkeleton,
+  AdminMetricGridSkeleton,
+} from "./components/AdminLoadingState";
 import { AdminPaymentVerification } from "./AdminPaymentVerification";
 import { AdminSchedule } from "./AdminSchedule";
+import { AdminProfileTab } from "./AdminProfileTab";
 import {
   AdminSidebar,
-  ADMIN_SIDEBAR_CONTENT_OFFSET_CLASS,
   type AdminSidebarBadgeCounts,
 } from "./AdminSidebar";
 import { AdminStudents } from "./AdminStudents";
@@ -77,11 +86,13 @@ type DashboardStatCardData = {
   direction: "up" | "down";
   accent: StatAccent;
   icon: LucideIcon;
+  isLoading?: boolean;
 };
 
 type PaymentOverviewSummary = AdminPaymentSummaryData["summary"];
 type PaymentOverviewPeriod = "week" | "month" | "year";
 type PaymentTrendPoint = AdminPaymentSummaryData["trend"][number];
+type FinanceOverviewSummary = AdminFinanceSummaryData["summary"];
 
 type ChartPoint = {
   x: number;
@@ -162,6 +173,7 @@ function DashboardStatCard({
   direction,
   accent,
   icon: Icon,
+  isLoading = false,
 }: DashboardStatCardData) {
   const styles = accentStyles[accent];
 
@@ -174,9 +186,13 @@ function DashboardStatCard({
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-xs font-medium text-slate-500">{title}</p>
-            <h3 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
-              {value}
-            </h3>
+            {isLoading ? (
+              <Skeleton className="mt-2 h-8 w-24" />
+            ) : (
+              <h3 className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
+                {value}
+              </h3>
+            )}
           </div>
 
           <div
@@ -189,6 +205,12 @@ function DashboardStatCard({
           </div>
         </div>
 
+        {isLoading ? (
+          <div className="mt-3 flex items-center gap-2">
+            <Skeleton className="h-6 w-16 rounded-md" />
+            <Skeleton className="h-3 w-24" />
+          </div>
+        ) : (
         <div className="mt-3 flex items-center gap-2">
           <Badge
             variant="secondary"
@@ -207,11 +229,16 @@ function DashboardStatCard({
 
           <span className="text-[11px] text-slate-400">{note}</span>
         </div>
+        )}
 
-        <Progress
-          value={percentage}
-          className={cn("mt-3 h-1.5 bg-slate-100", styles.progress)}
-        />
+        {isLoading ? (
+          <Skeleton className="mt-3 h-1.5 w-full rounded-full" />
+        ) : (
+          <Progress
+            value={percentage}
+            className={cn("mt-3 h-1.5 bg-slate-100", styles.progress)}
+          />
+        )}
       </CardContent>
     </Card>
   );
@@ -405,10 +432,7 @@ function PaymentDistributionCard({
   const yAxisTicks = [1, 0.75, 0.5, 0.25, 0].map((ratio) =>
     formatCompactCurrency(maxAmount * ratio),
   );
-  const totalPaymentAmountLabel =
-    isLoading && !summary
-      ? "Memuat total"
-      : formatCurrency(resolvedSummary.totalAmount);
+  const totalPaymentAmountLabel = formatCurrency(resolvedSummary.totalAmount);
 
   return (
     <Card className="relative overflow-hidden rounded-[24px] border border-slate-200/80 bg-white/96 shadow-[0_20px_36px_-30px_rgba(15,23,42,0.16)]">
@@ -447,23 +471,30 @@ function PaymentDistributionCard({
               <p className="text-xs font-medium text-slate-500">
                 Total Pembayaran
               </p>
-              <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
-                {totalPaymentAmountLabel}
-              </p>
-              <p className="mt-1 text-[11px] text-slate-500">
-                {error
-                  ? "Ringkasan nominal belum berhasil dimuat."
-                  : overviewCopy.totalHelper}
-              </p>
+              {isLoading && !summary ? (
+                <>
+                  <Skeleton className="mt-2 h-8 w-36 sm:ml-auto" />
+                  <Skeleton className="mt-2 h-3 w-44 sm:ml-auto" />
+                </>
+              ) : (
+                <>
+                  <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
+                    {totalPaymentAmountLabel}
+                  </p>
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    {error
+                      ? "Ringkasan nominal belum berhasil dimuat."
+                      : overviewCopy.totalHelper}
+                  </p>
+                </>
+              )}
             </div>
           </div>
         </div>
 
         <div className="relative overflow-hidden rounded-[22px] border border-orange-100/60 bg-[linear-gradient(180deg,rgba(255,247,237,0.52),rgba(255,255,255,0.98))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)]">
           {isLoading && !hasChartData ? (
-            <div className="flex h-[320px] items-center justify-center text-center text-sm leading-6 text-slate-500">
-              Memuat statistik pembayaran live...
-            </div>
+            <AdminChartSkeleton className="border-0 bg-transparent" />
           ) : !hasChartData ? (
             <div className="flex h-[320px] items-center justify-center px-6 text-center">
               <div className="max-w-xs space-y-2">
@@ -669,9 +700,7 @@ function PaymentStatusDonutCard({
         </div>
 
         {isLoading && !hasSummary ? (
-          <div className="flex h-[320px] items-center justify-center text-center text-sm leading-6 text-slate-500">
-            Memuat distribusi status pembayaran...
-          </div>
+          <AdminDonutSkeleton />
         ) : !hasSummary ? (
           <div className="flex h-[320px] items-center justify-center px-6 text-center">
             <div className="max-w-xs space-y-2">
@@ -742,13 +771,144 @@ function PaymentStatusDonutCard({
   );
 }
 
+function BranchFinanceOverviewPanel({
+  summary,
+  isLoading,
+  error,
+  onViewDetails,
+}: {
+  summary: FinanceOverviewSummary | null;
+  isLoading: boolean;
+  error: string | null;
+  onViewDetails: () => void;
+}) {
+  const membershipPaidAmount = summary?.membership.paidAmount ?? 0;
+  const membershipPaidCount = summary?.membership.paidCount ?? 0;
+  const membershipPendingAmount = summary?.membership.pendingAmount ?? 0;
+  const membershipPendingCount = summary?.membership.pendingCount ?? 0;
+  const manualIncomeReceivedAmount = summary?.manualIncome.receivedAmount ?? 0;
+  const manualIncomeReceivedCount = summary?.manualIncome.receivedCount ?? 0;
+  const expenseSettledCount = summary?.expense.settledCount ?? 0;
+  const expensePendingAmount = summary?.expense.pendingAmount ?? 0;
+  const expensePendingCount = summary?.expense.pendingCount ?? 0;
+  const totalRealizedIncome = summary?.totalRealizedIncome ?? 0;
+  const totalRealizedExpense = summary?.totalRealizedExpense ?? 0;
+  const operationalBalance = summary?.netCashflow ?? 0;
+  const metricItems = [
+    {
+      label: "Total Pemasukan",
+      value: formatCurrency(totalRealizedIncome),
+      helper: `${membershipPaidCount + manualIncomeReceivedCount} transaksi terealisasi`,
+      tone: "emerald",
+    },
+    {
+      label: "Membership Lunas",
+      value: formatCurrency(membershipPaidAmount),
+      helper: `${membershipPaidCount} lunas, ${membershipPendingCount} menunggu (${formatCurrency(membershipPendingAmount)})`,
+      tone: "amber",
+    },
+    {
+      label: "Pengeluaran Operasional",
+      value: formatCurrency(totalRealizedExpense),
+      helper: `${expenseSettledCount} selesai, ${expensePendingCount} menunggu (${formatCurrency(expensePendingAmount)})`,
+      tone: "orange",
+    },
+    {
+      label: "Saldo Operasional",
+      value: formatCurrency(operationalBalance),
+      helper: `Termasuk pemasukan manual ${formatCurrency(manualIncomeReceivedAmount)}`,
+      tone: "slate",
+    },
+  ] as const;
+
+  return (
+    <Card className="relative overflow-hidden rounded-[24px] border border-slate-200/80 bg-white/96 shadow-[0_20px_36px_-30px_rgba(15,23,42,0.16)]">
+      <div className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+      <div className="absolute -right-12 -top-10 size-40 rounded-full bg-orange-100/45 blur-3xl" />
+      <CardContent className="relative p-5">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+          <div className="max-w-2xl">
+            <div className="flex items-center gap-3">
+              <span className="flex size-11 items-center justify-center rounded-2xl border border-orange-100 bg-orange-50 text-orange-600">
+                <WalletCards className="size-5" />
+              </span>
+              <div>
+                <h2 className="text-sm font-semibold text-slate-950">
+                  Ringkasan Keuangan Cabang
+                </h2>
+                <p className="mt-1 text-xs leading-5 text-slate-500">
+                  Satu area untuk membaca paid, pending, pengeluaran, dan saldo
+                  tanpa menambah card utama dashboard.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onViewDetails}
+            className="inline-flex w-fit items-center gap-1 rounded-full px-1 py-0.5 text-xs font-semibold text-orange-600 transition hover:text-orange-700"
+          >
+            Lihat detail pembayaran
+            <ChevronRight className="size-3.5" />
+          </button>
+        </div>
+
+        {error ? (
+          <div className="mt-5 rounded-[20px] border border-amber-100 bg-amber-50/80 px-4 py-3 text-sm leading-6 text-amber-700">
+            {error}
+          </div>
+        ) : null}
+
+        {isLoading && !summary ? (
+          <AdminMetricGridSkeleton className="mt-5" />
+        ) : (
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {metricItems.map((item) => (
+            <div
+              key={item.label}
+              className={cn(
+                "rounded-[20px] border px-4 py-3 shadow-[0_16px_28px_-28px_rgba(15,23,42,0.18)]",
+                item.tone === "emerald"
+                  ? "border-emerald-100 bg-emerald-50/70"
+                  : item.tone === "amber"
+                    ? "border-amber-100 bg-amber-50/70"
+                    : item.tone === "orange"
+                      ? "border-orange-100 bg-orange-50/70"
+                      : "border-slate-200 bg-slate-50/80",
+              )}
+            >
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                {item.label}
+              </p>
+              <p className="mt-2 text-xl font-bold tracking-tight text-slate-950">
+                {item.value}
+              </p>
+              <p className="mt-1 text-xs leading-5 text-slate-500">
+                {item.helper}
+              </p>
+            </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function DashboardPanel({
   active,
+  mounted,
   children,
 }: {
   active: boolean;
+  mounted: boolean;
   children: ReactNode;
 }) {
+  if (!mounted) {
+    return null;
+  }
+
   return <div className={active ? "block" : "hidden"}>{children}</div>;
 }
 
@@ -804,9 +964,10 @@ function OverviewSearchResultsSection({
       </div>
 
       {isLoading ? (
-        <div className="mt-5 flex items-center gap-2 rounded-[20px] border border-slate-200/80 bg-slate-50/80 px-4 py-4 text-sm text-slate-500">
-          <LoaderCircle className="size-4 animate-spin text-orange-500" />
-          Mengambil hasil pencarian terbaru dari backend...
+        <div className="mt-5 grid gap-4 xl:grid-cols-2 2xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <AdminListPanelSkeleton key={index} rows={2} />
+          ))}
         </div>
       ) : totalMatches === 0 ? (
         <div className="mt-5 rounded-[20px] border border-slate-200/80 bg-slate-50/80 px-4 py-4 text-sm leading-6 text-slate-500">
@@ -948,7 +1109,11 @@ function OverviewSearchResultsSection({
 }
 
 export function AdminDashboard() {
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<AdminTab>("overview");
+  const [mountedTabs, setMountedTabs] = useState<Set<AdminTab>>(
+    () => new Set(["overview"]),
+  );
   const [globalSearchQuery, setGlobalSearchQuery] = useState("");
   const [dashboardConfig, setDashboardConfig] = useState<AdminDashboardConfigData>(
     defaultAdminDashboardConfig,
@@ -980,14 +1145,34 @@ export function AdminDashboard() {
   const [paymentSummary, setPaymentSummary] =
     useState<PaymentOverviewSummary | null>(null);
   const [paymentTrend, setPaymentTrend] = useState<PaymentTrendPoint[]>([]);
+  const [financeSummary, setFinanceSummary] =
+    useState<FinanceOverviewSummary | null>(null);
   const [paymentsLoading, setPaymentsLoading] = useState(true);
   const [paymentsError, setPaymentsError] = useState<string | null>(null);
+  const [financeLoading, setFinanceLoading] = useState(true);
+  const [financeError, setFinanceError] = useState<string | null>(null);
   const [overviewSearchResults, setOverviewSearchResults] =
     useState<OverviewSearchResults>(emptyOverviewSearchResults);
   const [isOverviewSearchLoading, setIsOverviewSearchLoading] = useState(false);
   const [overviewSearchError, setOverviewSearchError] = useState<string | null>(
     null,
   );
+  const [studentSummaryLoading, setStudentSummaryLoading] = useState(true);
+  const [teacherSummaryLoading, setTeacherSummaryLoading] = useState(true);
+  const [scheduleSummaryLoading, setScheduleSummaryLoading] = useState(true);
+
+  const selectAdminTab = useCallback((tab: AdminTab) => {
+    setMountedTabs((currentTabs) => {
+      if (currentTabs.has(tab)) {
+        return currentTabs;
+      }
+
+      const nextTabs = new Set(currentTabs);
+      nextTabs.add(tab);
+      return nextTabs;
+    });
+    setActiveTab(tab);
+  }, []);
 
   const refreshStudentSummary = useCallback(async () => {
     try {
@@ -1005,6 +1190,8 @@ export function AdminDashboard() {
         branchCount: 0,
         classCount: 0,
       });
+    } finally {
+      setStudentSummaryLoading(false);
     }
   }, []);
 
@@ -1024,6 +1211,8 @@ export function AdminDashboard() {
         branchCount: 0,
         activeClassesTotal: 0,
       });
+    } finally {
+      setTeacherSummaryLoading(false);
     }
   }, []);
 
@@ -1044,6 +1233,8 @@ export function AdminDashboard() {
         scheduledRoomCount: 0,
         roomConflictCount: 0,
       });
+    } finally {
+      setScheduleSummaryLoading(false);
     }
   }, []);
 
@@ -1077,15 +1268,36 @@ export function AdminDashboard() {
     [paymentOverviewPeriod],
   );
 
+  const refreshFinanceSummary = useCallback(async () => {
+    setFinanceLoading(true);
+
+    try {
+      const payload = await fetchAdminFinanceSummary();
+      setFinanceSummary(payload.summary);
+      setFinanceError(null);
+    } catch (error) {
+      setFinanceSummary(null);
+      setFinanceError(
+        error instanceof Error
+          ? error.message
+          : "Ringkasan keuangan cabang belum berhasil dimuat.",
+      );
+    } finally {
+      setFinanceLoading(false);
+    }
+  }, []);
+
   const refreshOverview = useCallback(async () => {
     await Promise.allSettled([
       refreshStudentSummary(),
       refreshTeacherSummary(),
       refreshScheduleSummary(),
       refreshPayments(paymentOverviewPeriod),
+      refreshFinanceSummary(),
     ]);
   }, [
     paymentOverviewPeriod,
+    refreshFinanceSummary,
     refreshPayments,
     refreshScheduleSummary,
     refreshStudentSummary,
@@ -1145,6 +1357,16 @@ export function AdminDashboard() {
       window.clearTimeout(timerId);
     };
   }, [paymentOverviewPeriod, refreshPayments]);
+
+  useEffect(() => {
+    const timerId = window.setTimeout(() => {
+      void refreshFinanceSummary();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timerId);
+    };
+  }, [refreshFinanceSummary]);
 
   useEffect(() => {
     const refreshOnFocus = () => {
@@ -1274,8 +1496,9 @@ export function AdminDashboard() {
   const activeTeachers = teacherSummary.activeCount;
   const ongoingSchedules = scheduleSummary.runningCount;
   const conflictSchedules = scheduleSummary.conflictCount;
-  const scheduledRoomCount = scheduleSummary.scheduledRoomCount;
-  const roomConflictCount = scheduleSummary.roomConflictCount;
+  const totalRealizedIncome = financeSummary?.totalRealizedIncome ?? 0;
+  const totalRealizedExpense = financeSummary?.totalRealizedExpense ?? 0;
+  const operationalBalance = financeSummary?.netCashflow ?? 0;
 
   const studentPercentage = studentSummary.totalItems
     ? Math.round((activeStudents / studentSummary.totalItems) * 100)
@@ -1288,8 +1511,11 @@ export function AdminDashboard() {
   const schedulePercentage = scheduleSummary.totalItems
     ? Math.round((ongoingSchedules / scheduleSummary.totalItems) * 100)
     : 0;
-  const roomPercentage = scheduleSummary.totalItems
-    ? Math.round((scheduledRoomCount / scheduleSummary.totalItems) * 100)
+  const financePercentage = totalRealizedIncome
+    ? Math.min(
+        100,
+        Math.max(0, Math.round((operationalBalance / totalRealizedIncome) * 100)),
+      )
     : 0;
 
   const dashboardStats: DashboardStatCardData[] = [
@@ -1303,6 +1529,7 @@ export function AdminDashboard() {
       direction: "up",
       accent: "orange",
       icon: Users,
+      isLoading: studentSummaryLoading,
     },
     {
       key: "teachers",
@@ -1314,6 +1541,7 @@ export function AdminDashboard() {
       direction: "up",
       accent: "emerald",
       icon: GraduationCap,
+      isLoading: teacherSummaryLoading,
     },
     {
       key: "schedules",
@@ -1325,19 +1553,21 @@ export function AdminDashboard() {
       direction: conflictSchedules ? "down" : "up",
       accent: "amber",
       icon: CalendarDays,
+      isLoading: scheduleSummaryLoading,
     },
     {
-      key: "rooms",
-      title: "Ruangan Terpakai di Jadwal",
-      value: scheduledRoomCount.toString(),
-      note: roomConflictCount
-        ? `${roomConflictCount} ruangan bentrok`
-        : "Tanpa bentrok ruangan",
-      percentage: roomPercentage,
-      trend: `${scheduledRoomCount} ruangan dipakai`,
-      direction: roomConflictCount ? "down" : "up",
+      key: "finance",
+      title: "Saldo Operasional",
+      value: formatCompactCurrency(operationalBalance),
+      note: financeError
+        ? "Ringkasan keuangan belum termuat"
+        : `Masuk ${formatCompactCurrency(totalRealizedIncome)} | Keluar ${formatCompactCurrency(totalRealizedExpense)}`,
+      percentage: financePercentage,
+      trend: `${operationalBalance >= 0 ? "+" : "-"}${formatCompactCurrency(Math.abs(operationalBalance))}`,
+      direction: operationalBalance >= 0 ? "up" : "down",
       accent: "slate",
-      icon: Building2,
+      icon: WalletCards,
+      isLoading: financeLoading && !financeSummary,
     },
   ];
   const sidebarBadgeCounts: AdminSidebarBadgeCounts = {
@@ -1356,20 +1586,22 @@ export function AdminDashboard() {
     >
       <AdminSidebar
         activeTab={activeTab}
-        onSelect={setActiveTab}
+        onSelect={selectAdminTab}
         badgeCounts={sidebarBadgeCounts}
+        collapsed={isSidebarCollapsed}
+        onToggle={() => setIsSidebarCollapsed((prev) => !prev)}
         className="fixed inset-y-0 left-0 z-20"
       />
 
       <div
         className={cn(
-          "flex min-h-screen flex-1 flex-col",
-          ADMIN_SIDEBAR_CONTENT_OFFSET_CLASS,
+          "flex min-h-screen flex-1 flex-col transition-[padding] duration-200",
+          isSidebarCollapsed ? "lg:pl-20" : "lg:pl-[236px]"
         )}
       >
         <AdminTopbar
           activeTab={activeTab}
-          onSelectTab={setActiveTab}
+          onSelectTab={selectAdminTab}
           sidebarBadgeCounts={sidebarBadgeCounts}
           searchQuery={globalSearchQuery}
           onSearchQueryChange={setGlobalSearchQuery}
@@ -1380,7 +1612,10 @@ export function AdminDashboard() {
 
         <main className="flex-1 p-5 lg:p-6">
           <div className="space-y-6">
-            <DashboardPanel active={activeTab === "overview"}>
+            <DashboardPanel
+              active={activeTab === "overview"}
+              mounted={mountedTabs.has("overview")}
+            >
               <div className="space-y-6">
                 {globalSearchQuery.trim() ? (
                   <OverviewSearchResultsSection
@@ -1388,7 +1623,7 @@ export function AdminDashboard() {
                     results={overviewSearchResults}
                     isLoading={isOverviewSearchLoading}
                     error={overviewSearchError}
-                    onOpenTab={setActiveTab}
+                    onOpenTab={selectAdminTab}
                   />
                 ) : null}
 
@@ -1397,6 +1632,15 @@ export function AdminDashboard() {
                     <DashboardStatCard key={key} {...stat} />
                   ))}
                 </section>
+
+                <BranchFinanceOverviewPanel
+                  summary={financeSummary}
+                  isLoading={financeLoading}
+                  error={financeError}
+                  onViewDetails={() => {
+                    selectAdminTab("payments");
+                  }}
+                />
 
                 <section className="grid gap-4 xl:grid-cols-[1fr_320px]">
                   <PaymentDistributionCard
@@ -1412,14 +1656,17 @@ export function AdminDashboard() {
                     isLoading={paymentsLoading}
                     error={paymentsError}
                     onViewDetails={() => {
-                      setActiveTab("payments");
+                      selectAdminTab("payments");
                     }}
                   />
                 </section>
               </div>
             </DashboardPanel>
 
-            <DashboardPanel active={activeTab === "students"}>
+            <DashboardPanel
+              active={activeTab === "students"}
+              mounted={mountedTabs.has("students")}
+            >
               <AdminStudents
                 dashboardConfig={dashboardConfig}
                 onRefresh={refreshOverview}
@@ -1429,7 +1676,10 @@ export function AdminDashboard() {
               />
             </DashboardPanel>
 
-            <DashboardPanel active={activeTab === "teachers"}>
+            <DashboardPanel
+              active={activeTab === "teachers"}
+              mounted={mountedTabs.has("teachers")}
+            >
               <AdminTeachers
                 dashboardConfig={dashboardConfig}
                 onRefresh={refreshOverview}
@@ -1439,7 +1689,10 @@ export function AdminDashboard() {
               />
             </DashboardPanel>
 
-            <DashboardPanel active={activeTab === "schedule"}>
+            <DashboardPanel
+              active={activeTab === "schedule"}
+              mounted={mountedTabs.has("schedule")}
+            >
               <AdminSchedule
                 dashboardConfig={dashboardConfig}
                 onRefresh={refreshOverview}
@@ -1449,7 +1702,10 @@ export function AdminDashboard() {
               />
             </DashboardPanel>
 
-            <DashboardPanel active={activeTab === "payments"}>
+            <DashboardPanel
+              active={activeTab === "payments"}
+              mounted={mountedTabs.has("payments")}
+            >
               <AdminPaymentVerification
                 dashboardConfig={dashboardConfig}
                 onRefresh={refreshOverview}
@@ -1457,6 +1713,13 @@ export function AdminDashboard() {
                   activeTab === "payments" ? globalSearchQuery : ""
                 }
               />
+            </DashboardPanel>
+
+            <DashboardPanel
+              active={activeTab === "profile"}
+              mounted={mountedTabs.has("profile")}
+            >
+              <AdminProfileTab />
             </DashboardPanel>
           </div>
         </main>

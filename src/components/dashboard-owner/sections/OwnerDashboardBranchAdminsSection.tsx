@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Building2,
   Eye,
   EyeOff,
   FilterX,
@@ -15,7 +16,7 @@ import {
   UserCog,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type { OwnerDashboardBranchAdminManager } from "@/components/dashboard-owner/hooks/useOwnerBranchAdmins";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -51,9 +53,22 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { requestAdminApi } from "@/lib/admin-api";
 
 type OwnerDashboardBranchAdminsSectionProps = {
   manager: OwnerDashboardBranchAdminManager;
+};
+
+type OwnerAdminBranch = {
+  branchId: string;
+  name: string;
+  shortAddress: string;
+  fullAddress: string;
+  phone: string;
+  email: string;
+  status: string;
+  adminName: string;
+  adminUserId: string | null;
 };
 
 const flashToneClasses = {
@@ -84,6 +99,123 @@ export function OwnerDashboardBranchAdminsSection({
 }: OwnerDashboardBranchAdminsSectionProps) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
+  const [branches, setBranches] = useState<OwnerAdminBranch[]>([]);
+  const [assignmentAdminId, setAssignmentAdminId] = useState<string | null>(null);
+  const [selectedBranchId, setSelectedBranchId] = useState("");
+  const [isSavingAssignment, setIsSavingAssignment] = useState(false);
+  const [assignmentError, setAssignmentError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function loadBranches() {
+      try {
+        const response = await requestAdminApi<{ branches: OwnerAdminBranch[] }>(
+          "/api/branches",
+          { method: "GET" },
+        );
+
+        if (!isCancelled) {
+          setBranches(response.data?.branches ?? []);
+        }
+      } catch {
+        if (!isCancelled) {
+          setBranches([]);
+        }
+      }
+    }
+
+    void loadBranches();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [manager.totalAdmins]);
+
+  const assignedBranchesByAdmin = useMemo(() => {
+    const directory = new Map<string, OwnerAdminBranch[]>();
+
+    for (const admin of manager.admins) {
+      directory.set(
+        admin.id,
+        branches.filter(
+          (branch) =>
+            branch.adminUserId === admin.id ||
+            branch.adminName.trim().toLowerCase() === admin.name.trim().toLowerCase(),
+        ),
+      );
+    }
+
+    return directory;
+  }, [branches, manager.admins]);
+
+  const assignmentAdmin = manager.admins.find(
+    (admin) => admin.id === assignmentAdminId,
+  );
+
+  function openAssignmentDialog(adminId: string) {
+    const currentAssignment = assignedBranchesByAdmin.get(adminId)?.[0];
+
+    setAssignmentAdminId(adminId);
+    setSelectedBranchId(currentAssignment?.branchId ?? "");
+    setAssignmentError(null);
+  }
+
+  function closeAssignmentDialog() {
+    setAssignmentAdminId(null);
+    setSelectedBranchId("");
+    setAssignmentError(null);
+  }
+
+  async function saveBranchAssignment() {
+    const admin = assignmentAdmin;
+    const branch = branches.find((item) => item.branchId === selectedBranchId);
+
+    if (!admin || !branch) {
+      setAssignmentError("Pilih cabang terlebih dahulu.");
+      return;
+    }
+
+    setIsSavingAssignment(true);
+    setAssignmentError(null);
+
+    try {
+      await requestAdminApi<{ branch: OwnerAdminBranch }>(
+        `/api/branches/${encodeURIComponent(branch.branchId)}`,
+        {
+          method: "PUT",
+          body: JSON.stringify({
+            name: branch.name,
+            shortAddress: branch.shortAddress,
+            fullAddress: branch.fullAddress,
+            phone: branch.phone,
+            email: branch.email,
+            status: branch.status,
+            adminName: admin.name,
+            adminUserId: admin.id,
+          }),
+        },
+      );
+
+      setBranches((current) =>
+        current.map((item) =>
+          item.branchId === branch.branchId
+            ? { ...item, adminName: admin.name, adminUserId: admin.id }
+            : item,
+        ),
+      );
+      closeAssignmentDialog();
+    } catch (error) {
+      setAssignmentError(
+        error instanceof Error
+          ? error.message
+          : "Penugasan cabang gagal disimpan.",
+      );
+    } finally {
+      setIsSavingAssignment(false);
+    }
+  }
+
   const hasActiveFilters =
     manager.searchQuery.trim().length > 0 ||
     manager.verificationFilter !== "Semua";
@@ -227,16 +359,17 @@ export function OwnerDashboardBranchAdminsSection({
           </div>
 
           <div className="-mx-6 overflow-hidden border-t border-slate-200/80">
-            <Table className="min-w-[980px]">
+            <Table className="min-w-[1120px]">
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-16 px-6">No</TableHead>
                   <TableHead>Nama Admin</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead className="w-52">Status Email</TableHead>
+                  <TableHead className="w-52">Cabang</TableHead>
+                  <TableHead className="w-52">Status Admin</TableHead>
                   <TableHead className="w-40">Dibuat</TableHead>
                   <TableHead className="w-40">Update Terakhir</TableHead>
-                  <TableHead className="w-32 px-6 text-center">Aksi</TableHead>
+                  <TableHead className="w-40 px-6 text-center">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -267,6 +400,25 @@ export function OwnerDashboardBranchAdminsSection({
                         </span>
                       </TableCell>
                       <TableCell>
+                        {assignedBranchesByAdmin.get(admin.id)?.length ? (
+                          <div className="flex flex-wrap gap-1.5">
+                            {assignedBranchesByAdmin.get(admin.id)?.map((branch) => (
+                              <Badge
+                                key={branch.branchId}
+                                variant="secondary"
+                                className="rounded-lg border border-orange-100 bg-orange-50 text-orange-700"
+                              >
+                                {branch.name}
+                              </Badge>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-sm text-slate-400">
+                            Belum ditugaskan
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
                         <div className="space-y-2">
                           <Badge
                             variant={admin.isEmailVerified ? "success" : "warning"}
@@ -281,8 +433,8 @@ export function OwnerDashboardBranchAdminsSection({
                               )}
                             />
                             {admin.isEmailVerified
-                              ? "Terverifikasi"
-                              : "Belum Terverifikasi"}
+                              ? "Aktif"
+                              : "Menunggu Verifikasi"}
                           </Badge>
 
                           {admin.emailVerifiedAt ? (
@@ -328,6 +480,22 @@ export function OwnerDashboardBranchAdminsSection({
                                 type="button"
                                 size="icon"
                                 variant="ghost"
+                                className="size-10 rounded-lg text-orange-600 hover:bg-orange-50 hover:text-orange-700"
+                                onClick={() => openAssignmentDialog(admin.id)}
+                              >
+                                <Building2 className="size-4" />
+                                <span className="sr-only">Pilih cabang</span>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Pilih cabang</TooltipContent>
+                          </Tooltip>
+
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
                                 className="size-10 rounded-full"
                                 onClick={() => {
                                   setIsPasswordVisible(false);
@@ -361,9 +529,27 @@ export function OwnerDashboardBranchAdminsSection({
                       </TableCell>
                     </TableRow>
                   ))
+                ) : manager.isLoading ? (
+                  Array.from({ length: 5 }).map((_, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="px-6 py-4"><Skeleton className="h-4 w-6" /></TableCell>
+                      <TableCell className="px-4 py-4"><Skeleton className="h-4 w-32" /></TableCell>
+                      <TableCell className="px-4 py-4"><Skeleton className="h-4 w-40" /></TableCell>
+                      <TableCell className="px-4 py-4"><Skeleton className="h-6 w-24 rounded-lg" /></TableCell>
+                      <TableCell className="px-4 py-4"><Skeleton className="h-4 w-28" /></TableCell>
+                      <TableCell className="px-4 py-4"><Skeleton className="h-4 w-36" /></TableCell>
+                      <TableCell className="px-4 py-4"><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                      <TableCell className="px-4 py-4">
+                        <div className="flex gap-1">
+                          <Skeleton className="size-9 rounded-full" />
+                          <Skeleton className="size-9 rounded-full" />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={7} className="px-6 py-14">
+                    <TableCell colSpan={8} className="px-6 py-14">
                       <div className="flex flex-col items-center gap-3 text-center">
                         <div className="flex size-14 items-center justify-center rounded-full bg-orange-50 text-orange-600">
                           <ShieldCheck className="size-6" />
@@ -399,6 +585,75 @@ export function OwnerDashboardBranchAdminsSection({
             </Table>
           </div>
         </section>
+
+        <Dialog
+          open={assignmentAdminId !== null}
+          onOpenChange={(open) => {
+            if (!open) {
+              closeAssignmentDialog();
+            }
+          }}
+        >
+          <DialogContent className="max-w-lg rounded-2xl">
+            <DialogHeader>
+              <DialogTitle>Pilih cabang admin</DialogTitle>
+              <DialogDescription>
+                Tetapkan cabang yang dikelola oleh akun {assignmentAdmin?.name ?? "admin"}.
+                Data disimpan melalui endpoint cabang yang sudah ada.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-2">
+              <label
+                className="text-sm font-medium text-slate-700"
+                htmlFor="owner-admin-branch-assignment"
+              >
+                Cabang
+              </label>
+              <Select value={selectedBranchId} onValueChange={setSelectedBranchId}>
+                <SelectTrigger id="owner-admin-branch-assignment">
+                  <SelectValue placeholder="Pilih cabang" />
+                </SelectTrigger>
+                <SelectContent>
+                  {branches.map((branch) => (
+                    <SelectItem key={branch.branchId} value={branch.branchId}>
+                      {branch.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs leading-5 text-slate-500">
+                Penugasan ini memakai relasi admin pada data cabang. Penugasan cabang
+                lain yang sudah dimiliki akun tidak dihapus otomatis.
+              </p>
+            </div>
+
+            {assignmentError ? (
+              <div className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {assignmentError}
+              </div>
+            ) : null}
+
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={closeAssignmentDialog}>
+                Batal
+              </Button>
+              <Button
+                type="button"
+                className="bg-orange-600 text-white hover:bg-orange-700"
+                onClick={() => void saveBranchAssignment()}
+                disabled={isSavingAssignment || !selectedBranchId}
+              >
+                {isSavingAssignment ? (
+                  <LoaderCircle className="size-4 animate-spin" />
+                ) : (
+                  <Building2 className="size-4" />
+                )}
+                Simpan cabang
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <Dialog
           open={manager.dialog.isOpen}

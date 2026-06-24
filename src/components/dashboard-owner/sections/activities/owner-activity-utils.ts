@@ -3,8 +3,10 @@ import type { OwnerActivitiesRouteState } from "@/lib/owner-dashboard-routing";
 
 import type {
   BranchFilter,
+  IncomingPaymentPeriodFilter,
   IncomingPaymentStatusFilter,
   MembershipActivationFilter,
+  OwnerIncomingPaymentRecord,
   OutgoingPaymentStatusFilter,
   StudentClass,
   StudentLevel,
@@ -12,6 +14,7 @@ import type {
   SurfaceTone,
 } from "./owner-activity-types";
 import {
+  allIncomingPaymentPeriodFilter,
   combinedIncomingPaymentStatusFilter,
   inactiveActivationStatusFilter,
   allBranchFilter,
@@ -25,6 +28,13 @@ export const incomingStatusOptions = [
   "failed",
   "expired",
 ] as const satisfies readonly IncomingPaymentStatusFilter[];
+
+export const incomingPeriodOptions = [
+  allIncomingPaymentPeriodFilter,
+  "Minggu ini",
+  "Bulan ini",
+  "Tahun ini",
+] as const satisfies readonly IncomingPaymentPeriodFilter[];
 
 export const outgoingStatusOptions = [
   "Semua",
@@ -361,9 +371,150 @@ export function formatPaymentMethodLabel(value: string) {
   );
 }
 
-export function getBranchFilterOptions(items: Array<{ branch: string }>): BranchFilter[] {
-  const branches = Array.from(
-    new Set(items.map((item) => item.branch.trim()).filter(Boolean)),
+function normalizeFilterText(value: string) {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+function normalizeLookupKey(value: string) {
+  return normalizeFilterText(value).toLowerCase();
+}
+
+function isUnassignedBranchLabel(value: string) {
+  return normalizeLookupKey(value) === "belum diatur";
+}
+
+function startOfLocalDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function endOfLocalDay(date: Date) {
+  return new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    23,
+    59,
+    59,
+    999,
+  );
+}
+
+function getPeriodRange(periodFilter: IncomingPaymentPeriodFilter, referenceDate: Date) {
+  const reference = new Date(referenceDate);
+
+  if (Number.isNaN(reference.getTime())) {
+    return null;
+  }
+
+  if (periodFilter === "Minggu ini") {
+    const start = startOfLocalDay(reference);
+    const day = start.getDay();
+    const distanceFromMonday = day === 0 ? 6 : day - 1;
+
+    start.setDate(start.getDate() - distanceFromMonday);
+
+    const end = endOfLocalDay(start);
+    end.setDate(start.getDate() + 6);
+
+    return { start, end };
+  }
+
+  if (periodFilter === "Bulan ini") {
+    return {
+      start: new Date(reference.getFullYear(), reference.getMonth(), 1),
+      end: new Date(
+        reference.getFullYear(),
+        reference.getMonth() + 1,
+        0,
+        23,
+        59,
+        59,
+        999,
+      ),
+    };
+  }
+
+  if (periodFilter === "Tahun ini") {
+    return {
+      start: new Date(reference.getFullYear(), 0, 1),
+      end: new Date(reference.getFullYear(), 11, 31, 23, 59, 59, 999),
+    };
+  }
+
+  return null;
+}
+
+export function getIncomingPaymentActivityDate(
+  payment: Pick<OwnerIncomingPaymentRecord, "paidAt" | "createdAt">,
+) {
+  const value = payment.paidAt ?? payment.createdAt;
+
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+export function isDateInIncomingPaymentPeriod(
+  date: Date | null,
+  periodFilter: IncomingPaymentPeriodFilter,
+  referenceDate = new Date(),
+) {
+  if (periodFilter === allIncomingPaymentPeriodFilter) {
+    return true;
+  }
+
+  if (!date) {
+    return false;
+  }
+
+  const range = getPeriodRange(periodFilter, referenceDate);
+
+  if (!range) {
+    return true;
+  }
+
+  const timestamp = date.getTime();
+
+  return timestamp >= range.start.getTime() && timestamp <= range.end.getTime();
+}
+
+export function branchesMatch(branch: string, branchFilter: BranchFilter) {
+  if (branchFilter === allBranchFilter) {
+    return true;
+  }
+
+  return normalizeLookupKey(branch) === normalizeLookupKey(branchFilter);
+}
+
+export function getBranchFilterOptions(
+  items: Array<{ branch: string }>,
+  additionalBranches: string[] = [],
+): BranchFilter[] {
+  const branchByKey = new Map<string, string>();
+
+  for (const branch of [
+    ...additionalBranches,
+    ...items.map((item) => item.branch),
+  ]) {
+    const normalizedBranch = normalizeFilterText(branch);
+
+    if (!normalizedBranch || isUnassignedBranchLabel(normalizedBranch)) {
+      continue;
+    }
+
+    const key = normalizeLookupKey(normalizedBranch);
+
+    if (!branchByKey.has(key)) {
+      branchByKey.set(key, normalizedBranch);
+    }
+  }
+
+  const branches = [...branchByKey.values()].sort((first, second) =>
+    first.localeCompare(second, "id-ID"),
   );
 
   return [allBranchFilter, ...branches];

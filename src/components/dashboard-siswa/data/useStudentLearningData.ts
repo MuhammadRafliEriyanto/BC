@@ -1,15 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { clearAuthClientState } from "@/lib/auth";
 
 import type {
+  StudentAcademicSummary,
   StudentMaterial,
+  StudentTaskGradeSummary,
   StudentTask,
+  StudentTaskSubmissionSummary,
   StudentTaskStatus,
   SubmissionMode,
 } from "./learning-data";
+import {
+  EMPTY_ACADEMIC_SCORES,
+  type AcademicGradeScheme,
+  type AcademicScores,
+} from "@/lib/academic-grades";
 
 type StudentLearningApiMaterialItem = {
   id?: string;
@@ -26,6 +34,8 @@ type StudentLearningApiMaterialItem = {
 type StudentLearningApiTaskItem = {
   id?: string;
   taskId?: string;
+  classId?: string;
+  className?: string;
   subject?: string;
   title?: string;
   meetingNumber?: number;
@@ -33,6 +43,8 @@ type StudentLearningApiTaskItem = {
   deadline?: string;
   reviewStatus?: string;
   attachment?: StudentLearningApiAttachmentItem | null;
+  mySubmission?: StudentLearningApiTaskSubmissionItem | null;
+  myGrade?: StudentLearningApiTaskGradeItem | null;
 };
 
 type StudentLearningApiAttachmentItem = {
@@ -41,13 +53,50 @@ type StudentLearningApiAttachmentItem = {
   size?: number;
 };
 
+type StudentLearningApiTaskSubmissionItem = {
+  submitted?: boolean;
+  submissionId?: string | null;
+  submissionMode?: SubmissionMode | null;
+  submittedAt?: string | null;
+  hasAttachment?: boolean;
+  driveUrl?: string;
+  answerTextPreview?: string;
+};
+
+type StudentLearningApiTaskGradeItem = {
+  graded?: boolean;
+  gradeId?: string | null;
+  score?: number | null;
+  note?: string;
+  status?: string;
+  gradedAt?: string | null;
+};
+
 type StudentLearningResponse = {
   success: boolean;
   message?: string;
   data?: {
     materials?: StudentLearningApiMaterialItem[];
     tasks?: StudentLearningApiTaskItem[];
+    academicSummaries?: StudentLearningApiAcademicSummaryItem[];
   };
+};
+
+type StudentLearningApiAcademicSummaryItem = {
+  classId?: string;
+  className?: string;
+  subject?: string;
+  scheme?: AcademicGradeScheme;
+  period?: {
+    academicYear?: string;
+    semester?: string;
+  };
+  taskAverage?: number | null;
+  gradedTaskCount?: number;
+  scores?: Partial<AcademicScores>;
+  note?: string;
+  finalAverage?: number | null;
+  evaluatedAt?: string | null;
 };
 
 function normalizeText(value: string | null | undefined) {
@@ -141,10 +190,15 @@ function formatUpdatedLabel(updatedAt: string | null | undefined) {
 
 function deriveTaskStatus(
   deadline: string,
-  reviewStatus: string,
+  grade: StudentLearningApiTaskGradeItem | null | undefined,
+  submission: StudentLearningApiTaskSubmissionItem | null | undefined,
 ): StudentTaskStatus {
-  if (normalizeText(reviewStatus).toLowerCase() === "sudah dinilai") {
+  if (normalizeText(grade?.status).toLowerCase() === "sudah dinilai") {
     return "Sudah Dinilai";
+  }
+
+  if (submission?.submitted) {
+    return "Sudah Dikirim";
   }
 
   const normalizedDeadline = normalizeText(deadline);
@@ -160,6 +214,49 @@ function deriveTaskStatus(
   }
 
   return "Menunggu Dikirim";
+}
+
+function mapTaskSubmissionSummary(
+  submission: StudentLearningApiTaskSubmissionItem | null | undefined,
+): StudentTaskSubmissionSummary | undefined {
+  if (!submission) {
+    return undefined;
+  }
+
+  return {
+    submitted: Boolean(submission.submitted),
+    submissionId: submission.submissionId?.trim() || null,
+    submissionMode: submission.submissionMode ?? null,
+    submittedAt: submission.submittedAt?.trim() || null,
+    hasAttachment: Boolean(submission.hasAttachment),
+    driveUrl: normalizeText(submission.driveUrl),
+    answerTextPreview: normalizeText(submission.answerTextPreview),
+  };
+}
+
+function mapTaskGradeSummary(
+  grade: StudentLearningApiTaskGradeItem | null | undefined,
+): StudentTaskGradeSummary | undefined {
+  if (!grade) {
+    return undefined;
+  }
+
+  const normalizedStatus =
+    normalizeText(grade.status).toLowerCase() === "sudah dinilai"
+      ? "Sudah Dinilai"
+      : "Belum Dinilai";
+
+  return {
+    graded: Boolean(grade.graded) || normalizedStatus === "Sudah Dinilai",
+    gradeId: normalizeText(grade.gradeId) || null,
+    score:
+      typeof grade.score === "number" && Number.isFinite(grade.score)
+        ? grade.score
+        : null,
+    note: normalizeText(grade.note),
+    status: normalizedStatus,
+    gradedAt: grade.gradedAt?.trim() || null,
+  };
 }
 
 function mapApiMaterialToStudentMaterial(
@@ -225,9 +322,12 @@ function mapApiTaskToStudentTask(task: StudentLearningApiTaskItem): StudentTask 
     normalizeText(task.id) ||
     `tugas-${Date.now()}`;
   const attachmentFileName = normalizeText(task.attachment?.fileName);
+  const myGrade = mapTaskGradeSummary(task.myGrade);
 
   return {
     id: taskId,
+    classId: normalizeText(task.classId),
+    className: normalizeText(task.className),
     mapel: normalizeText(task.subject) || "Mapel belum diatur",
     judul: title,
     pertemuan: Math.max(
@@ -236,8 +336,15 @@ function mapApiTaskToStudentTask(task: StudentLearningApiTaskItem): StudentTask 
     ),
     deadline: deadline ? `${formatDisplayDate(deadline)}, 23.59 WIB` : "-",
     estimasi: "Mandiri",
-    poin: "Sesuai penilaian guru",
-    status: deriveTaskStatus(deadline, normalizeText(task.reviewStatus)),
+    poin:
+      myGrade?.graded && typeof myGrade.score === "number"
+        ? `${myGrade.score}/100`
+        : "Sesuai penilaian guru",
+    status: deriveTaskStatus(
+      deadline,
+      task.myGrade,
+      task.mySubmission,
+    ),
     deskripsi: description,
     detailHref: "/dashboard-siswa/tugas",
     submitHref: "/dashboard-siswa/kirim-tugas",
@@ -251,21 +358,60 @@ function mapApiTaskToStudentTask(task: StudentLearningApiTaskItem): StudentTask 
       "Kamu bisa mengirim lewat file, teks langsung, atau link Drive.",
       "Pastikan jawaban final sudah siap sebelum dikirim ke guru.",
     ],
+    mySubmission: mapTaskSubmissionSummary(task.mySubmission),
+    myGrade,
+  };
+}
+
+function mapApiAcademicSummary(
+  summary: StudentLearningApiAcademicSummaryItem,
+): StudentAcademicSummary {
+  return {
+    classId: normalizeText(summary.classId),
+    className: normalizeText(summary.className),
+    subject: normalizeText(summary.subject) || "Mapel belum diatur",
+    scheme: summary.scheme ?? "semester",
+    academicYear: normalizeText(summary.period?.academicYear),
+    semester: normalizeText(summary.period?.semester),
+    taskAverage:
+      typeof summary.taskAverage === "number" ? summary.taskAverage : null,
+    gradedTaskCount: Math.max(summary.gradedTaskCount ?? 0, 0),
+    scores: {
+      ...EMPTY_ACADEMIC_SCORES,
+      ...summary.scores,
+    },
+    note: normalizeText(summary.note),
+    finalAverage:
+      typeof summary.finalAverage === "number" ? summary.finalAverage : null,
+    evaluatedAt: normalizeText(summary.evaluatedAt) || null,
   };
 }
 
 export function useStudentLearningData() {
   const [materials, setMaterials] = useState<StudentMaterial[]>([]);
   const [tasks, setTasks] = useState<StudentTask[]>([]);
+  const [academicSummaries, setAcademicSummaries] = useState<
+    StudentAcademicSummary[]
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
+  const isMountedRef = useRef(true);
+  const silentReloadRef = useRef(false);
 
   useEffect(() => {
-    let isMounted = true;
+    isMountedRef.current = true;
+    const showLoading = !silentReloadRef.current;
+    silentReloadRef.current = false;
 
     async function loadStudentLearningData() {
-      setIsLoading(true);
-      setLoadError(null);
+      if (showLoading && isMountedRef.current) {
+        setIsLoading(true);
+      }
+
+      if (isMountedRef.current) {
+        setLoadError(null);
+      }
 
       try {
         const response = await fetch("/api/student/me/learning", {
@@ -277,7 +423,7 @@ export function useStudentLearningData() {
           | StudentLearningResponse
           | null;
 
-        if (!isMounted) {
+        if (!isMountedRef.current) {
           return;
         }
 
@@ -285,6 +431,7 @@ export function useStudentLearningData() {
           clearAuthClientState();
           setMaterials([]);
           setTasks([]);
+          setAcademicSummaries([]);
           setLoadError("Sesi login berakhir. Silakan login ulang.");
           return;
         }
@@ -292,9 +439,9 @@ export function useStudentLearningData() {
         if (!response.ok || !payload?.success) {
           setMaterials([]);
           setTasks([]);
+          setAcademicSummaries([]);
           setLoadError(
-            payload?.message ||
-              "Materi dan tugas siswa belum bisa dimuat saat ini.",
+            payload?.message || "Materi dan tugas siswa belum bisa dimuat saat ini.",
           );
           return;
         }
@@ -303,17 +450,21 @@ export function useStudentLearningData() {
           (payload.data?.materials ?? []).map(mapApiMaterialToStudentMaterial),
         );
         setTasks((payload.data?.tasks ?? []).map(mapApiTaskToStudentTask));
+        setAcademicSummaries(
+          (payload.data?.academicSummaries ?? []).map(mapApiAcademicSummary),
+        );
       } catch (error) {
-        if (!isMounted) {
+        if (!isMountedRef.current) {
           return;
         }
 
         console.error("[dashboard-siswa] load_learning_data_failed", { error });
         setMaterials([]);
         setTasks([]);
+        setAcademicSummaries([]);
         setLoadError("Materi dan tugas siswa belum bisa dimuat saat ini.");
       } finally {
-        if (isMounted) {
+        if (isMountedRef.current) {
           setIsLoading(false);
         }
       }
@@ -324,14 +475,44 @@ export function useStudentLearningData() {
     });
 
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
     };
-  }, []);
+  }, [reloadToken]);
+
+  function refreshLearningData() {
+    silentReloadRef.current = true;
+    setReloadToken((currentToken) => currentToken + 1);
+  }
+
+  function updateTaskSubmissionSummary(
+    taskId: string,
+    submissionSummary: StudentTaskSubmissionSummary,
+  ) {
+    setTasks((currentTasks) =>
+      currentTasks.map((task) =>
+        task.id === taskId
+          ? {
+              ...task,
+              mySubmission: submissionSummary,
+              status:
+                task.myGrade?.status === "Sudah Dinilai"
+                  ? "Sudah Dinilai"
+                  : submissionSummary.submitted
+                    ? "Sudah Dikirim"
+                    : task.status,
+            }
+          : task,
+      ),
+    );
+  }
 
   return {
     materials,
     tasks,
+    academicSummaries,
     isLoading,
     loadError,
+    refreshLearningData,
+    updateTaskSubmissionSummary,
   };
 }

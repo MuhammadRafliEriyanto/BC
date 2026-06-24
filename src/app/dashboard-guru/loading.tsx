@@ -1,3 +1,5 @@
+import { DashboardLoading } from "@/components/shared/dashboard-loading";
+
 export default function Loading() {
-  return <main className="min-h-screen w-full bg-white" />;
+  return <DashboardLoading />;
 }

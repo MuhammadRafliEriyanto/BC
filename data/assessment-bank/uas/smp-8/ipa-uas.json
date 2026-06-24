@@ -1,0 +1,216 @@
+{
+  "schemaVersion": "1.0.0",
+  "questionSetId": "UAS-SMP8-IPA",
+  "assessmentType": "UAS",
+  "stage": null,
+  "className": "SMP 8",
+  "grade": 8,
+  "phase": "Fase D",
+  "subject": "IPA",
+  "questionCount": 10,
+  "suggestedDurationMinutes": 60,
+  "reviewStatus": "Perlu Review Guru",
+  "curriculumNote": "Draft orisinal berbasis kompetensi umum Kurikulum Merdeka; cocokkan kembali dengan ATP dan materi yang telah diajarkan di cabang.",
+  "questions": [
+    {
+      "questionId": "UAS-SMP8-IPA-001",
+      "number": 1,
+      "competency": "Pengukuran",
+      "topic": "Pengukuran",
+      "indicator": "Memilih alat ukur sesuai objek",
+      "cognitiveLevel": "C2",
+      "difficulty": "Mudah",
+      "question": "Alat yang paling tepat untuk mengukur volume 48 mL air adalah ...",
+      "options": {
+        "A": "neraca",
+        "B": "termometer",
+        "C": "mistar",
+        "D": "gelas ukur"
+      },
+      "correctAnswer": "D",
+      "explanation": "Gelas ukur dirancang untuk mengukur volume cairan.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMP8-IPA-002",
+      "number": 2,
+      "competency": "Pemisahan campuran",
+      "topic": "Pemisahan campuran",
+      "indicator": "Menentukan urutan pemisahan campuran",
+      "cognitiveLevel": "C2",
+      "difficulty": "Mudah",
+      "question": "Campuran garam dan pasir paling tepat dipisahkan dengan urutan ...",
+      "options": {
+        "A": "memanaskan pasir hingga mencair",
+        "B": "menggunakan magnet untuk menarik garam",
+        "C": "melarutkan garam, menyaring pasir, lalu menguapkan air",
+        "D": "menyaring campuran kering lalu membekukannya"
+      },
+      "correctAnswer": "C",
+      "explanation": "Garam larut dalam air, pasir tertahan saat penyaringan, dan garam diperoleh kembali melalui penguapan.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMP8-IPA-003",
+      "number": 3,
+      "competency": "Sistem organ",
+      "topic": "Sistem organ",
+      "indicator": "Menghubungkan struktur dengan fungsi",
+      "cognitiveLevel": "C3",
+      "difficulty": "Mudah",
+      "question": "Alveolus pada paru-paru memiliki dinding tipis dan banyak kapiler agar ...",
+      "options": {
+        "A": "tulang menghasilkan gerak",
+        "B": "pertukaran oksigen dan karbon dioksida berlangsung efisien",
+        "C": "makanan dapat dicerna",
+        "D": "darah membeku lebih cepat"
+      },
+      "correctAnswer": "B",
+      "explanation": "Dinding tipis dan jaringan kapiler memperpendek jarak difusi gas.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMP8-IPA-004",
+      "number": 4,
+      "competency": "Ekosistem",
+      "topic": "Ekosistem",
+      "indicator": "Menganalisis pencemaran perairan",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Limpasan pupuk berlebih masuk ke danau dan memicu ledakan alga. Dampak lanjutan yang paling mungkin adalah ...",
+      "options": {
+        "A": "oksigen terlarut menurun ketika alga membusuk",
+        "B": "air selalu menjadi lebih jernih",
+        "C": "semua ikan mendapat lebih banyak oksigen",
+        "D": "jumlah pengurai langsung menjadi nol"
+      },
+      "correctAnswer": "A",
+      "explanation": "Penguraian biomassa alga menggunakan oksigen sehingga kadar oksigen terlarut dapat turun.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMP8-IPA-005",
+      "number": 5,
+      "competency": "Massa jenis",
+      "topic": "Massa jenis",
+      "indicator": "Menghitung massa jenis benda",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Benda bermassa 300 gram memiliki volume 150 cm3. Massa jenisnya adalah ...",
+      "options": {
+        "A": "450 g/cm3",
+        "B": "0.5 g/cm3",
+        "C": "45000 g/cm3",
+        "D": "2 g/cm3"
+      },
+      "correctAnswer": "D",
+      "explanation": "Massa jenis = massa/volume = 300/150 = 2 g/cm3.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMP8-IPA-006",
+      "number": 6,
+      "competency": "Gaya dan usaha",
+      "topic": "Gaya dan usaha",
+      "indicator": "Menghitung usaha oleh gaya searah perpindahan",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Gaya 45 N mendorong benda sejauh 9 m searah gaya. Usaha yang dilakukan adalah ...",
+      "options": {
+        "A": "5 J",
+        "B": "0.2 J",
+        "C": "54 J",
+        "D": "405 J"
+      },
+      "correctAnswer": "D",
+      "explanation": "Usaha W = F x s = 45 x 9 = 405 J.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMP8-IPA-007",
+      "number": 7,
+      "competency": "Kalor",
+      "topic": "Kalor",
+      "indicator": "Menganalisis konveksi pada kehidupan sehari-hari",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Udara panas di atas api bergerak naik terutama karena ...",
+      "options": {
+        "A": "gravitasi berhenti bekerja",
+        "B": "massa jenisnya menurun sehingga terjadi konveksi",
+        "C": "udara panas berubah menjadi padat",
+        "D": "kalor hanya dapat merambat melalui logam"
+      },
+      "correctAnswer": "B",
+      "explanation": "Pemanasan membuat udara memuai dan massa jenisnya menurun sehingga bergerak naik.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMP8-IPA-008",
+      "number": 8,
+      "competency": "Listrik",
+      "topic": "Listrik",
+      "indicator": "Membandingkan rangkaian seri dan paralel",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sedang",
+      "question": "Keunggulan pemasangan lampu rumah secara paralel adalah ...",
+      "options": {
+        "A": "lampu lain tetap menyala ketika satu lampu putus",
+        "B": "semua lampu pasti lebih redup",
+        "C": "rangkaian hanya memiliki satu jalur",
+        "D": "tegangan sumber menjadi nol"
+      },
+      "correctAnswer": "A",
+      "explanation": "Setiap cabang paralel memiliki jalur arus sendiri.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMP8-IPA-009",
+      "number": 9,
+      "competency": "Sistem reproduksi",
+      "topic": "Sistem reproduksi",
+      "indicator": "Menjelaskan fungsi hormon",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sulit",
+      "question": "Pada siklus menstruasi, peningkatan hormon FSH terutama merangsang ...",
+      "options": {
+        "A": "pembekuan darah",
+        "B": "pertukaran gas di alveolus",
+        "C": "pencernaan protein di lambung",
+        "D": "pematangan folikel di ovarium"
+      },
+      "correctAnswer": "D",
+      "explanation": "FSH berperan merangsang pertumbuhan dan pematangan folikel.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMP8-IPA-010",
+      "number": 10,
+      "competency": "Metode ilmiah",
+      "topic": "Metode ilmiah",
+      "indicator": "Mengidentifikasi variabel terikat",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sulit",
+      "question": "Dalam percobaan pengaruh suhu air terhadap waktu larut gula, variabel terikatnya adalah ...",
+      "options": {
+        "A": "jenis gula yang dibuat berbeda",
+        "B": "ukuran wadah yang diubah-ubah",
+        "C": "waktu yang diperlukan gula untuk larut",
+        "D": "suhu air"
+      },
+      "correctAnswer": "C",
+      "explanation": "Variabel terikat adalah hasil yang diukur, yaitu waktu pelarutan.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    }
+  ]
+}

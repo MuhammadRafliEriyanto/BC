@@ -1,0 +1,216 @@
+{
+  "schemaVersion": "1.0.0",
+  "questionSetId": "UAS-SMA10-BIND",
+  "assessmentType": "UAS",
+  "stage": null,
+  "className": "SMA 10",
+  "grade": 10,
+  "phase": "Fase E",
+  "subject": "Bahasa Indonesia",
+  "questionCount": 10,
+  "suggestedDurationMinutes": 60,
+  "reviewStatus": "Perlu Review Guru",
+  "curriculumNote": "Draft orisinal berbasis kompetensi umum Kurikulum Merdeka; cocokkan kembali dengan ATP dan materi yang telah diajarkan di cabang.",
+  "questions": [
+    {
+      "questionId": "UAS-SMA10-BIND-001",
+      "number": 1,
+      "competency": "Gagasan utama",
+      "topic": "Gagasan utama",
+      "indicator": "Menentukan gagasan utama teks informatif",
+      "cognitiveLevel": "C2",
+      "difficulty": "Mudah",
+      "question": "Bacalah teks \"Budaya Membaca Data\" berikut.\nSebuah grafik dapat tampak meyakinkan meskipun menggunakan skala yang memotong sebagian sumbu. Pemotongan itu membuat perbedaan kecil terlihat sangat besar. Pembaca perlu memeriksa judul, satuan, sumber, dan rentang skala sebelum menarik kesimpulan. Kemampuan tersebut penting agar keputusan tidak didasarkan pada visualisasi yang menipu.\nGagasan utama teks tersebut adalah ...",
+      "options": {
+        "A": "Masalah dalam teks tidak memiliki hubungan dengan pembaca.",
+        "B": "Grafik harus dibaca secara kritis sebelum dijadikan dasar kesimpulan.",
+        "C": "Seluruh kegiatan harus dihentikan.",
+        "D": "Teks hanya berisi daftar nama orang."
+      },
+      "correctAnswer": "B",
+      "explanation": "Gagasan tersebut merangkum seluruh uraian, yaitu grafik harus dibaca secara kritis sebelum dijadikan dasar kesimpulan.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMA10-BIND-002",
+      "number": 2,
+      "competency": "Informasi tersurat",
+      "topic": "Informasi tersurat",
+      "indicator": "Menemukan bukti yang dinyatakan langsung",
+      "cognitiveLevel": "C2",
+      "difficulty": "Mudah",
+      "question": "Berdasarkan teks \"Budaya Membaca Data\", informasi yang dinyatakan secara langsung adalah ...",
+      "options": {
+        "A": "Pemotongan sumbu dapat membesar-besarkan perbedaan.",
+        "B": "Penulis menolak seluruh tindakan yang dibahas.",
+        "C": "Kegiatan tersebut tidak pernah menghasilkan perubahan.",
+        "D": "Semua tokoh mengabaikan bukti."
+      },
+      "correctAnswer": "A",
+      "explanation": "Informasi tersebut tertulis secara langsung dalam teks \"Budaya Membaca Data\".",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMA10-BIND-003",
+      "number": 3,
+      "competency": "Inferensi",
+      "topic": "Inferensi",
+      "indicator": "Menarik simpulan dari hubungan antargagasan",
+      "cognitiveLevel": "C3",
+      "difficulty": "Mudah",
+      "question": "Simpulan tersirat yang didukung oleh teks \"Budaya Membaca Data\" adalah ...",
+      "options": {
+        "A": "Masalah akan selesai tanpa tindakan.",
+        "B": "Data tidak diperlukan dalam pengambilan keputusan.",
+        "C": "Setiap perubahan selalu merugikan.",
+        "D": "Tampilan visual tidak selalu mencerminkan besarnya perbedaan secara adil."
+      },
+      "correctAnswer": "D",
+      "explanation": "Simpulan tersebut konsisten dengan fakta dan hubungan sebab-akibat pada teks.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMA10-BIND-004",
+      "number": 4,
+      "competency": "Makna kata",
+      "topic": "Makna kata",
+      "indicator": "Menafsirkan istilah dalam teks",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Dalam teks \"Budaya Membaca Data\", kata \"rentang\" bermakna ...",
+      "options": {
+        "A": "tempat yang tidak dapat dijelaskan",
+        "B": "pendapat yang pasti salah",
+        "C": "jarak antara batas terendah dan tertinggi",
+        "D": "kegiatan tanpa tujuan"
+      },
+      "correctAnswer": "C",
+      "explanation": "Makna yang sesuai konteks adalah jarak antara batas terendah dan tertinggi.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMA10-BIND-005",
+      "number": 5,
+      "competency": "Sudut pandang penulis",
+      "topic": "Sudut pandang penulis",
+      "indicator": "Menilai sikap penulis terhadap topik",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Sikap penulis dalam teks \"Budaya Membaca Data\" paling tepat digambarkan sebagai ...",
+      "options": {
+        "A": "hanya menceritakan khayalan",
+        "B": "kritis dan berbasis alasan",
+        "C": "menolak topik tanpa penjelasan",
+        "D": "acuh terhadap dampak"
+      },
+      "correctAnswer": "B",
+      "explanation": "Penulis menyajikan fakta, dampak, dan alasan secara kritis.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMA10-BIND-006",
+      "number": 6,
+      "competency": "Kalimat efektif",
+      "topic": "Kalimat efektif",
+      "indicator": "Memperbaiki kalimat tidak efektif",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Perbaikan paling tepat untuk kalimat \"Para siswa-siswa melakukan pemeriksaan ulang kembali\" adalah ...",
+      "options": {
+        "A": "Para siswa melakukan pemeriksaan ulang.",
+        "B": "Para siswa-siswa melakukan pemeriksaan kembali lagi.",
+        "C": "Siswa para melakukan ulang pemeriksaan kembali.",
+        "D": "Pemeriksaan para siswa-siswa lakukan ulang kembali."
+      },
+      "correctAnswer": "A",
+      "explanation": "Kata \"para\" sudah menyatakan jamak dan \"ulang\" tidak perlu disertai \"kembali\".",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMA10-BIND-007",
+      "number": 7,
+      "competency": "Konjungsi",
+      "topic": "Konjungsi",
+      "indicator": "Menggunakan konjungsi sebab-akibat",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Data telah diperiksa dari beberapa sumber, ... kesimpulan laporan menjadi lebih dapat dipercaya.",
+      "options": {
+        "A": "meskipun",
+        "B": "sebelum",
+        "C": "atau",
+        "D": "sehingga"
+      },
+      "correctAnswer": "D",
+      "explanation": "Konjungsi \"sehingga\" menyatakan akibat dari pemeriksaan data.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMA10-BIND-008",
+      "number": 8,
+      "competency": "Ejaan",
+      "topic": "Ejaan",
+      "indicator": "Menerapkan tanda baca pada kalimat majemuk",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sedang",
+      "question": "Kalimat dengan tanda baca yang tepat adalah ...",
+      "options": {
+        "A": "Laporan itu ringkas tetapi, bukti pendukungnya lengkap.",
+        "B": "Laporan itu ringkas tetapi bukti, pendukungnya lengkap.",
+        "C": "Laporan itu ringkas, tetapi bukti pendukungnya lengkap.",
+        "D": "Laporan itu, ringkas tetapi bukti pendukungnya lengkap."
+      },
+      "correctAnswer": "C",
+      "explanation": "Koma diletakkan sebelum konjungsi \"tetapi\" yang menghubungkan dua klausa setara.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMA10-BIND-009",
+      "number": 9,
+      "competency": "Sintesis",
+      "topic": "Sintesis",
+      "indicator": "Menyusun ringkasan dari gagasan utama dan bukti",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sulit",
+      "question": "Ringkasan paling lengkap untuk teks \"Budaya Membaca Data\" adalah ...",
+      "options": {
+        "A": "Teks tidak menyampaikan gagasan yang dapat diringkas.",
+        "B": "Grafik harus dibaca secara kritis sebelum dijadikan dasar kesimpulan. Bukti pentingnya adalah: pemotongan sumbu dapat membesar-besarkan perbedaan.",
+        "C": "Pemotongan sumbu dapat membesar-besarkan perbedaan.",
+        "D": "Teks hanya menjelaskan arti kata \"rentang\"."
+      },
+      "correctAnswer": "B",
+      "explanation": "Pilihan tersebut menggabungkan gagasan utama dengan bukti penting secara ringkas.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UAS-SMA10-BIND-010",
+      "number": 10,
+      "competency": "Evaluasi informasi",
+      "topic": "Evaluasi informasi",
+      "indicator": "Memilih sumber penguat yang kredibel",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sulit",
+      "question": "Sumber tambahan paling tepat untuk memeriksa isi teks \"Budaya Membaca Data\" adalah ...",
+      "options": {
+        "A": "laporan lembaga terkait yang memuat metode dan data",
+        "B": "unggahan anonim tanpa tanggal",
+        "C": "iklan yang tidak mencantumkan sumber",
+        "D": "komentar singkat tanpa bukti"
+      },
+      "correctAnswer": "A",
+      "explanation": "Laporan yang menjelaskan metode dan data lebih dapat diuji serta dipertanggungjawabkan.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    }
+  ]
+}

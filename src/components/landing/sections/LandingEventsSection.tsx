@@ -251,7 +251,7 @@ export default function LandingEventsSection() {
 
                 <div className="mt-8 flex flex-wrap items-center gap-3">
                   <Link
-                    href="/register-online"
+                    href="/register"
                     className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[linear-gradient(135deg,#f97316_0%,#ea580c_100%)] px-6 text-sm font-semibold text-white shadow-[0_24px_34px_-24px_rgba(249,115,22,0.42)] transition hover:-translate-y-px hover:brightness-105"
                   >
                     Daftar Program Ini

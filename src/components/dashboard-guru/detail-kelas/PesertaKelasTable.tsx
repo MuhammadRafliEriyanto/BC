@@ -119,6 +119,7 @@ export default function PesertaKelasTable({
                   <th className="px-4 py-4 font-semibold">No</th>
                   <th className="px-4 py-4 font-semibold">Nama Siswa</th>
                   <th className="px-4 py-4 font-semibold">Kelas/Jenjang</th>
+                  <th className="px-4 py-4 font-semibold">Cabang</th>
                   <th className="px-4 py-4 font-semibold">Status</th>
                   <th className="px-4 py-4 text-center font-semibold">Aksi</th>
                 </tr>
@@ -137,6 +138,11 @@ export default function PesertaKelasTable({
                     </td>
                     <td className="px-4 py-4 text-slate-600">
                       {student.classLevel}
+                    </td>
+                    <td className="px-4 py-4">
+                      <span className="inline-flex border border-orange-100 bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-700">
+                        {student.branch}
+                      </span>
                     </td>
                     <td className="px-4 py-4">
                       <span
@@ -187,7 +193,7 @@ export default function PesertaKelasTable({
                   {selectedStudent?.name ?? "-"}
                 </h3>
                 <p className="mt-1 text-sm text-slate-500">
-                  {selectedStudent?.classLevel ?? "-"}
+                  {selectedStudent?.classLevel ?? "-"} • {selectedStudent?.branch ?? "-"}
                 </p>
               </div>
               <span

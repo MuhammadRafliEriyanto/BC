@@ -6,6 +6,7 @@ import {
   ChevronDown,
   LoaderCircle,
   LogOut,
+  Menu,
   Search,
   UserRound,
 } from "lucide-react";
@@ -26,6 +27,7 @@ import {
   AuthRequestError,
   authService,
   clearAuthClientState,
+  getRedirectPathForRole,
   persistAuthUser,
   readPersistedAuthUser,
   type AuthUser,
@@ -37,8 +39,6 @@ import {
   fetchOwnerGlobalSearch,
   type OwnerSearchResults,
 } from "@/lib/owner-search";
-
-import { OwnerUserProfileDialog } from "./OwnerUserProfileDialog";
 
 function getInitials(name: string) {
   return (
@@ -150,7 +150,7 @@ function resolveOwnerSearchHref(groupKey: OwnerSearchGroupKey) {
     case "payments":
       return "/dashboard-owner/aktivitas?tab=masuk";
     case "expenses":
-      return "/dashboard-owner/pengeluaran";
+      return "/dashboard-owner/aktivitas?tab=keluar";
     case "activations":
       return "/dashboard-owner/aktivitas?tab=aktivasi";
     default:
@@ -158,12 +158,17 @@ function resolveOwnerSearchHref(groupKey: OwnerSearchGroupKey) {
   }
 }
 
-export function OwnerDashboardTopbar() {
+type OwnerDashboardTopbarProps = {
+  onOpenNavigation?: () => void;
+};
+
+export function OwnerDashboardTopbar({
+  onOpenNavigation,
+}: OwnerDashboardTopbarProps) {
   const router = useRouter();
   const [, startTransition] = useTransition();
   const searchContainerRef = useRef<HTMLDivElement | null>(null);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isUserLoading, setIsUserLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [notificationTotal, setNotificationTotal] = useState(0);
@@ -190,6 +195,13 @@ export function OwnerDashboardTopbar() {
       if (user) {
         persistAuthUser(user);
         setCurrentUser(user);
+
+        if (user.role !== "owner") {
+          startTransition(() => {
+            router.replace(getRedirectPathForRole(user.role));
+            router.refresh();
+          });
+        }
       }
     } catch (error) {
       if (
@@ -205,7 +217,7 @@ export function OwnerDashboardTopbar() {
     } finally {
       setIsUserLoading(false);
     }
-  }, []);
+  }, [router, startTransition]);
 
   const loadNotificationSummary = useCallback(async () => {
     setIsNotificationsLoading(true);
@@ -402,11 +414,23 @@ export function OwnerDashboardTopbar() {
   return (
     <>
       <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/92 backdrop-blur-xl supports-[backdrop-filter]:bg-white/84">
-        <div className="flex min-h-[72px] flex-col gap-4 px-5 py-4 lg:h-[72px] lg:flex-row lg:items-center lg:justify-between lg:gap-0 lg:px-8 lg:py-0">
-          <div
-            ref={searchContainerRef}
-            className="relative min-w-0 w-full md:max-w-[300px] lg:max-w-[360px]"
-          >
+        <div className="flex min-h-[72px] flex-col gap-3 px-4 py-3 sm:px-5 lg:h-[72px] lg:flex-row lg:items-center lg:justify-between lg:gap-4 lg:px-8 lg:py-0">
+          <div className="flex min-w-0 items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="size-10 shrink-0 rounded-lg border-slate-200 bg-white lg:hidden"
+              onClick={onOpenNavigation}
+              aria-label="Buka navigasi Owner"
+            >
+              <Menu className="size-[18px]" />
+            </Button>
+
+            <div
+              ref={searchContainerRef}
+              className="relative min-w-0 flex-1 sm:w-[320px] lg:w-[360px]"
+            >
             <Search className="pointer-events-none absolute left-3.5 top-1/2 size-3.5 -translate-y-1/2 text-slate-400" />
             <Input
               aria-label="Cari data dashboard owner"
@@ -420,7 +444,7 @@ export function OwnerDashboardTopbar() {
               }}
               onFocus={() => setIsSearchOpen(true)}
             />
-            {shouldShowSearchDropdown ? (
+              {shouldShowSearchDropdown ? (
               <div className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-30 overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-xl shadow-slate-950/10">
                 <div className="border-b border-slate-100 px-4 py-3">
                   <p className="text-sm font-semibold text-slate-950">
@@ -493,7 +517,8 @@ export function OwnerDashboardTopbar() {
                   )}
                 </div>
               </div>
-            ) : null}
+              ) : null}
+            </div>
           </div>
 
           <div className="flex shrink-0 items-center justify-end gap-2 md:gap-3">
@@ -622,7 +647,11 @@ export function OwnerDashboardTopbar() {
               <DropdownMenuContent align="end" className="w-64">
                 <DropdownMenuLabel>Akun owner</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => setIsProfileOpen(true)}>
+                <DropdownMenuItem onSelect={() => {
+                  startTransition(() => {
+                    router.push("/dashboard-owner/profil");
+                  });
+                }}>
                   <UserRound className="size-4" />
                   Profil Pengguna
                 </DropdownMenuItem>
@@ -645,16 +674,6 @@ export function OwnerDashboardTopbar() {
         </div>
       </header>
 
-      <OwnerUserProfileDialog
-        key={currentUser?._id ?? "anonymous-owner"}
-        open={isProfileOpen}
-        onOpenChange={setIsProfileOpen}
-        user={currentUser}
-        isUserLoading={isUserLoading}
-        onProfileUpdated={(updatedUser) => {
-          setCurrentUser(updatedUser);
-        }}
-      />
     </>
   );
 }

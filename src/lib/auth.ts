@@ -110,6 +110,7 @@ export const AUTH_TOKEN_COOKIE_NAME = "bimbel_auth_token";
 export const AUTH_ROLE_COOKIE_NAME = "bimbel_auth_role";
 export const AUTH_USER_STORAGE_KEY = "bimbel.auth.user";
 export const AUTH_ROLE_STORAGE_KEY = "bimbel.auth.role";
+export const AUTH_USER_UPDATED_EVENT = "bimbel:auth-user-updated";
 
 const ROLE_REDIRECT_MAP: Record<UserRole, string> = {
   owner: "/dashboard-owner",
@@ -267,6 +268,13 @@ export function persistAuthUser(user: AuthUser) {
 
   window.localStorage.setItem(AUTH_USER_STORAGE_KEY, JSON.stringify(user));
   window.localStorage.setItem(AUTH_ROLE_STORAGE_KEY, user.role);
+  window.dispatchEvent(
+    new CustomEvent(AUTH_USER_UPDATED_EVENT, {
+      detail: {
+        user,
+      },
+    }),
+  );
 }
 
 export function clearAuthClientState() {
@@ -276,6 +284,13 @@ export function clearAuthClientState() {
 
   window.localStorage.removeItem(AUTH_USER_STORAGE_KEY);
   window.localStorage.removeItem(AUTH_ROLE_STORAGE_KEY);
+  window.dispatchEvent(
+    new CustomEvent(AUTH_USER_UPDATED_EVENT, {
+      detail: {
+        user: null,
+      },
+    }),
+  );
 }
 
 export function readPersistedAuthUser() {

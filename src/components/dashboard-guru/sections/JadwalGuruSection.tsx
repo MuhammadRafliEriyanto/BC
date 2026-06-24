@@ -5,6 +5,7 @@ import { useEffect, useEffectEvent, useMemo, useState } from "react";
 import {
   AlertCircle,
   BookOpen,
+  Building2,
   Calendar,
   ChevronRight,
   ClipboardCheck,
@@ -17,6 +18,7 @@ import {
 } from "lucide-react";
 
 import { clearAuthClientState } from "@/lib/auth";
+import { DEFAULT_SEMESTER_MEETING_TARGET } from "@/components/dashboard-guru/data/guruClassData";
 
 type GuruDay =
   | "Senin"
@@ -35,6 +37,7 @@ type JadwalGuruItem = {
   jenjang: string;
   tingkat: string;
   mapel: string;
+  branch: string;
   day: GuruDay;
   time: string;
   room: string;
@@ -57,12 +60,16 @@ type GuruClassCardItem = {
   jenjang: string;
   tingkat: string;
   mapel: string;
+  branch: string;
   day: GuruDay;
   time: string;
   ruangan: string;
   totalSiswa: number;
+  totalPertemuan: number;
   status: GuruStatus;
   conflictCount: number;
+  pendingTaskCount: number;
+  overdueTaskCount: number;
 };
 
 type TeacherClassApiNextSchedule = {
@@ -83,6 +90,9 @@ type TeacherClassApiItem = {
   room?: string;
   studentCount?: number;
   scheduleCount?: number;
+  targetMeetingCount?: number;
+  pendingTaskCount?: number;
+  overdueTaskCount?: number;
   nextSchedule?: TeacherClassApiNextSchedule;
   status?: string;
 };
@@ -304,6 +314,7 @@ function mapKelasToJadwalItem(item: GuruClassCardItem): JadwalGuruItem {
     jenjang: item.jenjang,
     tingkat: item.tingkat,
     mapel: item.mapel,
+    branch: item.branch,
     day: item.day,
     time: item.time,
     room: item.ruangan,
@@ -311,8 +322,11 @@ function mapKelasToJadwalItem(item: GuruClassCardItem): JadwalGuruItem {
   };
 }
 
-function buildClassNameKey(value: string | null | undefined) {
-  return normalizeText(value).toLowerCase();
+function buildClassLookupKey(
+  branch: string | null | undefined,
+  className: string | null | undefined,
+) {
+  return `${normalizeText(branch).toLowerCase()}::${normalizeText(className).toLowerCase()}`;
 }
 
 function pickHigherPriorityStatus(
@@ -339,6 +353,8 @@ function mapTeacherClassItem(
   const namaKelas = normalizeText(item.className) || `Kelas ${index + 1}`;
   const tingkat = normalizeText(item.level) || inferTingkat(namaKelas);
   const nextSchedule = item.nextSchedule ?? null;
+  const configuredTotalPertemuan = DEFAULT_SEMESTER_MEETING_TARGET;
+  const totalPertemuan = configuredTotalPertemuan;
 
   return {
     kelasId: buildItemId("kelas", item.id, index),
@@ -349,6 +365,7 @@ function mapTeacherClassItem(
       normalizeText(item.subject) ||
       normalizeText(nextSchedule?.subject) ||
       "Mapel belum diatur",
+    branch: normalizeText(item.branch) || "Cabang belum diatur",
     day: toGuruDay(nextSchedule?.day) ?? getCurrentIndonesianDay(),
     time: normalizeText(nextSchedule?.time) || "00:00 - 00:00",
     ruangan:
@@ -356,18 +373,24 @@ function mapTeacherClassItem(
       normalizeText(nextSchedule?.room) ||
       "Ruangan belum diatur",
     totalSiswa: Math.max(toSafeNumber(item.studentCount), 0),
+    totalPertemuan,
     status: toGuruStatus(nextSchedule?.status || item.status),
     conflictCount: 0,
+    pendingTaskCount: Math.max(toSafeNumber(item.pendingTaskCount), 0),
+    overdueTaskCount: Math.max(toSafeNumber(item.overdueTaskCount), 0),
     nextScheduleId: normalizeText(nextSchedule?.id),
   };
 }
 
 function buildClassLookups(classItems: GuruClassLookupItem[]) {
-  const byClassName = new Map<string, GuruClassLookupItem>();
+  const byBranchAndClassName = new Map<string, GuruClassLookupItem>();
   const byNextScheduleId = new Map<string, GuruClassLookupItem>();
 
   for (const item of classItems) {
-    byClassName.set(buildClassNameKey(item.namaKelas), item);
+    byBranchAndClassName.set(
+      buildClassLookupKey(item.branch, item.namaKelas),
+      item,
+    );
 
     if (item.nextScheduleId) {
       byNextScheduleId.set(item.nextScheduleId, item);
@@ -375,7 +398,7 @@ function buildClassLookups(classItems: GuruClassLookupItem[]) {
   }
 
   return {
-    byClassName,
+    byBranchAndClassName,
     byNextScheduleId,
   };
 }
@@ -394,7 +417,11 @@ function resolveLinkedClassItem(
     }
   }
 
-  return classLookups.byClassName.get(buildClassNameKey(item.className)) ?? null;
+  return (
+    classLookups.byBranchAndClassName.get(
+      buildClassLookupKey(item.branch, item.className),
+    ) ?? null
+  );
 }
 
 function buildClassScheduleStats(
@@ -473,6 +500,10 @@ function mapScheduleItem(
       normalizeText(item.subject) ||
       linkedClass?.mapel ||
       "Mapel belum diatur",
+    branch:
+      normalizeText(item.branch) ||
+      linkedClass?.branch ||
+      "Cabang belum diatur",
     day,
     time: normalizeText(item.time) || linkedClass?.time || "00:00 - 00:00",
     room: normalizeText(item.room) || linkedClass?.ruangan || "Ruangan belum diatur",
@@ -488,12 +519,22 @@ function buildFollowUpItems(kelasItems: GuruClassCardItem[]) {
     .filter(
       (item) =>
         item.conflictCount > 0 ||
+        item.pendingTaskCount > 0 ||
+        item.overdueTaskCount > 0 ||
         item.status === "Bentrok" ||
         item.status === "Review",
     )
     .sort((left, right) => {
+      if (left.pendingTaskCount !== right.pendingTaskCount) {
+        return right.pendingTaskCount - left.pendingTaskCount;
+      }
+
       if (left.conflictCount !== right.conflictCount) {
         return right.conflictCount - left.conflictCount;
+      }
+
+      if (left.overdueTaskCount !== right.overdueTaskCount) {
+        return right.overdueTaskCount - left.overdueTaskCount;
       }
 
       return toMinuteValue(left.time) - toMinuteValue(right.time);
@@ -502,15 +543,23 @@ function buildFollowUpItems(kelasItems: GuruClassCardItem[]) {
     .map((item) => ({
       id: item.kelasId,
       judul: item.namaKelas,
-      mapel: `${item.mapel} • ${item.day}, ${formatTimeLabel(item.time)} WIB`,
+      mapel: `${item.mapel} • ${item.branch}`,
       jumlahSiswa: item.totalSiswa,
       batasNilai:
         item.conflictCount > 0
           ? `${item.conflictCount} bentrok perlu dicek`
-          : item.status === "Review"
-            ? "Perlu ditinjau ulang"
-            : "Jadwal perlu dikonfirmasi",
-      urgent: item.conflictCount > 0 || item.status === "Bentrok",
+          : item.pendingTaskCount > 0
+            ? `${item.pendingTaskCount} tugas belum dinilai`
+            : item.overdueTaskCount > 0
+              ? `${item.overdueTaskCount} tugas lewat deadline tanpa pengumpulan`
+              : item.status === "Review"
+                ? "Perlu ditinjau ulang"
+                : "Jadwal perlu dikonfirmasi",
+      urgent:
+        item.conflictCount > 0 ||
+        item.pendingTaskCount > 0 ||
+        item.overdueTaskCount > 0 ||
+        item.status === "Bentrok",
       href: `/dashboard-guru/detail-kelas?kelasId=${item.kelasId}`,
     })) satisfies ReviewItem[];
 }
@@ -556,6 +605,20 @@ function getStatusDotClass(status: GuruStatus) {
   }
 }
 
+function getBranchBadgeClass(branch: string) {
+  const normalizedBranch = normalizeText(branch).toLowerCase();
+
+  if (normalizedBranch === "slawi") {
+    return "border-orange-200 bg-orange-50 text-orange-700";
+  }
+
+  if (normalizedBranch === "adiwerna") {
+    return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  }
+
+  return "border-slate-200 bg-slate-50 text-slate-600";
+}
+
 function LoadingStack({ count = 3 }: { count?: number }) {
   return (
     <>
@@ -592,6 +655,12 @@ function JadwalCard({ item }: { item: JadwalGuruItem }) {
           <p className="mt-0.5 text-xs text-orange-600">
             {item.jenjang} {item.tingkat} - {item.mapel}
           </p>
+          <span
+            className={`mt-2 inline-flex items-center gap-1 border px-2 py-1 text-[10px] font-semibold ${getBranchBadgeClass(item.branch)}`}
+          >
+            <Building2 size={11} />
+            Cabang {item.branch}
+          </span>
         </div>
 
         <span
@@ -684,6 +753,12 @@ function KelasCard({ kelas }: { kelas: GuruClassCardItem }) {
           <p className="mt-0.5 text-xs text-orange-600">
             {kelas.jenjang} {kelas.tingkat} - {kelas.mapel}
           </p>
+          <span
+            className={`mt-2 inline-flex items-center gap-1 border px-2 py-1 text-[10px] font-semibold ${getBranchBadgeClass(kelas.branch)}`}
+          >
+            <Building2 size={11} />
+            Cabang {kelas.branch}
+          </span>
         </div>
 
         <span
@@ -700,6 +775,11 @@ function KelasCard({ kelas }: { kelas: GuruClassCardItem }) {
         <span className="flex items-center gap-1 text-xs text-gray-500">
           <User size={11} />
           {kelas.totalSiswa} siswa
+        </span>
+
+        <span className="flex items-center gap-1 text-xs text-gray-500">
+          <BookOpen size={11} />
+          Target {kelas.totalPertemuan} sesi
         </span>
 
         <span className="flex items-center gap-1 text-xs text-gray-500">
@@ -746,6 +826,7 @@ export default function JadwalGuruSection() {
     getCurrentIndonesianDay(),
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedBranch, setSelectedBranch] = useState("Semua");
   const [jadwalItems, setJadwalItems] = useState<JadwalGuruItem[]>([]);
   const [kelasItems, setKelasItems] = useState<GuruClassCardItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -879,9 +960,44 @@ export default function JadwalGuruSection() {
       }),
     [jadwalItems],
   );
+  const branchOptions = useMemo(
+    () => [
+      "Semua",
+      ...Array.from(
+        new Set(
+          sortedJadwal
+            .map((item) => normalizeText(item.branch))
+            .filter(Boolean),
+        ),
+      ).sort((left, right) => left.localeCompare(right, "id-ID")),
+    ],
+    [sortedJadwal],
+  );
+  const classCountByBranch = useMemo(() => {
+    const counts = new Map<string, number>();
+
+    for (const kelas of kelasItems) {
+      const branch = normalizeText(kelas.branch);
+
+      if (!branch) {
+        continue;
+      }
+
+      counts.set(branch, (counts.get(branch) ?? 0) + 1);
+    }
+
+    return counts;
+  }, [kelasItems]);
+  const branchFilteredJadwal = useMemo(
+    () =>
+      selectedBranch === "Semua"
+        ? sortedJadwal
+        : sortedJadwal.filter((item) => item.branch === selectedBranch),
+    [selectedBranch, sortedJadwal],
+  );
   const jadwalPerHari = useMemo(
-    () => sortedJadwal.filter((item) => item.day === selectedDay),
-    [selectedDay, sortedJadwal],
+    () => branchFilteredJadwal.filter((item) => item.day === selectedDay),
+    [branchFilteredJadwal, selectedDay],
   );
   const filteredKelas = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
@@ -898,6 +1014,7 @@ export default function JadwalGuruSection() {
         kelas.day.toLowerCase().includes(query) ||
         kelas.tingkat.toLowerCase().includes(query) ||
         kelas.jenjang.toLowerCase().includes(query)
+        || kelas.branch.toLowerCase().includes(query)
       );
     });
   }, [kelasItems, searchQuery]);
@@ -928,10 +1045,42 @@ export default function JadwalGuruSection() {
               <div className="text-xs font-medium text-gray-500">{weekLabel}</div>
             </div>
 
+            <div className="border-b border-gray-100 px-4 py-3">
+              <div className="flex items-center gap-1 overflow-x-auto" role="group" aria-label="Filter cabang jadwal">
+                {branchOptions.map((branch) => {
+                  const isActive = selectedBranch === branch;
+                  const classCount =
+                    branch === "Semua"
+                      ? kelasItems.length
+                      : classCountByBranch.get(branch) ?? 0;
+
+                  return (
+                    <button
+                      key={branch}
+                      type="button"
+                      aria-pressed={isActive}
+                      onClick={() => setSelectedBranch(branch)}
+                      className={`inline-flex min-h-9 shrink-0 items-center gap-1.5 border px-3 text-xs font-semibold transition ${
+                        isActive
+                          ? "border-orange-300 bg-orange-50 text-orange-700"
+                          : "border-slate-200 bg-white text-slate-600 hover:border-orange-200 hover:text-orange-700"
+                      }`}
+                    >
+                      {branch !== "Semua" ? <Building2 size={13} /> : null}
+                      {branch}
+                      <span className="text-[10px] font-medium opacity-70">
+                        {classCount}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="flex px-2 py-2.5">
               {weekDates.map((dateItem) => {
                 const isActive = selectedDay === dateItem.key;
-                const hasJadwal = sortedJadwal.some(
+                const hasJadwal = branchFilteredJadwal.some(
                   (jadwal) => jadwal.day === dateItem.key,
                 );
 
@@ -979,7 +1128,8 @@ export default function JadwalGuruSection() {
                 <div className="flex flex-col items-center justify-center py-10 text-center text-gray-400">
                   <Calendar size={28} className="opacity-40" />
                   <p className="mt-2 text-xs">
-                    {loadError ?? `Tidak ada jadwal untuk ${selectedDay}`}
+                    {loadError ??
+                      `Tidak ada jadwal${selectedBranch === "Semua" ? "" : ` cabang ${selectedBranch}`} untuk ${selectedDay}`}
                   </p>
                 </div>
               )}

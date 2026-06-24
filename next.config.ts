@@ -10,6 +10,15 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: "/register-online/:path*",
+        destination: "/register/:path*",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

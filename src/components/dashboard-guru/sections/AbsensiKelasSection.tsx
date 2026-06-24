@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import { clearAuthClientState } from "@/lib/auth";
+import { DEFAULT_SEMESTER_MEETING_TARGET } from "@/components/dashboard-guru/data/guruClassData";
 import {
   Dialog,
   DialogClose,
@@ -65,6 +66,7 @@ type AttendanceClassData = {
   ruangan: string;
   totalSiswa: number;
   totalPertemuan: number;
+  pertemuanSelesai: number;
   participants: AttendanceClassParticipant[];
 };
 
@@ -90,7 +92,9 @@ type TeacherClassApiDetailItem = {
   room?: string;
   studentCount?: number;
   scheduleCount?: number;
+  targetMeetingCount?: number;
   nextSchedule?: TeacherClassApiNextSchedule;
+  completedMeetingCount?: number;
   status?: string;
 };
 
@@ -335,6 +339,7 @@ function mapTeacherDetailToAttendanceData(
     } satisfies AttendanceClassParticipant;
   });
   const namaKelas = normalizeText(classItem?.className) || "Kelas belum diatur";
+  const configuredTotalPertemuan = DEFAULT_SEMESTER_MEETING_TARGET;
 
   return {
     kelasId: normalizeText(classItem?.id),
@@ -356,10 +361,8 @@ function mapTeacherDetailToAttendanceData(
       toSafeNumber(classItem?.studentCount),
       participants.length,
     ),
-    totalPertemuan: Math.max(
-      toSafeNumber(classItem?.scheduleCount),
-      schedules.length,
-    ),
+    totalPertemuan: configuredTotalPertemuan,
+    pertemuanSelesai: Math.max(toSafeNumber(classItem?.completedMeetingCount), 0),
     participants,
   };
 }
@@ -489,7 +492,7 @@ function SummaryCard({
   accentClass,
 }: {
   label: string;
-  value: number;
+  value: number | string;
   accentClass: string;
 }) {
   return (
@@ -1372,7 +1375,7 @@ export default function AbsensiKelasSection({
                 <div className="mt-5 flex flex-wrap gap-2.5 text-sm">
                   <div className="inline-flex items-center gap-2 rounded-full border border-orange-100 bg-white px-3.5 py-2 text-slate-600 shadow-sm shadow-orange-100/50">
                     <Users className="h-4 w-4" />
-                    Pertemuan {activeClass.totalPertemuan}
+                    Target Semester {activeClass.totalPertemuan} sesi
                   </div>
                   <div className="inline-flex items-center gap-2 rounded-full border border-orange-100 bg-white px-3.5 py-2 text-slate-600 shadow-sm shadow-orange-100/50">
                     <CalendarDays className="h-4 w-4" />
@@ -1448,24 +1451,24 @@ export default function AbsensiKelasSection({
 
           <div className="grid gap-4 border-b border-orange-100/80 bg-white px-5 py-5 md:grid-cols-4 md:px-7">
             <SummaryCard
-              label="Total Siswa"
-              value={attendanceRows.length}
+              label="Target Semester"
+              value={activeClass.totalPertemuan}
               accentClass="bg-orange-50 text-orange-700"
             />
             <SummaryCard
-              label="Hadir"
-              value={attendanceSummary.H}
+              label="Pertemuan Selesai"
+              value={activeClass.pertemuanSelesai}
               accentClass="bg-emerald-50 text-emerald-700"
             />
             <SummaryCard
-              label="Sakit / Izin"
-              value={attendanceSummary.S + attendanceSummary.I}
+              label="Sisa Pertemuan"
+              value={Math.max(0, activeClass.totalPertemuan - activeClass.pertemuanSelesai)}
               accentClass="bg-amber-50 text-amber-700"
             />
             <SummaryCard
-              label="Alpa"
-              value={attendanceSummary.A}
-              accentClass="bg-rose-50 text-rose-700"
+              label="Progress"
+              value={`${activeClass.pertemuanSelesai}/${activeClass.totalPertemuan}`}
+              accentClass="bg-blue-50 text-blue-700"
             />
           </div>
 

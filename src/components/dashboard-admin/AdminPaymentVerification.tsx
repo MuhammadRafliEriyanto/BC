@@ -1,19 +1,17 @@
-
 /*  */"use client";
-import type { LucideIcon } from "lucide-react";
 import {
   AlertTriangle,
   Ban,
-  CreditCard,
+  CheckCircle2,
   Download,
   Eye,
   LoaderCircle,
   Mail,
+  Pencil,
   Plus,
   RefreshCw,
   Search,
-  UsersRound,
-  WalletCards,
+  Trash2,
 } from "lucide-react";
 import type { FormEvent } from "react";
 import {
@@ -27,7 +25,6 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +34,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -52,6 +50,7 @@ import {
   type AdminDashboardConfigData,
 } from "@/lib/admin-dashboard-config";
 import {
+  archiveAdminPayment,
   cancelAdminPayment,
   createAdminBatchPaymentSession,
   createAdminPaymentSession,
@@ -60,6 +59,8 @@ import {
   fetchAdminPaymentActivations,
   fetchAdminPayments,
   resendAdminPaymentLink,
+  replaceAdminPayment,
+  updateAdminPaymentStatus,
   type AdminBatchPaymentReasonCode,
   type AdminPaymentActivationsData,
   type AdminPaymentListItem,
@@ -67,24 +68,29 @@ import {
   type CreateAdminBatchPaymentSessionData,
   type CreateAdminBatchPaymentSessionItem,
   type CreateAdminBatchPaymentSessionPayload,
+  type ReplaceAdminPaymentPayload,
 } from "@/lib/admin-payments";
 import { type OwnerActivityStudentActivation } from "@/lib/owner-activities";
 import {
   findPackageByKey,
   findPackageByName,
+  getPriceByClassAndPackage,
 } from "@/lib/subscription";
 import { cn, formatCurrency } from "@/lib/utils";
 
 import type { AdminStudent } from "./admin-data";
+import { AdminBranchFinance } from "./AdminBranchFinance";
 import {
   AdminDataTable,
   type AdminColumnDefinition,
 } from "./components/AdminDataTable";
 import { AdminPaginationFooter } from "./components/AdminPaginationFooter";
+import { AdminListPanelSkeleton } from "./components/AdminLoadingState";
 import { AdminSectionCard } from "./components/AdminSectionCard";
 import { AdminStatusBadge } from "./components/AdminStatusBadge";
 
-type PaymentTab = "incoming" | "activations";
+type PaymentTab = "incoming" | "expenses" | "activations";
+type ActivationMembershipView = "without_membership" | "with_membership";
 type IncomingPaymentRecord = AdminPaymentListItem;
 type ActivationRecord = OwnerActivityStudentActivation;
 type PaymentStatus = IncomingPaymentRecord["status"];
@@ -108,17 +114,12 @@ type PaymentViewRefreshOptions = {
   activationPageValue?: number;
 };
 
-type BranchApiItem = {
-  name?: string;
-};
-
 type PackageFilterOption = {
   value: string;
   label: string;
 };
 
 const ALL_PAYMENT_STATUSES = "Semua status";
-const ALL_BRANCHES = "Semua cabang";
 const ALL_PACKAGES = "Semua paket";
 const ALL_LEVELS = "Semua jenjang";
 const ALL_CLASSES = "Semua kelas";
@@ -165,6 +166,26 @@ const emptyIncomingSummary: AdminPaymentsListData["summary"] = {
 
 function normalizeText(value: string | null | undefined) {
   return value?.trim() ?? "";
+}
+
+function formatDateTimeLocalInput(value: string | null | undefined) {
+  const normalizedValue = normalizeText(value);
+
+  if (!normalizedValue) {
+    return "";
+  }
+
+  const date = new Date(normalizedValue);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  const offsetMilliseconds = date.getTimezoneOffset() * 60 * 1000;
+
+  return new Date(date.getTime() - offsetMilliseconds)
+    .toISOString()
+    .slice(0, 16);
 }
 
 function formatPaymentSourceLabel(value: IncomingPaymentRecord["source"]) {
@@ -293,8 +314,16 @@ function formatStudentOptionLabel(student: AdminStudent) {
 
 function buildPaymentStatusPagePath(paymentId: string | null | undefined) {
   return paymentId
-    ? `/register-online/status?paymentId=${encodeURIComponent(paymentId)}`
+    ? `/register/status?paymentId=${encodeURIComponent(paymentId)}`
     : null;
+}
+
+function normalizeRegistrationPath(path: string | null | undefined) {
+  if (!path) {
+    return null;
+  }
+
+  return path.replace(/^\/register-online(?=\/|$)/, "/register");
 }
 
 function getIncomingDisplayDate(record: IncomingPaymentRecord) {
@@ -542,120 +571,6 @@ function formatResolvedPackageSourceLabel(
   }
 }
 
-function SummaryTile({
-  icon: Icon,
-  label,
-  value,
-  helper,
-  tone,
-  accentLabel,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: string;
-  helper: string;
-  tone: "orange" | "amber" | "emerald" | "rose" | "slate";
-  accentLabel: string;
-}) {
-  const toneClasses = {
-    orange:
-      "border-orange-100/80 bg-gradient-to-br from-orange-50 to-amber-50 text-orange-700",
-    amber:
-      "border-amber-100/80 bg-gradient-to-br from-amber-50 to-orange-50 text-amber-700",
-    emerald:
-      "border-emerald-100/80 bg-gradient-to-br from-emerald-50 to-emerald-100/60 text-emerald-700",
-    rose:
-      "border-rose-100/80 bg-gradient-to-br from-rose-50 to-orange-50 text-rose-700",
-    slate:
-      "border-slate-200/80 bg-gradient-to-br from-slate-50 to-white text-slate-700",
-  } as const;
-  const accentClasses = {
-    orange: {
-      glow: "bg-orange-100/90",
-      badge:
-        "border-orange-100/80 bg-orange-50/90 text-orange-700 shadow-orange-100/70",
-      divider: "from-transparent via-orange-200 to-transparent",
-    },
-    amber: {
-      glow: "bg-amber-100/90",
-      badge:
-        "border-amber-100/80 bg-amber-50/90 text-amber-700 shadow-amber-100/70",
-      divider: "from-transparent via-amber-200 to-transparent",
-    },
-    emerald: {
-      glow: "bg-emerald-100/90",
-      badge:
-        "border-emerald-100/80 bg-emerald-50/90 text-emerald-700 shadow-emerald-100/70",
-      divider: "from-transparent via-emerald-200 to-transparent",
-    },
-    rose: {
-      glow: "bg-rose-100/90",
-      badge:
-        "border-rose-100/80 bg-rose-50/90 text-rose-700 shadow-rose-100/70",
-      divider: "from-transparent via-rose-200 to-transparent",
-    },
-    slate: {
-      glow: "bg-slate-100/90",
-      badge:
-        "border-slate-200/90 bg-slate-100/90 text-slate-700 shadow-slate-100/70",
-      divider: "from-transparent via-slate-200 to-transparent",
-    },
-  } as const;
-  const accents = accentClasses[tone];
-
-  return (
-    <Card className="group relative overflow-hidden rounded-[24px] border border-slate-200/80 bg-white/96 shadow-[0_20px_34px_-30px_rgba(15,23,42,0.16)] transition-all duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_26px_44px_-34px_rgba(15,23,42,0.16)]">
-      <div
-        className={cn(
-          "absolute inset-x-5 top-0 h-px bg-gradient-to-r",
-          accents.divider,
-        )}
-      />
-      <div
-        className={cn(
-          "absolute -right-10 top-0 size-24 rounded-full blur-3xl transition-transform duration-300 group-hover:scale-110",
-          accents.glow,
-        )}
-      />
-
-      <CardContent className="relative p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <p className="text-xs font-medium text-slate-500">
-              {label}
-            </p>
-            <p className="mt-2 text-2xl font-bold tracking-tight text-slate-950">
-              {value}
-            </p>
-          </div>
-
-          <div
-            className={cn(
-              "flex size-11 shrink-0 items-center justify-center rounded-2xl border border-white/80 shadow-sm shadow-slate-950/5",
-              toneClasses[tone],
-            )}
-          >
-            <Icon className="size-4.5" />
-          </div>
-        </div>
-
-        <div className="mt-3 flex items-center gap-2">
-          <Badge
-            variant="secondary"
-            className={cn(
-              "rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] shadow-sm",
-              accents.badge,
-            )}
-          >
-            {accentLabel}
-          </Badge>
-          <p className="text-[11px] leading-5 text-slate-400">{helper}</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
 function InfoField({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-[20px] border border-slate-200/80 bg-white/95 px-4 py-3 shadow-[0_12px_24px_-24px_rgba(15,23,42,0.14)]">
@@ -708,7 +623,7 @@ function BillingFeedbackBanner({
               ) : null}
               {feedback.statusPagePath ? (
                 <a
-                  href={feedback.statusPagePath}
+                  href={normalizeRegistrationPath(feedback.statusPagePath) ?? "#"}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center rounded-full border border-white/80 bg-white/80 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-white"
@@ -758,14 +673,48 @@ function AnomalyBanner({
 
 function LoadingPanel({ title }: { title: string }) {
   return (
-    <div className="flex min-h-[260px] flex-col items-center justify-center gap-3 rounded-[24px] border border-dashed border-slate-200 bg-[linear-gradient(180deg,rgba(255,247,237,0.38),rgba(255,255,255,0.94))] px-5 py-12 text-center shadow-[0_14px_24px_-24px_rgba(15,23,42,0.1)]">
-      <LoaderCircle className="size-7 animate-spin text-orange-500" />
-      <div className="space-y-1">
-        <p className="text-base font-semibold text-slate-900">{title}</p>
-        <p className="text-sm leading-6 text-slate-500">
-          Data pembayaran real sedang diambil dari backend.
-        </p>
-      </div>
+    <div aria-label={title} role="status">
+      <AdminListPanelSkeleton rows={5} />
+      <span className="sr-only">{title}...</span>
+    </div>
+  );
+}
+
+function ActivationOverviewCard({
+  label,
+  value,
+  tone = "default",
+  isLoading = false,
+}: {
+  label: string;
+  value: string;
+  tone?: "default" | "success" | "warning" | "info";
+  isLoading?: boolean;
+}) {
+  const toneClassName =
+    tone === "success"
+      ? "border-emerald-100 bg-emerald-50/80 text-emerald-800"
+      : tone === "warning"
+        ? "border-amber-100 bg-amber-50/80 text-amber-800"
+        : tone === "info"
+          ? "border-orange-100 bg-orange-50/80 text-orange-800"
+          : "border-slate-200 bg-white text-slate-800";
+
+  return (
+    <div
+      className={cn(
+        "rounded-[18px] border px-3 py-2.5 shadow-[0_10px_20px_-22px_rgba(15,23,42,0.22)]",
+        toneClassName,
+      )}
+    >
+      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] opacity-75">
+        {label}
+      </p>
+      {isLoading ? (
+        <Skeleton className="mt-1 h-5 w-20" />
+      ) : (
+        <p className="mt-1 text-sm font-semibold">{value}</p>
+      )}
     </div>
   );
 }
@@ -801,6 +750,100 @@ function ErrorPanel({
   );
 }
 
+function StudentsWithoutMembershipPanel({
+  students,
+  isLoading,
+  error,
+  onCreateBilling,
+}: {
+  students: AdminStudent[];
+  isLoading: boolean;
+  error: string | null;
+  onCreateBilling: (student: AdminStudent) => void;
+}) {
+  return (
+    <div className="rounded-[24px] border border-orange-100/80 bg-[linear-gradient(180deg,rgba(255,247,237,0.72),rgba(255,255,255,0.96))] p-4 shadow-[0_16px_30px_-26px_rgba(15,23,42,0.14)]">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div className="space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-base font-semibold text-slate-950">
+              Siswa Belum Membership
+            </p>
+            <Badge variant="warning">{students.length} siswa</Badge>
+          </div>
+          <p className="text-sm leading-6 text-slate-600">
+            Daftar ini menampilkan siswa existing yang belum muncul pada data
+            aktivasi membership. Cocok dipakai untuk aktivasi awal siswa lama
+            tanpa mengubah flow backend yang sudah berjalan.
+          </p>
+          <p className="text-xs leading-5 text-slate-500">
+            Filter pencarian, jenjang, dan kelas tetap berlaku di panel ini.
+            Data cabang mengikuti scope akun admin secara otomatis.
+          </p>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="mt-4 space-y-3">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div
+              key={index}
+              className="h-20 animate-pulse rounded-[20px] border border-orange-100/80 bg-white/80"
+            />
+          ))}
+        </div>
+      ) : null}
+
+      {!isLoading && error ? (
+        <div className="mt-4 rounded-[20px] border border-rose-100/80 bg-rose-50/85 px-4 py-3 text-sm leading-6 text-rose-700">
+          {error}
+        </div>
+      ) : null}
+
+      {!isLoading && !error && students.length === 0 ? (
+        <div className="mt-4 rounded-[20px] border border-emerald-100/80 bg-emerald-50/75 px-4 py-4 text-sm leading-6 text-emerald-800">
+          Semua siswa yang cocok dengan filter saat ini sudah memiliki jejak
+          membership di sistem.
+        </div>
+      ) : null}
+
+      {!isLoading && !error && students.length > 0 ? (
+        <div className="mt-4 max-h-[28rem] space-y-3 overflow-y-auto pr-1">
+          {students.map((student) => (
+            <div
+              key={student.id}
+              className="flex flex-col gap-4 rounded-[20px] border border-white/80 bg-white/95 px-4 py-4 shadow-[0_12px_24px_-24px_rgba(15,23,42,0.16)] lg:flex-row lg:items-start lg:justify-between"
+            >
+              <div className="space-y-1.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-semibold text-slate-950">{student.name}</p>
+                  <AdminStatusBadge status={student.status} className="w-fit" />
+                </div>
+                <p className="text-sm text-slate-500">
+                  {student.id} | {student.className} | {student.branch || "Belum diatur"}
+                </p>
+                <p className="text-sm text-slate-500">{student.email}</p>
+              </div>
+
+              <Button
+                type="button"
+                size="sm"
+                className="gap-2 self-start"
+                onClick={() => {
+                  onCreateBilling(student);
+                }}
+              >
+                <Plus className="size-4" />
+                Buat Tagihan Awal
+              </Button>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function CreateMembershipBillingDialog({
   open,
   onOpenChange,
@@ -812,8 +855,6 @@ function CreateMembershipBillingDialog({
   batchLevel,
   batchClassOptions,
   batchClassOption,
-  branchOptions,
-  batchBranchFilter,
   billingPackages,
   batchPackageMode,
   batchPackageKey,
@@ -828,7 +869,6 @@ function CreateMembershipBillingDialog({
   onCreateModeChange,
   onBatchLevelChange,
   onBatchClassOptionChange,
-  onBatchBranchFilterChange,
   onBatchPackageModeChange,
   onBatchPackageKeyChange,
   onBatchIncludeInactiveChange,
@@ -848,9 +888,7 @@ function CreateMembershipBillingDialog({
   batchLevel: StudentLevel;
   batchClassOptions: string[];
   batchClassOption: string;
-  branchOptions: string[];
   billingPackages: AdminBillingPackage[];
-  batchBranchFilter: string;
   batchPackageMode: BatchPackageMode;
   batchPackageKey: string;
   batchIncludeInactive: boolean;
@@ -864,7 +902,6 @@ function CreateMembershipBillingDialog({
   onCreateModeChange: (value: CreateBillingMode) => void;
   onBatchLevelChange: (value: StudentLevel) => void;
   onBatchClassOptionChange: (value: string) => void;
-  onBatchBranchFilterChange: (value: string) => void;
   onBatchPackageModeChange: (value: BatchPackageMode) => void;
   onBatchPackageKeyChange: (value: string) => void;
   onBatchIncludeInactiveChange: (value: boolean) => void;
@@ -946,7 +983,7 @@ function CreateMembershipBillingDialog({
                   </div>
                 ) : null}
 
-                <div className="grid gap-4 xl:grid-cols-3">
+                <div className="grid gap-4 xl:grid-cols-2">
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-slate-800">
                       Jenjang / program
@@ -997,30 +1034,6 @@ function CreateMembershipBillingDialog({
                       </Select>
                     </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-800">
-                      Cabang
-                    </label>
-                    <Select
-                      value={batchBranchFilter}
-                      onValueChange={onBatchBranchFilterChange}
-                    >
-                      <SelectTrigger className={warmSelectTriggerClassName}>
-                        <SelectValue placeholder="Pilih cabang" />
-                      </SelectTrigger>
-                      <SelectContent className={warmSelectContentClassName}>
-                        {branchOptions.map((option) => (
-                          <SelectItem
-                            key={option}
-                            value={option}
-                            className={warmSelectItemClassName}
-                          >
-                            {option}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
                 </div>
 
                 <div className="grid gap-4 xl:grid-cols-2">
@@ -1156,9 +1169,9 @@ function CreateMembershipBillingDialog({
                         label="Failed"
                         value={String(batchResult.summary.failedCount)}
                       />
-                      <InfoField
+                        <InfoField
                         label="Cabang"
-                        value={batchResult.filters.branch ?? "Semua cabang"}
+                        value={batchResult.filters.branch ?? "Cabang admin"}
                       />
                     </div>
 
@@ -1270,7 +1283,7 @@ function CreateMembershipBillingDialog({
                                 ) : null}
                                 {item.statusPagePath ? (
                                   <a
-                                    href={item.statusPagePath}
+                                    href={normalizeRegistrationPath(item.statusPagePath) ?? "#"}
                                     target="_blank"
                                     rel="noreferrer"
                                     className="inline-flex items-center rounded-full border border-white/80 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-orange-50 hover:text-orange-700"
@@ -1377,15 +1390,19 @@ function CreateMembershipBillingDialog({
                         <SelectValue placeholder="Pilih paket membership" />
                       </SelectTrigger>
                       <SelectContent className={warmSelectContentClassName}>
-                        {billingPackages.map((item) => (
-                          <SelectItem
-                            key={item.packageKey}
-                            value={item.packageKey}
-                            className={warmSelectItemClassName}
-                          >
-                            {item.packageName} • {formatCurrency(item.amount)}
-                          </SelectItem>
-                        ))}
+                        {billingPackages.map((item) => {
+                          const activeStudent = filteredStudents.find(s => s.id === selectedStudentId);
+                          const dynamicAmount = getPriceByClassAndPackage(activeStudent?.className, item.packageKey as "1-semester" | "2-semester");
+                          return (
+                            <SelectItem
+                              key={item.packageKey}
+                              value={item.packageKey}
+                              className={warmSelectItemClassName}
+                            >
+                              {item.packageName} • {formatCurrency(dynamicAmount)}
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                   </div>
@@ -1429,6 +1446,249 @@ function CreateMembershipBillingDialog({
             </Button>
           </DialogFooter>
         </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function IncomingPaymentEditDialog({
+  record,
+  billingPackages,
+  open,
+  isSubmitting,
+  onOpenChange,
+  onConfirm,
+}: {
+  record: IncomingPaymentRecord | null;
+  billingPackages: AdminBillingPackage[];
+  open: boolean;
+  isSubmitting: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: (
+    record: IncomingPaymentRecord,
+    payload: ReplaceAdminPaymentPayload,
+  ) => void;
+}) {
+  const initialPackage =
+    billingPackages.find((item) => item.packageKey === record?.packageKey) ??
+    billingPackages.find((item) => item.packageName === record?.packageName) ??
+    billingPackages[0];
+  const [packageKey, setPackageKey] = useState(
+    initialPackage?.packageKey ?? "",
+  );
+  const [expiresAtValue, setExpiresAtValue] = useState(
+    formatDateTimeLocalInput(record?.expiresAt),
+  );
+
+  const canSubmit =
+    Boolean(record) &&
+    record?.source === "admin" &&
+    record.status === "pending" &&
+    Boolean(packageKey);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className={detailDialogClassName}>
+        {record ? (
+          <form
+            className="flex max-h-[84vh] flex-col"
+            onSubmit={(event) => {
+              event.preventDefault();
+
+              if (!canSubmit) {
+                return;
+              }
+
+              onConfirm(record, {
+                packageKey,
+                expiresAt: expiresAtValue
+                  ? new Date(expiresAtValue).toISOString()
+                  : undefined,
+              });
+            }}
+          >
+            <DialogHeader className="gap-3 border-b border-slate-100 px-5 pb-4 pt-5 pr-12 sm:px-6">
+              <div className="flex flex-wrap items-center gap-2">
+                <AdminStatusBadge
+                  status={formatPaymentStatusLabel(record.status)}
+                  tone={formatPaymentStatusTone(record.status)}
+                  className="w-fit"
+                />
+                <Badge variant="secondary">Edit tagihan pending</Badge>
+              </div>
+              <DialogTitle className="text-xl sm:text-2xl">
+                {record.paymentId}
+              </DialogTitle>
+              <DialogDescription>
+                Perubahan paket atau batas pembayaran akan membuat sesi pembayaran
+                pengganti. Tagihan lama tetap disimpan sebagai riwayat expired.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 overflow-y-auto px-5 py-4 sm:px-6">
+              <div className="grid gap-4 md:grid-cols-2">
+                <InfoField label="Nama siswa" value={record.student.name} />
+                <InfoField label="Tagihan lama" value={record.paymentId} />
+
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-semibold text-slate-700">
+                    Paket membership
+                  </label>
+                  <Select value={packageKey} onValueChange={setPackageKey}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih paket" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {billingPackages.map((item) => {
+                        const dynamicAmount = getPriceByClassAndPackage(record?.student.className, item.packageKey as "1-semester" | "2-semester");
+                        return (
+                          <SelectItem key={item.packageKey} value={item.packageKey}>
+                            {item.packageName} · {formatCurrency(dynamicAmount)}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <label
+                    htmlFor="edit-payment-expires-at"
+                    className="text-sm font-semibold text-slate-700"
+                  >
+                    Batas pembayaran baru
+                  </label>
+                  <Input
+                    id="edit-payment-expires-at"
+                    type="datetime-local"
+                    value={expiresAtValue}
+                    onChange={(event) => setExpiresAtValue(event.target.value)}
+                  />
+                  <p className="text-xs leading-5 text-slate-500">
+                    Kosongkan bila ingin memakai masa berlaku default dari provider.
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-[20px] border border-amber-100/80 bg-amber-50/90 px-4 py-3 text-sm leading-6 text-amber-700">
+                Checkout link lama akan dibatalkan. Sistem membuat payment ID dan
+                checkout link baru agar data Xendit tetap konsisten.
+              </div>
+            </div>
+
+            <DialogFooter className="border-t border-slate-100 px-5 py-4 sm:px-6">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
+              >
+                Batal
+              </Button>
+              <Button type="submit" disabled={!canSubmit || isSubmitting}>
+                {isSubmitting ? (
+                  <LoaderCircle className="size-4 animate-spin" />
+                ) : (
+                  <Pencil className="size-4" />
+                )}
+                Simpan Perubahan
+              </Button>
+            </DialogFooter>
+          </form>
+        ) : null}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function IncomingPaymentStatusEditDialog({
+  record,
+  open,
+  isSubmitting,
+  onOpenChange,
+  onConfirm,
+}: {
+  record: IncomingPaymentRecord | null;
+  open: boolean;
+  isSubmitting: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: (record: IncomingPaymentRecord) => void;
+}) {
+  const canMarkPaid = record?.status === "pending";
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className={detailDialogClassName}>
+        {record ? (
+          <div className="flex max-h-[84vh] flex-col">
+            <DialogHeader className="gap-3 border-b border-slate-100 px-5 pb-4 pt-5 pr-12 sm:px-6">
+              <div className="flex flex-wrap items-center gap-2">
+                <AdminStatusBadge
+                  status={formatPaymentStatusLabel(record.status)}
+                  tone={formatPaymentStatusTone(record.status)}
+                  className="w-fit"
+                />
+                <Badge variant="secondary">Edit status pembayaran</Badge>
+              </div>
+              <DialogTitle className="text-xl sm:text-2xl">
+                {record.paymentId}
+              </DialogTitle>
+              <DialogDescription>
+                Tandai pembayaran pending sebagai lunas untuk merapikan data testing.
+                Membership terkait akan mengikuti logika aktivasi backend.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 overflow-y-auto px-5 py-4 sm:px-6">
+              <div className="grid gap-3 md:grid-cols-2">
+                <InfoField label="Nama siswa" value={record.student.name} />
+                <InfoField
+                  label="Subscription Code"
+                  value={record.subscription?.subscriptionCode ?? "-"}
+                />
+                <InfoField label="Paket membership" value={record.packageName} />
+                <InfoField label="Nominal" value={formatCurrency(record.amount)} />
+                <InfoField
+                  label="Status sekarang"
+                  value={formatPaymentStatusLabel(record.status)}
+                />
+                <InfoField
+                  label="Status baru"
+                  value={canMarkPaid ? "Lunas" : "Tidak dapat diubah"}
+                />
+              </div>
+
+              <div className="rounded-[20px] border border-amber-100/80 bg-amber-50/90 px-4 py-3 text-sm leading-6 text-amber-700">
+                Perubahan ini akan menyimpan tanggal bayar saat tombol ditekan,
+                mengubah payment menjadi Lunas, dan mengaktifkan subscription jika
+                periode membership sudah mulai.
+              </div>
+            </div>
+
+            <DialogFooter className="border-t border-slate-100 px-5 py-4 sm:px-6">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isSubmitting}
+              >
+                Batal
+              </Button>
+              <Button
+                type="button"
+                disabled={!canMarkPaid || isSubmitting}
+                onClick={() => onConfirm(record)}
+              >
+                {isSubmitting ? (
+                  <LoaderCircle className="size-4 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="size-4" />
+                )}
+                Tandai Lunas
+              </Button>
+            </DialogFooter>
+          </div>
+        ) : null}
       </DialogContent>
     </Dialog>
   );
@@ -1714,14 +1974,22 @@ export function AdminPaymentVerification({
   >([]);
   const [activationStudents, setActivationStudents] = useState<ActivationRecord[]>([]);
   const [students, setStudents] = useState<AdminStudent[]>([]);
-  const [branchOptions, setBranchOptions] = useState<string[]>([]);
+  const [studentsWithMembershipIds, setStudentsWithMembershipIds] = useState<
+    string[]
+  >([]);
+  const [adminManagedBranches, setAdminManagedBranches] = useState<string[]>([]);
   const [studentBranchAvailable, setStudentBranchAvailable] = useState(false);
   const [paymentsLoading, setPaymentsLoading] = useState(true);
   const [activationsLoading, setActivationsLoading] = useState(true);
   const [studentsLoading, setStudentsLoading] = useState(true);
+  const [membershipCoverageLoading, setMembershipCoverageLoading] =
+    useState(true);
   const [paymentsError, setPaymentsError] = useState<string | null>(null);
   const [activationsError, setActivationsError] = useState<string | null>(null);
   const [studentsError, setStudentsError] = useState<string | null>(null);
+  const [membershipCoverageError, setMembershipCoverageError] = useState<
+    string | null
+  >(null);
   const [incomingPage, setIncomingPage] = useState(1);
   const [incomingPageLimit, setIncomingPageLimit] = useState(
     defaultIncomingPageLimit,
@@ -1751,23 +2019,26 @@ export function AdminPaymentVerification({
   const [incomingStatusFilter, setIncomingStatusFilter] =
     useState<(typeof paymentStatusOptions)[number]>(ALL_PAYMENT_STATUSES);
   const [incomingPackageFilter, setIncomingPackageFilter] = useState(ALL_PACKAGES);
-  const [incomingBranchFilter, setIncomingBranchFilter] = useState(ALL_BRANCHES);
 
   const [activationSearchQuery, setActivationSearchQuery] = useState("");
   const [activationPaymentStatusFilter, setActivationPaymentStatusFilter] =
     useState<(typeof paymentStatusOptions)[number]>(ALL_PAYMENT_STATUSES);
   const [activationPackageFilter, setActivationPackageFilter] =
     useState(ALL_PACKAGES);
-  const [activationBranchFilter, setActivationBranchFilter] =
-    useState(ALL_BRANCHES);
   const [activationStatusFilter, setActivationStatusFilter] =
     useState<(typeof activationStatusOptions)[number]>(ALL_ACTIVATION_STATUSES);
   const [levelFilter, setLevelFilter] = useState<LevelFilterOption>(ALL_LEVELS);
   const [classFilter, setClassFilter] = useState(ALL_CLASSES);
+  const [activationMembershipView, setActivationMembershipView] =
+    useState<ActivationMembershipView>("without_membership");
 
   const [selectedIncomingPaymentId, setSelectedIncomingPaymentId] = useState<
     string | null
   >(null);
+  const [paymentStatusEditRecord, setPaymentStatusEditRecord] =
+    useState<IncomingPaymentRecord | null>(null);
+  const [paymentEditRecord, setPaymentEditRecord] =
+    useState<IncomingPaymentRecord | null>(null);
   const [selectedActivationId, setSelectedActivationId] = useState<string | null>(
     null,
   );
@@ -1778,7 +2049,6 @@ export function AdminPaymentVerification({
   const [batchLevel, setBatchLevel] = useState<StudentLevel>(defaultBatchLevel);
   const [batchClassOption, setBatchClassOption] =
     useState<string>(defaultBatchClassOption);
-  const [batchBranchFilter, setBatchBranchFilter] = useState(ALL_BRANCHES);
   const [batchPackageMode, setBatchPackageMode] =
     useState<BatchPackageMode>("follow_latest_package");
   const [batchPackageKey, setBatchPackageKey] =
@@ -1795,6 +2065,9 @@ export function AdminPaymentVerification({
   const [activePaymentActionKey, setActivePaymentActionKey] = useState<
     string | null
   >(null);
+  const [isUpdatingPaymentStatus, setIsUpdatingPaymentStatus] = useState(false);
+  const [isReplacingPayment, setIsReplacingPayment] = useState(false);
+  const [financeRefreshKey, setFinanceRefreshKey] = useState(0);
   const previousIncomingFiltersRef = useRef<string | null>(null);
   const previousActivationFiltersRef = useRef<string | null>(null);
   const deferredIncomingSearchQuery = useDeferredValue(incomingSearchQuery);
@@ -1802,13 +2075,15 @@ export function AdminPaymentVerification({
   const deferredActivationSearchQuery = useDeferredValue(activationSearchQuery);
 
   const isRefreshing =
-    paymentsLoading || activationsLoading || studentsLoading;
+    paymentsLoading ||
+    activationsLoading ||
+    studentsLoading ||
+    membershipCoverageLoading;
 
   function resetCreateDialogState() {
     setCreateBillingMode("massal");
     setBatchLevel(defaultBatchLevel);
     setBatchClassOption(defaultBatchClassOption);
-    setBatchBranchFilter(ALL_BRANCHES);
     setBatchPackageMode("follow_latest_package");
     setBatchPackageKey(defaultBillingPackageKey);
     setBatchIncludeInactive(false);
@@ -1841,11 +2116,6 @@ export function AdminPaymentVerification({
     clearBatchOutcome();
   }
 
-  function handleBatchBranchFilterChange(value: string) {
-    setBatchBranchFilter(value);
-    clearBatchOutcome();
-  }
-
   function handleBatchPackageModeChange(value: BatchPackageMode) {
     setBatchPackageMode(value);
     clearBatchOutcome();
@@ -1866,45 +2136,6 @@ export function AdminPaymentVerification({
     clearBatchOutcome();
   }
 
-  useEffect(() => {
-    let isCancelled = false;
-
-    async function loadBranchOptions() {
-      try {
-        const payload = await requestAdminApi<{ branches: BranchApiItem[] }>(
-          "/api/branches",
-          {
-            method: "GET",
-          },
-        );
-
-        if (isCancelled) {
-          return;
-        }
-
-        const nextBranchOptions = Array.from(
-          new Set(
-            (payload.data?.branches ?? [])
-              .map((branch) => branch.name?.trim() ?? "")
-              .filter(Boolean),
-          ),
-        ).sort((first, second) => first.localeCompare(second, "id-ID"));
-
-        setBranchOptions(nextBranchOptions);
-      } catch {
-        if (!isCancelled) {
-          setBranchOptions([]);
-        }
-      }
-    }
-
-    void loadBranchOptions();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, []);
-
   const normalizedIncomingSearchQuery = normalizeText(deferredIncomingSearchQuery);
   const normalizedGlobalIncomingSearchQuery = normalizeText(deferredGlobalSearchQuery);
   const incomingServerSearchQuery = [
@@ -1917,7 +2148,6 @@ export function AdminPaymentVerification({
     incomingServerSearchQuery.toLowerCase(),
     incomingStatusFilter,
     incomingPackageFilter,
-    incomingBranchFilter,
     incomingPageLimit,
   ].join("|");
   const activationServerSearchQuery = [
@@ -1930,7 +2160,6 @@ export function AdminPaymentVerification({
     activationServerSearchQuery.toLowerCase(),
     activationPaymentStatusFilter,
     activationPackageFilter,
-    activationBranchFilter,
     activationStatusFilter,
     levelFilter,
     classFilter,
@@ -1955,13 +2184,10 @@ export function AdminPaymentVerification({
             incomingPackageFilter === ALL_PACKAGES
               ? undefined
               : incomingPackageFilter,
-          branch:
-            incomingBranchFilter === ALL_BRANCHES
-              ? undefined
-              : incomingBranchFilter,
         });
 
         setIncomingPayments(result.items);
+        setAdminManagedBranches(result.scope?.managedBranches ?? []);
         setIncomingSummary(result.summary);
         setIncomingPage(result.pagination.page);
         setIncomingPageLimit(result.pagination.limit);
@@ -1983,7 +2209,6 @@ export function AdminPaymentVerification({
       }
     },
     [
-      incomingBranchFilter,
       incomingPage,
       incomingPageLimit,
       incomingPackageFilter,
@@ -2013,15 +2238,12 @@ export function AdminPaymentVerification({
           activationPackageFilter === ALL_PACKAGES
             ? undefined
             : activationPackageFilter,
-        branch:
-          activationBranchFilter === ALL_BRANCHES
-            ? undefined
-            : activationBranchFilter,
         level: levelFilter === ALL_LEVELS ? undefined : levelFilter,
         className: classFilter === ALL_CLASSES ? undefined : classFilter,
       });
 
       setActivationStudents(result.items);
+      setAdminManagedBranches(result.scope?.managedBranches ?? []);
       setActivationSummary(result.summary);
       setActivationPage(result.pagination.page);
       setActivationPageLimit(result.pagination.limit);
@@ -2050,7 +2272,6 @@ export function AdminPaymentVerification({
       setActivationsLoading(false);
     }
   }, [
-    activationBranchFilter,
     activationPage,
     activationPageLimit,
     activationPackageFilter,
@@ -2084,6 +2305,47 @@ export function AdminPaymentVerification({
       );
     } finally {
       setStudentsLoading(false);
+    }
+  }, []);
+
+  const loadMembershipCoverage = useCallback(async () => {
+    setMembershipCoverageLoading(true);
+    setMembershipCoverageError(null);
+
+    try {
+      const knownStudentIds = new Set<string>();
+      let nextPage = 1;
+      let totalPages = 1;
+
+      do {
+        const result = await fetchAdminPaymentActivations({
+          page: nextPage,
+          limit: 100,
+        });
+
+        result.items.forEach((item) => {
+          const normalizedStudentId = normalizeText(item.studentId);
+
+          if (normalizedStudentId) {
+            knownStudentIds.add(normalizedStudentId);
+          }
+        });
+
+        totalPages = Math.max(result.pagination.totalPages, 1);
+        nextPage += 1;
+      } while (nextPage <= totalPages);
+
+      setStudentsWithMembershipIds([...knownStudentIds]);
+      setMembershipCoverageError(null);
+    } catch (error) {
+      setStudentsWithMembershipIds([]);
+      setMembershipCoverageError(
+        error instanceof Error
+          ? error.message
+          : "Gagal memetakan siswa yang sudah memiliki membership.",
+      );
+    } finally {
+      setMembershipCoverageLoading(false);
     }
   }, []);
 
@@ -2130,6 +2392,16 @@ export function AdminPaymentVerification({
       window.clearTimeout(timer);
     };
   }, [activationPage, loadActivationStudents, loadStudentsList]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadMembershipCoverage();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [loadMembershipCoverage]);
 
   useEffect(() => {
     const filtersChanged =
@@ -2198,24 +2470,6 @@ export function AdminPaymentVerification({
     };
   }, [refreshPaymentViews]);
 
-  const sharedBranchOptions = useMemo(
-    () =>
-      createSelectOptions(
-        [
-          ...branchOptions,
-          ...incomingPayments.map((payment) => payment.student.branch),
-          ...activationStudents.map((student) => student.branch),
-          ...students.map((student) => student.branch),
-        ],
-        ALL_BRANCHES,
-      ),
-    [activationStudents, branchOptions, incomingPayments, students],
-  );
-
-  const incomingBranchOptions = sharedBranchOptions;
-  const activationBranchOptions = sharedBranchOptions;
-  const batchBranchOptions = sharedBranchOptions;
-
   const incomingPackageOptions = useMemo(
     () =>
       createPackageFilterOptions(
@@ -2274,6 +2528,65 @@ export function AdminPaymentVerification({
 
   const filteredIncomingPayments = incomingPayments;
   const filteredActivationStudents = activationStudents;
+  const adminManagedBranchKeys = useMemo(
+    () =>
+      adminManagedBranches.map((branch) =>
+        normalizeText(branch).toLowerCase(),
+      ),
+    [adminManagedBranches],
+  );
+  const scopedStudents = useMemo(
+    () =>
+      adminManagedBranchKeys.length
+        ? students.filter((student) =>
+            adminManagedBranchKeys.includes(
+              normalizeText(student.branch).toLowerCase(),
+            ),
+          )
+        : students,
+    [adminManagedBranchKeys, students],
+  );
+  const studentsWithMembershipIdSet = useMemo(
+    () => new Set(studentsWithMembershipIds.map((value) => normalizeText(value))),
+    [studentsWithMembershipIds],
+  );
+  const filteredStudentsWithoutMembership = useMemo(() => {
+    const normalizedSearch = activationServerSearchQuery.trim().toLowerCase();
+    const normalizedClassFilter =
+      classFilter === ALL_CLASSES ? "" : normalizeText(classFilter);
+
+    return scopedStudents
+      .filter(
+        (student) => !studentsWithMembershipIdSet.has(normalizeText(student.id)),
+      )
+      .filter((student) =>
+        normalizedSearch
+          ? [
+              student.id,
+              student.name,
+              student.email,
+              student.className,
+              student.program,
+              student.branch,
+            ].some((value) => value.toLowerCase().includes(normalizedSearch))
+          : true,
+      )
+      .filter((student) =>
+        levelFilter === ALL_LEVELS ? true : student.level === levelFilter,
+      )
+      .filter((student) =>
+        normalizedClassFilter
+          ? normalizeText(student.className) === normalizedClassFilter
+          : true,
+      )
+      .sort((first, second) => first.name.localeCompare(second.name, "id-ID"));
+  }, [
+    activationServerSearchQuery,
+    classFilter,
+    levelFilter,
+    scopedStudents,
+    studentsWithMembershipIdSet,
+  ]);
 
   const incomingAnomalyCount = useMemo(
     () =>
@@ -2291,17 +2604,19 @@ export function AdminPaymentVerification({
     [activationStudents],
   );
 
-  const totalPaidAmount = useMemo(
+  const studentsWithoutMembershipActiveCount = useMemo(
     () =>
-      incomingPayments
-        .filter((payment) => payment.status === "paid")
-        .reduce((total, payment) => total + payment.amount, 0),
-    [incomingPayments],
+      filteredStudentsWithoutMembership.filter(
+        (student) => student.status === "Aktif",
+      ).length,
+    [filteredStudentsWithoutMembership],
   );
-
-  const activeMembershipCount = useMemo(
-    () => activationSummary.activeCount,
-    [activationSummary.activeCount],
+  const studentsWithoutMembershipInactiveCount = useMemo(
+    () =>
+      filteredStudentsWithoutMembership.filter(
+        (student) => student.status !== "Aktif",
+      ).length,
+    [filteredStudentsWithoutMembership],
   );
 
   const incomingOverview = useMemo(
@@ -2325,9 +2640,63 @@ export function AdminPaymentVerification({
       totalCount: activationSummary.totalItems,
       activeCount: activationSummary.activeCount,
       pendingCount: activationSummary.pendingCount,
+      missingCount: filteredStudentsWithoutMembership.length,
     }),
-    [activationSummary],
+    [activationSummary, filteredStudentsWithoutMembership.length],
   );
+  const activationOverviewCards = useMemo(() => {
+    if (activationMembershipView === "without_membership") {
+      return [
+        {
+          label: "Belum membership",
+          value: `${filteredStudentsWithoutMembership.length} siswa`,
+          tone: "warning" as const,
+        },
+        {
+          label: "Akun aktif",
+          value: `${studentsWithoutMembershipActiveCount} siswa`,
+          tone: "success" as const,
+        },
+        {
+          label: "Akun nonaktif",
+          value: `${studentsWithoutMembershipInactiveCount} siswa`,
+          tone: "default" as const,
+        },
+      ];
+    }
+
+    return [
+      {
+        label: "Siswa tampil",
+        value: `${activationOverview.totalCount} siswa`,
+        tone: "default" as const,
+      },
+      {
+        label: "Membership aktif",
+        value: `${activationOverview.activeCount} siswa`,
+        tone: "success" as const,
+      },
+      {
+        label: "Menunggu bayar",
+        value: `${activationOverview.pendingCount} siswa`,
+        tone: "warning" as const,
+      },
+      {
+        label: "Belum membership",
+        value: `${activationOverview.missingCount} siswa`,
+        tone: "info" as const,
+      },
+    ];
+  }, [
+    activationMembershipView,
+    activationOverview.activeCount,
+    activationOverview.missingCount,
+    activationOverview.pendingCount,
+    activationOverview.totalCount,
+    filteredStudentsWithoutMembership.length,
+    studentsWithoutMembershipActiveCount,
+    studentsWithoutMembershipInactiveCount,
+  ]);
 
   const selectedIncomingPayment = useMemo(
     () =>
@@ -2346,6 +2715,88 @@ export function AdminPaymentVerification({
         : null,
     [activationStudents, selectedActivationId],
   );
+
+  function buildPaymentRecordFromActivation(
+    student: ActivationRecord,
+  ): IncomingPaymentRecord | null {
+    if (!student.paymentId) {
+      return null;
+    }
+
+    const matchingPayment =
+      incomingPayments.find((payment) => payment.paymentId === student.paymentId) ??
+      null;
+
+    if (matchingPayment) {
+      return matchingPayment;
+    }
+
+    const paymentSource = student.paymentSource ?? null;
+
+    if (!paymentSource) {
+      return null;
+    }
+
+    const paymentCreatedAt = student.paymentCreatedAt ?? student.registeredAt;
+    const paymentUpdatedAt = student.paymentUpdatedAt ?? paymentCreatedAt;
+
+    return {
+      id: student.paymentId,
+      paymentId: student.paymentId,
+      source: paymentSource,
+      packageKey: student.packageKey,
+      packageName: student.membershipPackage,
+      durationMonth: student.durationMonth,
+      amount: student.paymentAmount ?? 0,
+      provider: student.paymentProvider ?? "-",
+      method: student.paymentMethod ?? "-",
+      status: student.paymentStatus,
+      paidAt: student.paymentPaidAt ?? null,
+      checkoutUrl: student.paymentCheckoutUrl ?? null,
+      expiresAt: student.paymentExpiresAt ?? null,
+      checkoutLastSentAt: student.paymentCheckoutLastSentAt ?? null,
+      checkoutSendCount: student.paymentCheckoutSendCount ?? 0,
+      cancelReason: student.paymentCancelReason ?? null,
+      canceledAt: student.paymentCanceledAt ?? null,
+      createdAt: paymentCreatedAt,
+      updatedAt: paymentUpdatedAt,
+      displayDate: student.paymentPaidAt ?? paymentCreatedAt,
+      canResendLink: student.paymentCanResendLink === true,
+      canCancel: student.paymentCanCancel === true,
+      anomalyReasons: [],
+      student: {
+        id: null,
+        studentId: student.studentId,
+        userId: null,
+        name: student.studentName,
+        email: student.studentEmail,
+        role: "siswa",
+        branch: student.branch,
+        program: student.jenjang,
+        className: student.kelas,
+      },
+      subscription: {
+        id: student.id,
+        subscriptionCode: student.subscriptionCode,
+        status: student.activationStatus === "Aktif" ? "active" : "pending",
+        paymentStatus: student.paymentStatus,
+        startDate: null,
+        endDate: student.activeUntil,
+        source: paymentSource,
+        renewalOfSubscriptionId: null,
+      },
+    };
+  }
+
+  function openCreateBillingForStudent(student: AdminStudent) {
+    setCreateBillingMode("individual");
+    clearBatchOutcome();
+    setStudentSearchQuery(`${student.id} ${student.name}`);
+    setSelectedStudentId(student.id);
+    setSelectedPackageKey(defaultBillingPackageKey);
+    setExpiresAtValue("");
+    setIsCreateDialogOpen(true);
+  }
 
   async function handleCreateBatchPaymentSession(
     event: FormEvent<HTMLFormElement>,
@@ -2378,7 +2829,6 @@ export function AdminPaymentVerification({
         level: batchLevel,
         grade: selectedGrade,
         className: buildCanonicalBatchClassName(batchLevel, batchClassOption),
-        branch: batchBranchFilter === ALL_BRANCHES ? undefined : batchBranchFilter,
         packageMode: batchPackageMode,
         packageKey:
           batchPackageMode === "fixed_package" ? batchPackageKey : undefined,
@@ -2398,10 +2848,13 @@ export function AdminPaymentVerification({
         message: `${response.summary.createdCount} berhasil dibuat, ${response.summary.skippedCount} skipped, dan ${response.summary.failedCount} failed untuk ${response.summary.totalTargetStudents} siswa target.`,
       });
       setIncomingPage(1);
-      await refreshPaymentViews({
-        includeStudents: false,
-        page: 1,
-      });
+      await Promise.allSettled([
+        refreshPaymentViews({
+          includeStudents: false,
+          page: 1,
+        }),
+        loadMembershipCoverage(),
+      ]);
     } catch (requestError) {
       const message =
         requestError instanceof Error
@@ -2449,7 +2902,7 @@ export function AdminPaymentVerification({
       });
 
       const statusPagePath =
-        response.statusPagePath ??
+        normalizeRegistrationPath(response.statusPagePath) ??
         buildPaymentStatusPagePath(response.payment.paymentId);
 
       setBillingFeedback({
@@ -2463,10 +2916,13 @@ export function AdminPaymentVerification({
       setIsCreateDialogOpen(false);
       resetCreateDialogState();
       setIncomingPage(1);
-      await refreshPaymentViews({
-        includeStudents: false,
-        page: 1,
-      });
+      await Promise.allSettled([
+        refreshPaymentViews({
+          includeStudents: false,
+          page: 1,
+        }),
+        loadMembershipCoverage(),
+      ]);
     } catch (requestError) {
       const message =
         requestError instanceof Error
@@ -2569,6 +3025,161 @@ export function AdminPaymentVerification({
         includeStudents: false,
       });
     } finally {
+      setActivePaymentActionKey(null);
+    }
+  }
+
+  async function handleReplacePayment(
+    payment: IncomingPaymentRecord,
+    payload: ReplaceAdminPaymentPayload,
+  ) {
+    setIsReplacingPayment(true);
+    setActivePaymentActionKey(`${payment.id}:replace`);
+
+    try {
+      const response = await replaceAdminPayment(payment.paymentId, payload);
+      const statusPagePath =
+        normalizeRegistrationPath(response.statusPagePath) ??
+        buildPaymentStatusPagePath(response.payment.paymentId);
+
+      setBillingFeedback({
+        tone: "success",
+        title: "Tagihan berhasil diperbarui",
+        message: `Payment ${response.replacedPaymentId} diganti dengan ${response.payment.paymentId}. Bagikan checkout link baru kepada siswa.`,
+        checkoutUrl: response.payment.checkoutUrl ?? null,
+        statusPagePath,
+      });
+      setPaymentEditRecord(null);
+      window.alert("Tagihan berhasil diperbarui dengan payment baru.");
+      setIncomingPage(1);
+      await Promise.allSettled([
+        refreshPaymentViews({
+          includeStudents: false,
+          page: 1,
+        }),
+        loadMembershipCoverage(),
+      ]);
+      setFinanceRefreshKey((value) => value + 1);
+    } catch (requestError) {
+      const message =
+        requestError instanceof Error
+          ? requestError.message
+          : "Tagihan belum bisa diperbarui.";
+
+      setBillingFeedback({
+        tone: "warning",
+        title: "Edit tagihan gagal",
+        message,
+      });
+      window.alert(message);
+      await refreshPaymentViews({
+        includeStudents: false,
+      });
+    } finally {
+      setIsReplacingPayment(false);
+      setActivePaymentActionKey(null);
+    }
+  }
+
+  async function handleArchivePayment(payment: IncomingPaymentRecord) {
+    const confirmed = window.confirm(
+      `Hapus tagihan ${payment.paymentId} dari daftar? Data tidak dihapus permanen dan tetap tersimpan sebagai arsip audit.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setActivePaymentActionKey(`${payment.id}:archive`);
+
+    try {
+      const response = await archiveAdminPayment(
+        payment.paymentId,
+        "Dihapus melalui kolom aksi Informasi Pembayaran.",
+      );
+
+      setBillingFeedback({
+        tone: "warning",
+        title: "Tagihan dihapus dari daftar",
+        message: `Payment ${response.paymentId} tetap tersimpan sebagai arsip audit.`,
+      });
+      setSelectedIncomingPaymentId(null);
+      window.alert("Tagihan berhasil dihapus dari daftar pembayaran.");
+      await Promise.allSettled([
+        refreshPaymentViews({
+          includeStudents: false,
+        }),
+        loadMembershipCoverage(),
+      ]);
+      setFinanceRefreshKey((value) => value + 1);
+    } catch (requestError) {
+      const message =
+        requestError instanceof Error
+          ? requestError.message
+          : "Tagihan belum bisa dihapus.";
+
+      setBillingFeedback({
+        tone: "warning",
+        title: "Hapus tagihan gagal",
+        message,
+      });
+      window.alert(message);
+      await refreshPaymentViews({
+        includeStudents: false,
+      });
+    } finally {
+      setActivePaymentActionKey(null);
+    }
+  }
+
+  async function handleMarkPaymentPaid(payment: IncomingPaymentRecord) {
+    if (payment.status !== "pending") {
+      const message = "Hanya payment pending yang bisa ditandai lunas.";
+      setBillingFeedback({
+        tone: "warning",
+        title: "Status tidak bisa diubah",
+        message,
+      });
+      window.alert(message);
+      return;
+    }
+
+    setIsUpdatingPaymentStatus(true);
+    setActivePaymentActionKey(`${payment.id}:mark-paid`);
+
+    try {
+      const response = await updateAdminPaymentStatus(payment.paymentId, {
+        status: "paid",
+      });
+
+      setBillingFeedback({
+        tone: "success",
+        title: "Pembayaran berhasil ditandai lunas",
+        message: `Payment ${response.paymentId} sudah Lunas. Subscription ${response.subscriptionCode} sekarang ${response.subscriptionStatus} dengan status pembayaran ${formatPaymentStatusLabel(response.subscriptionPaymentStatus)}.`,
+      });
+      setPaymentStatusEditRecord(null);
+      window.alert("Pembayaran berhasil ditandai lunas.");
+      await refreshPaymentViews({
+        includeStudents: false,
+      });
+      setFinanceRefreshKey((value) => value + 1);
+    } catch (requestError) {
+      const message =
+        requestError instanceof Error
+          ? requestError.message
+          : "Status pembayaran belum bisa diubah.";
+
+      setBillingFeedback({
+        tone: "warning",
+        title: "Update status pembayaran gagal",
+        message,
+      });
+      window.alert(message);
+      await refreshPaymentViews({
+        includeStudents: false,
+      });
+    } finally {
+      setIsUpdatingPaymentStatus(false);
       setActivePaymentActionKey(null);
     }
   }
@@ -2726,16 +3337,69 @@ export function AdminPaymentVerification({
     {
       key: "actions",
       header: "Aksi",
-      className: "min-w-[280px] text-center",
+      className: "min-w-[380px] text-center",
       cell: (payment) => {
         const isResending =
           activePaymentActionKey === `${payment.id}:resend`;
         const isCanceling =
           activePaymentActionKey === `${payment.id}:cancel`;
-        const isProcessing = isResending || isCanceling;
+        const isMarkingPaid =
+          activePaymentActionKey === `${payment.id}:mark-paid`;
+        const isReplacing =
+          activePaymentActionKey === `${payment.id}:replace`;
+        const isArchiving =
+          activePaymentActionKey === `${payment.id}:archive`;
+        const isProcessing =
+          isResending ||
+          isCanceling ||
+          isMarkingPaid ||
+          isReplacing ||
+          isArchiving;
+        const canEditPayment =
+          payment.source === "admin" && payment.status === "pending";
+        const canArchivePayment =
+          payment.source === "admin" && payment.status !== "paid";
 
         return (
           <div className="flex flex-wrap items-center justify-center gap-2">
+            {canEditPayment ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-2 border-sky-200 text-sky-700 hover:bg-sky-50 hover:text-sky-700"
+                disabled={isProcessing}
+                onClick={() => {
+                  setPaymentEditRecord(payment);
+                }}
+              >
+                {isReplacing ? (
+                  <LoaderCircle className="size-4 animate-spin" />
+                ) : (
+                  <Pencil className="size-4" />
+                )}
+                Edit Tagihan
+              </Button>
+            ) : null}
+            {payment.status === "pending" ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-700"
+                disabled={isProcessing}
+                onClick={() => {
+                  setPaymentStatusEditRecord(payment);
+                }}
+              >
+                {isMarkingPaid ? (
+                  <LoaderCircle className="size-4 animate-spin" />
+                ) : (
+                  <Pencil className="size-4" />
+                )}
+                Edit Status
+              </Button>
+            ) : null}
             {payment.canResendLink ? (
               <Button
                 type="button"
@@ -2772,6 +3436,25 @@ export function AdminPaymentVerification({
                   <Ban className="size-4" />
                 )}
                 Batalkan Tagihan
+              </Button>
+            ) : null}
+            {canArchivePayment ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-2 border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-700"
+                disabled={isProcessing}
+                onClick={() => {
+                  void handleArchivePayment(payment);
+                }}
+              >
+                {isArchiving ? (
+                  <LoaderCircle className="size-4 animate-spin" />
+                ) : (
+                  <Trash2 className="size-4" />
+                )}
+                Hapus
               </Button>
             ) : null}
             <Button
@@ -2941,23 +3624,147 @@ export function AdminPaymentVerification({
     {
       key: "actions",
       header: "Aksi",
-      className: "w-[96px] text-center",
-      cell: (student) => (
-        <div className="flex items-center justify-center">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="gap-2 text-slate-600"
-            onClick={() => {
-              setSelectedActivationId(student.id);
-            }}
-          >
-            <Eye className="size-4" />
-            Detail
-          </Button>
-        </div>
-      ),
+      className: "min-w-[280px] text-center",
+      cell: (student) => {
+        const payment = buildPaymentRecordFromActivation(student);
+        const isResending = payment
+          ? activePaymentActionKey === `${payment.id}:resend`
+          : false;
+        const isCanceling = payment
+          ? activePaymentActionKey === `${payment.id}:cancel`
+          : false;
+        const isMarkingPaid = payment
+          ? activePaymentActionKey === `${payment.id}:mark-paid`
+          : false;
+        const isReplacing = payment
+          ? activePaymentActionKey === `${payment.id}:replace`
+          : false;
+        const isArchiving = payment
+          ? activePaymentActionKey === `${payment.id}:archive`
+          : false;
+        const isProcessing =
+          isResending ||
+          isCanceling ||
+          isMarkingPaid ||
+          isReplacing ||
+          isArchiving;
+        const canEditPayment =
+          payment?.source === "admin" && payment.status === "pending";
+        const canArchivePayment =
+          payment?.source === "admin" && payment.status !== "paid";
+
+        return (
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {payment && canEditPayment ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-2 border-sky-200 text-sky-700 hover:bg-sky-50 hover:text-sky-700"
+                disabled={isProcessing}
+                onClick={() => {
+                  setPaymentEditRecord(payment);
+                }}
+              >
+                {isReplacing ? (
+                  <LoaderCircle className="size-4 animate-spin" />
+                ) : (
+                  <Pencil className="size-4" />
+                )}
+                Edit Tagihan
+              </Button>
+            ) : null}
+            {payment && payment.status === "pending" ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-700"
+                disabled={isProcessing}
+                onClick={() => {
+                  setPaymentStatusEditRecord(payment);
+                }}
+              >
+                {isMarkingPaid ? (
+                  <LoaderCircle className="size-4 animate-spin" />
+                ) : (
+                  <Pencil className="size-4" />
+                )}
+                Edit Status
+              </Button>
+            ) : null}
+            {payment?.canResendLink ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                disabled={isProcessing}
+                onClick={() => {
+                  void handleResendPaymentLink(payment);
+                }}
+              >
+                {isResending ? (
+                  <LoaderCircle className="size-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="size-4" />
+                )}
+                Kirim Ulang Link
+              </Button>
+            ) : null}
+            {payment?.canCancel ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-2 border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-700"
+                disabled={isProcessing}
+                onClick={() => {
+                  void handleCancelPayment(payment);
+                }}
+              >
+                {isCanceling ? (
+                  <LoaderCircle className="size-4 animate-spin" />
+                ) : (
+                  <Ban className="size-4" />
+                )}
+                Batalkan Tagihan
+              </Button>
+            ) : null}
+            {payment && canArchivePayment ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-2 border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-700"
+                disabled={isProcessing}
+                onClick={() => {
+                  void handleArchivePayment(payment);
+                }}
+              >
+                {isArchiving ? (
+                  <LoaderCircle className="size-4 animate-spin" />
+                ) : (
+                  <Trash2 className="size-4" />
+                )}
+                Hapus
+              </Button>
+            ) : null}
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="gap-2 text-slate-600"
+              onClick={() => {
+                setSelectedActivationId(student.id);
+              }}
+            >
+              <Eye className="size-4" />
+              Detail
+            </Button>
+          </div>
+        );
+      },
     },
   ];
 
@@ -2966,14 +3773,12 @@ export function AdminPaymentVerification({
     setIncomingSearchQuery("");
     setIncomingStatusFilter(ALL_PAYMENT_STATUSES);
     setIncomingPackageFilter(ALL_PACKAGES);
-    setIncomingBranchFilter(ALL_BRANCHES);
   }
 
   function resetActivationFilters() {
     setActivationSearchQuery("");
     setActivationPaymentStatusFilter(ALL_PAYMENT_STATUSES);
     setActivationPackageFilter(ALL_PACKAGES);
-    setActivationBranchFilter(ALL_BRANCHES);
     setActivationStatusFilter(ALL_ACTIVATION_STATUSES);
     setLevelFilter(ALL_LEVELS);
     setClassFilter(ALL_CLASSES);
@@ -2991,10 +3796,6 @@ export function AdminPaymentVerification({
           incomingPackageFilter === ALL_PACKAGES
             ? undefined
             : incomingPackageFilter,
-        branch:
-          incomingBranchFilter === ALL_BRANCHES
-            ? undefined
-            : incomingBranchFilter,
       });
     } catch (error) {
       setPaymentsError(
@@ -3021,10 +3822,6 @@ export function AdminPaymentVerification({
           activationPackageFilter === ALL_PACKAGES
             ? undefined
             : activationPackageFilter,
-        branch:
-          activationBranchFilter === ALL_BRANCHES
-            ? undefined
-            : activationBranchFilter,
         level: levelFilter === ALL_LEVELS ? undefined : levelFilter,
         className: classFilter === ALL_CLASSES ? undefined : classFilter,
       });
@@ -3040,41 +3837,6 @@ export function AdminPaymentVerification({
   return (
     <>
       <div className="space-y-6">
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <SummaryTile
-            icon={CreditCard}
-            label="Pembayaran Masuk"
-            value={`${incomingOverview.totalCount}`}
-            helper="Total transaksi yang cocok dengan filter payment aktif."
-            tone="orange"
-            accentLabel="Transaksi"
-          />
-          <SummaryTile
-            icon={WalletCards}
-            label="Nominal Lunas"
-            value={formatCurrency(totalPaidAmount)}
-            helper="Akumulasi transaksi paid pada halaman yang sedang tampil."
-            tone="emerald"
-            accentLabel="Lunas"
-          />
-          <SummaryTile
-            icon={UsersRound}
-            label="Membership Aktif"
-            value={`${activeMembershipCount}`}
-            helper="Siswa dengan membership aktif saat ini."
-            tone="amber"
-            accentLabel="Aktif"
-          />
-          <SummaryTile
-            icon={AlertTriangle}
-            label="Anomali Data"
-            value={`${incomingAnomalyCount + activationAnomalyCount}`}
-            helper="Data yang masih perlu dicek admin."
-            tone="rose"
-            accentLabel="Perlu cek"
-          />
-        </section>
-
         {billingFeedback ? (
           <BillingFeedbackBanner
             feedback={billingFeedback}
@@ -3091,6 +3853,7 @@ export function AdminPaymentVerification({
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <TabsList className="bg-slate-100/90">
               <TabsTrigger value="incoming">Pembayaran Masuk</TabsTrigger>
+              <TabsTrigger value="expenses">Pengeluaran</TabsTrigger>
               <TabsTrigger value="activations">Aktivasi Membership</TabsTrigger>
             </TabsList>
 
@@ -3105,7 +3868,11 @@ export function AdminPaymentVerification({
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  void refreshPaymentViews();
+                  void Promise.allSettled([
+                    refreshPaymentViews(),
+                    loadMembershipCoverage(),
+                  ]);
+                  setFinanceRefreshKey((currentValue) => currentValue + 1);
                 }}
                 disabled={isRefreshing}
               >
@@ -3125,15 +3892,25 @@ export function AdminPaymentVerification({
               description="Kelola tagihan membership Xendit untuk siswa existing sekaligus memonitor histori payment yang sudah tersimpan di backend."
               action={
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary">
-                    {incomingOverview.totalCount} transaksi tampil
-                  </Badge>
-                  <Badge variant="info">
-                    {formatCurrency(incomingOverview.filteredAmount)}
-                  </Badge>
-                  <Badge variant="success">
-                    {incomingOverview.paidCount} lunas
-                  </Badge>
+                  {paymentsLoading && incomingPayments.length === 0 ? (
+                    <>
+                      <Skeleton className="h-6 w-32 rounded-full" />
+                      <Skeleton className="h-6 w-28 rounded-full" />
+                      <Skeleton className="h-6 w-20 rounded-full" />
+                    </>
+                  ) : (
+                    <>
+                      <Badge variant="secondary">
+                        {incomingOverview.totalCount} transaksi tampil
+                      </Badge>
+                      <Badge variant="info">
+                        {formatCurrency(incomingOverview.filteredAmount)}
+                      </Badge>
+                      <Badge variant="success">
+                        {incomingOverview.paidCount} lunas
+                      </Badge>
+                    </>
+                  )}
                   <Button
                     type="button"
                     size="sm"
@@ -3185,7 +3962,7 @@ export function AdminPaymentVerification({
                     </div>
                   </div>
 
-                  <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     <Select
                       value={incomingStatusFilter}
                       onValueChange={(value) =>
@@ -3232,25 +4009,6 @@ export function AdminPaymentVerification({
                       </SelectContent>
                     </Select>
 
-                    <Select
-                      value={incomingBranchFilter}
-                      onValueChange={setIncomingBranchFilter}
-                    >
-                      <SelectTrigger className={warmSelectTriggerClassName}>
-                        <SelectValue placeholder="Filter cabang" />
-                      </SelectTrigger>
-                      <SelectContent className={warmSelectContentClassName}>
-                        {incomingBranchOptions.map((option) => (
-                          <SelectItem
-                            key={option}
-                            value={option}
-                            className={warmSelectItemClassName}
-                          >
-                            {option}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
                   </div>
                 </div>
 
@@ -3339,21 +4097,73 @@ export function AdminPaymentVerification({
             </AdminSectionCard>
           </TabsContent>
 
+          <TabsContent value="expenses" className="mt-6">
+            <AdminBranchFinance
+              key={financeRefreshKey}
+              compactSummary
+              onRefresh={async () => {
+                await Promise.resolve(onRefresh?.());
+              }}
+              globalSearchQuery={
+                activeTab === "expenses" ? globalSearchQuery : ""
+              }
+            />
+          </TabsContent>
+
           <TabsContent value="activations" className="mt-6">
             <AdminSectionCard
               title="Aktivasi Membership"
               description="Pantau status aktivasi siswa berdasarkan subscription terbaru dan status pembayaran yang tersedia."
               action={
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary">
-                    {activationOverview.totalCount} siswa tampil
-                  </Badge>
-                  <Badge variant="success">
-                    {activationOverview.activeCount} aktif
-                  </Badge>
-                  <Badge variant="warning">
-                    {activationOverview.pendingCount} menunggu pembayaran
-                  </Badge>
+                <div className="flex w-full flex-col gap-3 sm:min-w-[360px] sm:max-w-[520px] sm:items-end">
+                  <div className="inline-flex w-full rounded-2xl border border-slate-200 bg-slate-50/80 p-1 shadow-sm sm:w-auto">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={
+                        activationMembershipView === "without_membership"
+                          ? "default"
+                          : "ghost"
+                      }
+                      className="h-8 flex-1 rounded-xl sm:flex-none"
+                      onClick={() => {
+                        setActivationMembershipView("without_membership");
+                      }}
+                    >
+                      Belum Membership
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={
+                        activationMembershipView === "with_membership"
+                          ? "default"
+                          : "ghost"
+                      }
+                      className="h-8 flex-1 rounded-xl sm:flex-none"
+                      onClick={() => {
+                        setActivationMembershipView("with_membership");
+                      }}
+                    >
+                      Sudah Membership
+                    </Button>
+                  </div>
+
+                  <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                    {activationOverviewCards.map((item) => (
+                      <ActivationOverviewCard
+                        key={item.label}
+                        label={item.label}
+                        value={item.value}
+                        tone={item.tone}
+                        isLoading={
+                          activationMembershipView === "without_membership"
+                            ? studentsLoading || membershipCoverageLoading
+                            : activationsLoading
+                        }
+                      />
+                    ))}
+                  </div>
                 </div>
               }
             >
@@ -3379,6 +4189,7 @@ export function AdminPaymentVerification({
                         onClick={exportActivationMembershipCsv}
                         disabled={
                           activationsLoading ||
+                          activationMembershipView === "without_membership" ||
                           filteredActivationStudents.length === 0
                         }
                       >
@@ -3395,96 +4206,86 @@ export function AdminPaymentVerification({
                     </div>
                   </div>
 
-                  <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
-                    <Select
-                      value={activationPaymentStatusFilter}
-                      onValueChange={(value) =>
-                        setActivationPaymentStatusFilter(
-                          value as (typeof paymentStatusOptions)[number],
-                        )
-                      }
-                    >
-                      <SelectTrigger className={warmSelectTriggerClassName}>
-                        <SelectValue placeholder="Status pembayaran" />
-                      </SelectTrigger>
-                      <SelectContent className={warmSelectContentClassName}>
-                        {paymentStatusOptions.map((option) => (
-                          <SelectItem
-                            key={option}
-                            value={option}
-                            className={warmSelectItemClassName}
-                          >
-                            {option === ALL_PAYMENT_STATUSES
-                              ? option
-                              : formatPaymentStatusLabel(option)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div
+                    className={`mt-3 grid gap-3 ${
+                      activationMembershipView === "with_membership"
+                        ? "sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5"
+                        : "sm:grid-cols-2"
+                    }`}
+                  >
+                    {activationMembershipView === "with_membership" ? (
+                      <>
+                        <Select
+                          value={activationPaymentStatusFilter}
+                          onValueChange={(value) =>
+                            setActivationPaymentStatusFilter(
+                              value as (typeof paymentStatusOptions)[number],
+                            )
+                          }
+                        >
+                          <SelectTrigger className={warmSelectTriggerClassName}>
+                            <SelectValue placeholder="Status pembayaran" />
+                          </SelectTrigger>
+                          <SelectContent className={warmSelectContentClassName}>
+                            {paymentStatusOptions.map((option) => (
+                              <SelectItem
+                                key={option}
+                                value={option}
+                                className={warmSelectItemClassName}
+                              >
+                                {option === ALL_PAYMENT_STATUSES
+                                  ? option
+                                  : formatPaymentStatusLabel(option)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
 
-                    <Select
-                      value={activationStatusFilter}
-                      onValueChange={(value) =>
-                        setActivationStatusFilter(
-                          value as (typeof activationStatusOptions)[number],
-                        )
-                      }
-                    >
-                      <SelectTrigger className={warmSelectTriggerClassName}>
-                        <SelectValue placeholder="Status aktivasi" />
-                      </SelectTrigger>
-                      <SelectContent className={warmSelectContentClassName}>
-                        {activationStatusOptions.map((option) => (
-                          <SelectItem
-                            key={option}
-                            value={option}
-                            className={warmSelectItemClassName}
-                          >
-                            {option}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                        <Select
+                          value={activationStatusFilter}
+                          onValueChange={(value) =>
+                            setActivationStatusFilter(
+                              value as (typeof activationStatusOptions)[number],
+                            )
+                          }
+                        >
+                          <SelectTrigger className={warmSelectTriggerClassName}>
+                            <SelectValue placeholder="Status aktivasi" />
+                          </SelectTrigger>
+                          <SelectContent className={warmSelectContentClassName}>
+                            {activationStatusOptions.map((option) => (
+                              <SelectItem
+                                key={option}
+                                value={option}
+                                className={warmSelectItemClassName}
+                              >
+                                {option}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
 
-                    <Select
-                      value={activationPackageFilter}
-                      onValueChange={setActivationPackageFilter}
-                    >
-                      <SelectTrigger className={warmSelectTriggerClassName}>
-                        <SelectValue placeholder="Filter paket" />
-                      </SelectTrigger>
-                      <SelectContent className={warmSelectContentClassName}>
-                        {activationPackageOptions.map((option) => (
-                          <SelectItem
-                            key={option.value}
-                            value={option.value}
-                            className={warmSelectItemClassName}
-                          >
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <Select
-                      value={activationBranchFilter}
-                      onValueChange={setActivationBranchFilter}
-                    >
-                      <SelectTrigger className={warmSelectTriggerClassName}>
-                        <SelectValue placeholder="Filter cabang" />
-                      </SelectTrigger>
-                      <SelectContent className={warmSelectContentClassName}>
-                        {activationBranchOptions.map((option) => (
-                          <SelectItem
-                            key={option}
-                            value={option}
-                            className={warmSelectItemClassName}
-                          >
-                            {option}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                        <Select
+                          value={activationPackageFilter}
+                          onValueChange={setActivationPackageFilter}
+                        >
+                          <SelectTrigger className={warmSelectTriggerClassName}>
+                            <SelectValue placeholder="Filter paket" />
+                          </SelectTrigger>
+                          <SelectContent className={warmSelectContentClassName}>
+                            {activationPackageOptions.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value}
+                                className={warmSelectItemClassName}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </>
+                    ) : null}
 
                     <Select
                       value={levelFilter}
@@ -3528,7 +4329,14 @@ export function AdminPaymentVerification({
                   </div>
                 </div>
 
-                {activationsError ? (
+                {activationMembershipView === "without_membership" ? (
+                  <StudentsWithoutMembershipPanel
+                    students={filteredStudentsWithoutMembership}
+                    isLoading={studentsLoading || membershipCoverageLoading}
+                    error={studentsError ?? membershipCoverageError}
+                    onCreateBilling={openCreateBillingForStudent}
+                  />
+                ) : activationsError ? (
                   <ErrorPanel
                     message={activationsError}
                     onRetry={() => {
@@ -3597,7 +4405,7 @@ export function AdminPaymentVerification({
             resetCreateDialogState();
           }
         }}
-        students={students}
+        students={scopedStudents}
         studentsLoading={studentsLoading}
         studentsError={studentsError}
         createMode={createBillingMode}
@@ -3605,8 +4413,6 @@ export function AdminPaymentVerification({
         batchLevel={batchLevel}
         batchClassOptions={batchClassOptionsByLevel[batchLevel] ?? []}
         batchClassOption={batchClassOption}
-        branchOptions={batchBranchOptions}
-        batchBranchFilter={batchBranchFilter}
         billingPackages={billingPackages}
         batchPackageMode={batchPackageMode}
         batchPackageKey={batchPackageKey}
@@ -3621,7 +4427,6 @@ export function AdminPaymentVerification({
         onCreateModeChange={handleCreateModeChange}
         onBatchLevelChange={handleBatchLevelChange}
         onBatchClassOptionChange={handleBatchClassOptionChange}
-        onBatchBranchFilterChange={handleBatchBranchFilterChange}
         onBatchPackageModeChange={handleBatchPackageModeChange}
         onBatchPackageKeyChange={handleBatchPackageKeyChange}
         onBatchIncludeInactiveChange={handleBatchIncludeInactiveChange}
@@ -3631,6 +4436,36 @@ export function AdminPaymentVerification({
         onExpiresAtChange={handleExpiresAtValueChange}
         onSubmit={(event) => {
           void handleCreateBillingSubmit(event);
+        }}
+      />
+
+      <IncomingPaymentEditDialog
+        key={paymentEditRecord?.id ?? "empty-payment-edit"}
+        record={paymentEditRecord}
+        billingPackages={billingPackages}
+        open={paymentEditRecord !== null}
+        isSubmitting={isReplacingPayment}
+        onOpenChange={(open) => {
+          if (!open && !isReplacingPayment) {
+            setPaymentEditRecord(null);
+          }
+        }}
+        onConfirm={(record, payload) => {
+          void handleReplacePayment(record, payload);
+        }}
+      />
+
+      <IncomingPaymentStatusEditDialog
+        record={paymentStatusEditRecord}
+        open={paymentStatusEditRecord !== null}
+        isSubmitting={isUpdatingPaymentStatus}
+        onOpenChange={(open) => {
+          if (!open && !isUpdatingPaymentStatus) {
+            setPaymentStatusEditRecord(null);
+          }
+        }}
+        onConfirm={(record) => {
+          void handleMarkPaymentPaid(record);
         }}
       />
 

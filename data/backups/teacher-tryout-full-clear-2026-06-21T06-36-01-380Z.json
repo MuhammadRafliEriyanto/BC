@@ -1,0 +1,83 @@
+{
+  "createdAt": "2026-06-21T06:36:01.383Z",
+  "database": "bimbel-lms",
+  "purpose": "Backup before clearing all remaining guru tryout data so every teacher dashboard starts empty.",
+  "summary": {
+    "teacherTryoutCount": 1,
+    "teacherTryoutQuestionCount": 1,
+    "studentTryoutAttemptCount": 0,
+    "bySource": {
+      "manual": 1
+    },
+    "byTeacher": {
+      "TCH-013": 1
+    }
+  },
+  "teacherTryouts": [
+    {
+      "_id": "6a2bb9455b96b0d0093357bc",
+      "teacherId": "6a10066f620123141f80c8ea",
+      "tryoutId": "TO-001",
+      "title": "Latihan Tryout 1",
+      "jenjang": "SD",
+      "kelas": "Kelas 6",
+      "subject": "Matematika",
+      "durationMinutes": 90,
+      "startAt": "2026-06-13T07:44:00.000Z",
+      "endAt": "2026-06-14T21:44:00.000Z",
+      "publishStatus": "draft",
+      "questionSource": "manual",
+      "questionCount": 1,
+      "questionBankId": null,
+      "fileName": null,
+      "createdAt": "2026-06-12T07:46:13.703Z",
+      "updatedAt": "2026-06-12T07:47:19.048Z",
+      "__v": 0
+    }
+  ],
+  "teacherTryoutQuestions": [
+    {
+      "_id": "6a2bb9865b96b0d0093357ca",
+      "questionId": "TQ-001",
+      "teacherId": "6a10066f620123141f80c8ea",
+      "tryoutId": "TO-001",
+      "questionText": "Berapa 4+ 4",
+      "optionA": "8",
+      "optionB": "6",
+      "optionC": "5",
+      "optionD": "3",
+      "correctAnswer": "A",
+      "order": 1,
+      "createdAt": "2026-06-12T07:47:18.976Z",
+      "updatedAt": "2026-06-12T07:47:18.976Z",
+      "__v": 0
+    }
+  ],
+  "studentTryoutAttempts": [],
+  "readableTeacherTryouts": [
+    {
+      "_id": "6a2bb9455b96b0d0093357bc",
+      "teacherId": {
+        "_id": "6a10066f620123141f80c8ea",
+        "teacherId": "TCH-013",
+        "subject": "B. INDONESIA",
+        "branch": "Adiwerna",
+        "branches": [
+          "Slawi",
+          "Adiwerna"
+        ]
+      },
+      "tryoutId": "TO-001",
+      "title": "Latihan Tryout 1",
+      "kelas": "Kelas 6",
+      "subject": "Matematika",
+      "publishStatus": "draft",
+      "questionSource": "manual",
+      "questionCount": 1,
+      "questionBankId": null,
+      "fileName": null,
+      "createdAt": "2026-06-12T07:46:13.703Z",
+      "updatedAt": "2026-06-12T07:47:19.048Z"
+    }
+  ]
+}

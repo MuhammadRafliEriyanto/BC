@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, FileText, Send, TimerReset, Trophy } from "lucide-react";
+import { BookOpen, FileText, Send, TimerReset } from "lucide-react";
 
 const learningMenus = [
   {
@@ -21,13 +21,8 @@ const learningMenus = [
     icon: Send,
   },
   {
-    label: "Kuis",
-    href: "/dashboard-siswa/kuis",
-    icon: Trophy,
-  },
-  {
-    label: "Tryout",
-    href: "/dashboard-siswa/tryout",
+    label: "Ujian",
+    href: "/dashboard-siswa/ujian",
     icon: TimerReset,
   },
 ];
@@ -39,7 +34,8 @@ export default function StudentLearningNav() {
     <div className="flex flex-wrap gap-2 rounded-[20px] bg-white/90 p-1.5 shadow-sm ring-1 ring-orange-100/80">
       {learningMenus.map((menu) => {
         const Icon = menu.icon;
-        const isActive = pathname === menu.href;
+        const isActive =
+          pathname === menu.href || pathname.startsWith(`${menu.href}/`);
 
         return (
           <Link

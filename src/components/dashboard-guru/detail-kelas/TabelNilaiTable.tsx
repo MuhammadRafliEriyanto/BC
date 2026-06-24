@@ -1,8 +1,17 @@
 import { FilePenLine, Trophy } from "lucide-react";
 
+import {
+  ACADEMIC_SCORE_LABELS,
+  averageAvailableScores,
+  getAcademicScoreKeys,
+} from "@/lib/academic-grades";
 import type { GradeStatus, TabelNilaiTableProps } from "./types";
 
-function getGradeStatus(scoreAverage: number): GradeStatus {
+function getGradeStatus(scoreAverage: number | null): GradeStatus {
+  if (scoreAverage === null) {
+    return "Belum Dinilai";
+  }
+
   if (scoreAverage >= 85) {
     return "Sangat Baik";
   }
@@ -15,6 +24,10 @@ function getGradeStatus(scoreAverage: number): GradeStatus {
 }
 
 function getGradeStatusClass(status: GradeStatus) {
+  if (status === "Belum Dinilai") {
+    return "border-slate-200 bg-slate-50 text-slate-600";
+  }
+
   if (status === "Sangat Baik") {
     return "border-emerald-200 bg-emerald-50 text-emerald-700";
   }
@@ -26,25 +39,35 @@ function getGradeStatusClass(status: GradeStatus) {
   return "border-orange-200 bg-orange-50 text-orange-700";
 }
 
-function getAverageScore(scores: TabelNilaiTableProps["nilaiRows"][number]) {
-  return Math.round(scores.tugas);
+function formatScore(score: number | null) {
+  return score ?? "-";
 }
 
 export default function TabelNilaiTable({
   nilaiRows,
   onEditNilai,
   participants,
+  scheme,
 }: TabelNilaiTableProps) {
+  const scoreKeys = getAcademicScoreKeys(scheme);
   const rows = participants.map((student) => {
     const currentScore =
       nilaiRows.find((nilai) => nilai.studentId === student.id) ?? {
         studentId: student.id,
-        tugas: 0,
-        kuis: 0,
-        uts: 0,
-        uas: 0,
+        tugas: null,
+        scores: {
+          uts: null,
+          uas: null,
+          tryout1: null,
+          tryout2: null,
+          tryout3: null,
+        },
+        note: "",
       };
-    const average = getAverageScore(currentScore);
+    const average = averageAvailableScores([
+      currentScore.tugas,
+      ...scoreKeys.map((scoreKey) => currentScore.scores[scoreKey]),
+    ]);
 
     return {
       average,
@@ -79,8 +102,9 @@ export default function TabelNilaiTable({
             Tabel Nilai
           </h2>
           <p className="mt-1 text-sm text-slate-500">
-            Rekap nilai tugas siswa tersimpan dari backend. Kolom kuis, UTS,
-            dan UAS tetap disiapkan untuk integrasi tahap berikutnya.
+            {scheme === "tryout"
+              ? "Rekap tugas dan tiga tahap tryout untuk kelas akhir jenjang."
+              : "Rekap tugas, UTS, dan UAS untuk kelas reguler."}
           </p>
         </div>
         <span className="inline-flex items-center border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700">
@@ -90,15 +114,17 @@ export default function TabelNilaiTable({
 
       <div className="px-5 py-5 md:px-6">
         <div className="overflow-x-auto border border-orange-100">
-          <table className="min-w-[1040px] w-full">
+          <table className="min-w-[900px] w-full">
             <thead className="bg-orange-50/80 text-left">
               <tr className="text-xs uppercase tracking-[0.16em] text-slate-500">
                 <th className="px-4 py-4 font-semibold">No</th>
                 <th className="px-4 py-4 font-semibold">Nama Siswa</th>
                 <th className="px-4 py-4 font-semibold">Tugas</th>
-                <th className="px-4 py-4 font-semibold">Kuis</th>
-                <th className="px-4 py-4 font-semibold">UTS</th>
-                <th className="px-4 py-4 font-semibold">UAS</th>
+                {scoreKeys.map((scoreKey) => (
+                  <th key={scoreKey} className="px-4 py-4 font-semibold">
+                    {ACADEMIC_SCORE_LABELS[scoreKey]}
+                  </th>
+                ))}
                 <th className="px-4 py-4 font-semibold">Rata-rata</th>
                 <th className="px-4 py-4 font-semibold">Status</th>
                 <th className="px-4 py-4 text-center font-semibold">Aksi</th>
@@ -116,12 +142,16 @@ export default function TabelNilaiTable({
                   <td className="px-4 py-4 font-semibold text-slate-800">
                     {row.name}
                   </td>
-                  <td className="px-4 py-4 text-slate-600">{row.scores.tugas}</td>
-                  <td className="px-4 py-4 text-slate-600">{row.scores.kuis}</td>
-                  <td className="px-4 py-4 text-slate-600">{row.scores.uts}</td>
-                  <td className="px-4 py-4 text-slate-600">{row.scores.uas}</td>
+                  <td className="px-4 py-4 text-slate-600">
+                    {formatScore(row.scores.tugas)}
+                  </td>
+                  {scoreKeys.map((scoreKey) => (
+                    <td key={scoreKey} className="px-4 py-4 text-slate-600">
+                      {formatScore(row.scores.scores[scoreKey])}
+                    </td>
+                  ))}
                   <td className="px-4 py-4 font-semibold text-slate-800">
-                    {row.average}
+                    {formatScore(row.average)}
                   </td>
                   <td className="px-4 py-4">
                     <span

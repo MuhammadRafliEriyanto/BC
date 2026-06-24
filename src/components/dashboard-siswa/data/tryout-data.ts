@@ -256,7 +256,7 @@ export const studentTryoutSession: StudentTryoutSession = {
   schedule: "25 Mei 2026, 13.30 WIB",
   availability: "Akses dibuka sampai 25 Mei 2026, 18.00 WIB",
   mode: "CBT Mandiri Terjadwal",
-  href: "/dashboard-siswa/tryout",
+  href: "/dashboard-siswa/ujian",
   instructions: [
     "Klik mulai tryout saat kamu benar-benar siap karena timer akan berjalan terus sampai selesai.",
     "Setiap jawaban tersimpan otomatis di tampilan ini, jadi kamu bisa fokus pindah soal tanpa klik simpan.",

@@ -2,29 +2,15 @@ import type { ApiErrorDetails, ApiResponse } from "@/lib/auth";
 
 export const ONLINE_PACKAGES = [
   {
-    packageKey: "1-bulan",
-    packageName: "1 Bulan",
-    durationMonth: 1,
-    amount: 350_000,
-    highlight: "Cocok untuk eksplorasi awal dan adaptasi belajar.",
-  },
-  {
-    packageKey: "3-bulan",
-    packageName: "3 Bulan",
-    durationMonth: 3,
-    amount: 975_000,
-    highlight: "Pilihan paling seimbang untuk progres rutin tiap minggu.",
-  },
-  {
-    packageKey: "6-bulan",
-    packageName: "6 Bulan",
+    packageKey: "1-semester",
+    packageName: "1 Semester",
     durationMonth: 6,
     amount: 1_850_000,
-    highlight: "Komitmen jangka menengah dengan durasi aktif paling panjang.",
+    highlight: "Paket setengah tahun untuk fokus pada satu semester ajaran.",
   },
   {
-    packageKey: "12-bulan",
-    packageName: "1 Tahun",
+    packageKey: "2-semester",
+    packageName: "2 Semester (1 Tahun)",
     durationMonth: 12,
     amount: 3_700_000,
     highlight: "Pilihan tahunan untuk progres belajar yang ingin dijaga penuh sepanjang tahun.",
@@ -33,11 +19,39 @@ export const ONLINE_PACKAGES = [
 
 const LEGACY_ONLINE_PACKAGES = [
   {
+    packageKey: "12-bulan",
+    packageName: "Paket 1 Tahun (2 Semester) [Legacy]",
+    durationMonth: 12,
+    amount: 3_700_000,
+    highlight: "Paket legacy 12 bulan.",
+  },
+  {
+    packageKey: "6-bulan",
+    packageName: "6 Bulan [Legacy]",
+    durationMonth: 6,
+    amount: 2_000_000,
+    highlight: "Paket legacy 6 bulan.",
+  },
+  {
+    packageKey: "3-bulan",
+    packageName: "3 Bulan [Legacy]",
+    durationMonth: 3,
+    amount: 1_100_000,
+    highlight: "Paket legacy 3 bulan.",
+  },
+  {
     packageKey: "2-bulan",
-    packageName: "2 Bulan",
+    packageName: "2 Bulan [Legacy]",
     durationMonth: 2,
     amount: 650_000,
-    highlight: "Paket legacy untuk data lama yang masih tersimpan di sistem.",
+    highlight: "Paket legacy 2 bulan.",
+  },
+  {
+    packageKey: "1-bulan",
+    packageName: "1 Bulan [Legacy]",
+    durationMonth: 1,
+    amount: 350_000,
+    highlight: "Paket legacy 1 bulan.",
   },
 ] as const;
 
@@ -50,10 +64,61 @@ export const PROGRAM_OPTIONS = [
 ] as const;
 
 export const CLASS_OPTIONS_BY_PROGRAM = {
-  SD: ["Kelas 4", "Kelas 5", "Kelas 6"],
+  SD: ["Kelas 2", "Kelas 3", "Kelas 4", "Kelas 5", "Kelas 6"],
   SMP: ["Kelas 7", "Kelas 8", "Kelas 9"],
   SMA: ["Kelas 10", "Kelas 11", "Kelas 12"],
 } as const;
+
+export const CLASS_PRICING_MATRIX = {
+  // SD (Kelas 2-6)
+  "Kelas 2": { "1-semester": 1_800_000, "2-semester": 3_600_000 },
+  "Kelas 3": { "1-semester": 1_800_000, "2-semester": 3_600_000 },
+  "Kelas 4": { "1-semester": 1_850_000, "2-semester": 3_700_000 },
+  "Kelas 5": { "1-semester": 1_850_000, "2-semester": 3_700_000 },
+  "Kelas 6": { "1-semester": 1_900_000, "2-semester": 3_800_000 },
+  
+  // SMP (Kelas 7-9)
+  "Kelas 7": { "1-semester": 2_000_000, "2-semester": 4_000_000 },
+  "Kelas 8": { "1-semester": 2_000_000, "2-semester": 4_000_000 },
+  "Kelas 9": { "1-semester": 2_050_000, "2-semester": 4_100_000 },
+
+  // SMA (Kelas 10-12)
+  "Kelas 10": { "1-semester": 2_150_000, "2-semester": 4_300_000 },
+  "Kelas 11": { "1-semester": 2_150_000, "2-semester": 4_300_000 },
+  "Kelas 12": { "1-semester": 2_250_000, "2-semester": 4_500_000 },
+} as const;
+
+export type AcademicPackageKey = "1-semester" | "2-semester";
+
+export function getPriceByClassAndPackage(className: string | undefined | null, packageKey: AcademicPackageKey | string): number {
+  if (!className) return 3_700_000;
+  
+  const lowerClass = className.toLowerCase();
+  let mappedClassKey: keyof typeof CLASS_PRICING_MATRIX = "Kelas 4";
+
+  if (lowerClass.includes("kelas 2") || lowerClass.includes("sd 2")) mappedClassKey = "Kelas 2";
+  else if (lowerClass.includes("kelas 3") || lowerClass.includes("sd 3")) mappedClassKey = "Kelas 3";
+  else if (lowerClass.includes("kelas 4") || lowerClass.includes("sd 4")) mappedClassKey = "Kelas 4";
+  else if (lowerClass.includes("kelas 5") || lowerClass.includes("sd 5")) mappedClassKey = "Kelas 5";
+  else if (lowerClass.includes("kelas 6") || lowerClass.includes("sd 6")) mappedClassKey = "Kelas 6";
+  else if (lowerClass.includes("kelas 7") || lowerClass.includes("smp 7")) mappedClassKey = "Kelas 7";
+  else if (lowerClass.includes("kelas 8") || lowerClass.includes("smp 8")) mappedClassKey = "Kelas 8";
+  else if (lowerClass.includes("kelas 9") || lowerClass.includes("smp 9")) mappedClassKey = "Kelas 9";
+  else if (lowerClass.includes("kelas 10") || lowerClass.includes("sma 10")) mappedClassKey = "Kelas 10";
+  else if (lowerClass.includes("kelas 11") || lowerClass.includes("sma 11")) mappedClassKey = "Kelas 11";
+  else if (lowerClass.includes("kelas 12") || lowerClass.includes("sma 12")) mappedClassKey = "Kelas 12";
+
+  const classPricing = CLASS_PRICING_MATRIX[mappedClassKey];
+  
+  if (packageKey === "1-semester") return classPricing["1-semester"];
+  if (packageKey === "2-semester") return classPricing["2-semester"];
+  
+  return classPricing["2-semester"];
+}
+
+export function getPriceByClass(className: string | undefined | null): number {
+  return getPriceByClassAndPackage(className, "2-semester");
+}
 
 export type OnlinePackageKey = (typeof ONLINE_PACKAGES)[number]["packageKey"];
 export type ProgramOptionValue = (typeof PROGRAM_OPTIONS)[number]["value"];

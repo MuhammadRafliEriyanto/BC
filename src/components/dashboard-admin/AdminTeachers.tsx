@@ -66,6 +66,7 @@ import {
   type AdminColumnDefinition,
 } from "./components/AdminDataTable";
 import { AdminPaginationFooter } from "./components/AdminPaginationFooter";
+import { AdminSummaryLineSkeleton } from "./components/AdminLoadingState";
 import { AdminSectionCard } from "./components/AdminSectionCard";
 import { AdminStatusBadge } from "./components/AdminStatusBadge";
 
@@ -213,6 +214,22 @@ function buildBranchOptions(values: string[]) {
   ).sort((left, right) => left.localeCompare(right, "id"));
 }
 
+function getTeacherBranches(teacher: Pick<AdminTeacher, "branch" | "branches">) {
+  return Array.from(
+    new Set(
+      [...(teacher.branches ?? []), teacher.branch]
+        .map((branch) => normalizeText(branch))
+        .filter(Boolean),
+    ),
+  );
+}
+
+function getTeacherBranchesLabel(
+  teacher: Pick<AdminTeacher, "branch" | "branches">,
+) {
+  return getTeacherBranches(teacher).join(" • ") || "Cabang belum diatur";
+}
+
 function normalizeTeacherBranch(value: string, availableBranches: string[]) {
   const normalizedValue = normalizeText(value).toLowerCase();
 
@@ -242,8 +259,8 @@ function createEmptyTeacherForm(
     subject: "",
     branch: defaultBranch,
     phone: "",
-    schedule: "",
-    activeClasses: "1",
+    schedule: "-",
+    activeClasses: "0",
     classList: "",
     status: "Aktif",
     availability: defaultAvailability,
@@ -374,7 +391,7 @@ function TeacherActions({
               <DetailItem label="Email" value={teacher.email} />
               <DetailItem label="No. HP" value={teacher.phone} />
               <DetailItem label="Mapel" value={teacher.subject} />
-              <DetailItem label="Cabang" value={teacher.branch} />
+              <DetailItem label="Cabang" value={getTeacherBranchesLabel(teacher)} />
               <DetailItem label="Jadwal" value={teacher.schedule} />
               <DetailItem
                 label="Kelas aktif"
@@ -461,6 +478,7 @@ export function AdminTeachers({
     ...dashboardConfig.teacher.statuses,
   ];
   const teacherAvailabilityOptions = dashboardConfig.teacher.availabilities;
+  const teacherSubjectOptions = dashboardConfig.schedule.subjects;
   const defaultTeacherAvailability =
     teacherAvailabilityOptions[0] ?? "Tersedia";
   const [teachers, setTeachers] = useState<AdminTeacher[]>([]);
@@ -571,7 +589,7 @@ export function AdminTeachers({
           q: combinedSearchQuery || undefined,
           branch: branchFilter === allBranchesLabel ? undefined : branchFilter,
           status: statusFilter === "Semua" ? undefined : statusFilter,
-          sort: "createdAt_desc",
+          sort: "createdAt_asc",
         });
 
         setTeachers(result.teachers);
@@ -636,7 +654,10 @@ export function AdminTeachers({
   }, [page, refreshTeachers, requestKey]);
 
   const teacherBranchOptions = useMemo(
-    () => buildBranchOptions(teachers.map((teacher) => teacher.branch)),
+    () =>
+      buildBranchOptions(
+        teachers.flatMap((teacher) => getTeacherBranches(teacher)),
+      ),
     [teachers],
   );
   const availableBranchOptions = useMemo(
@@ -700,7 +721,10 @@ export function AdminTeachers({
     setImportInputVersion((currentValue) => currentValue + 1);
   };
   const teacherNumberMap = new Map(
-    filteredTeachers.map((teacher, index) => [teacher.id, index + 1]),
+    filteredTeachers.map((teacher, index) => [
+      teacher.id,
+      (page - 1) * pageLimit + index + 1,
+    ]),
   );
 
   const updateFormValue = <K extends keyof TeacherFormValues>(
@@ -786,6 +810,11 @@ export function AdminTeachers({
 
     if (!normalizedClassList) {
       setFormError("Kelas yang diampu wajib diisi.");
+      return;
+    }
+
+    if (!normalizedClassList) {
+      setFormError("Pendidikan terakhir wajib diisi.");
       return;
     }
 
@@ -945,7 +974,7 @@ export function AdminTeachers({
         q: combinedSearchQuery || undefined,
         branch: branchFilter === allBranchesLabel ? undefined : branchFilter,
         status: statusFilter === "Semua" ? undefined : statusFilter,
-        sort: "createdAt_desc",
+        sort: "createdAt_asc",
       });
     } catch (requestError) {
       setFormError(
@@ -1045,7 +1074,17 @@ export function AdminTeachers({
       cell: (teacher) => (
         <div>
           <p className="font-medium text-slate-800">{teacher.subject}</p>
-          <p className="text-sm text-slate-500">{teacher.branch}</p>
+          <div className="mt-1 flex flex-wrap gap-1.5">
+            {getTeacherBranches(teacher).map((branch) => (
+              <Badge
+                key={branch}
+                variant="outline"
+                className="border-orange-100 bg-orange-50/70 px-2 py-0.5 text-[11px] font-medium text-orange-700"
+              >
+                {branch}
+              </Badge>
+            ))}
+          </div>
         </div>
       ),
     },
@@ -1070,7 +1109,7 @@ export function AdminTeachers({
     },
     {
       key: "classList",
-      header: "Kelas Diampu",
+      header: "Pendidikan Terakhir",
       cell: (teacher) => (
         <p className="max-w-[240px] text-sm leading-6 text-slate-700">
           {teacher.classList}
@@ -1138,6 +1177,9 @@ export function AdminTeachers({
           </div>
         }
       >
+        {isLoading ? (
+          <AdminSummaryLineSkeleton className="mb-4" />
+        ) : (
         <div className="mb-4 flex flex-wrap items-center gap-2 text-sm text-slate-500">
           <span>
             Menampilkan {filteredTeachers.length} dari {totalItems}{" "}
@@ -1153,11 +1195,10 @@ export function AdminTeachers({
             Cabang {summary.branchCount}
           </Badge>
         </div>
+        )}
 
         {isBranchOptionsLoading ? (
-          <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-            Memuat daftar cabang guru dari backend...
-          </div>
+          <AdminSummaryLineSkeleton className="mb-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3" badges={2} />
         ) : null}
 
         {!isBranchOptionsLoading && branchOptions.length === 0 ? (
@@ -1237,12 +1278,6 @@ export function AdminTeachers({
           </div>
         ) : null}
 
-        {isLoading ? (
-          <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-            Menyinkronkan data guru terbaru dari server...
-          </div>
-        ) : null}
-
         <div className="mb-6 grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1.7fr)_220px_160px_auto]">
           <div className="md:col-span-2 xl:col-span-1">
             <Input
@@ -1309,6 +1344,7 @@ export function AdminTeachers({
           keyExtractor={(teacher) => teacher.id}
           emptyTitle="Tidak ada guru yang cocok"
           emptyDescription="Coba ubah kata kunci pencarian atau kombinasi filter."
+          isLoading={isLoading}
           square
           getRowClassName={(teacher) =>
             teacher.status === "Nonaktif"
@@ -1345,7 +1381,7 @@ export function AdminTeachers({
         }}
       >
         <DialogContent
-          className={`max-h-[85vh] overflow-y-auto sm:max-w-3xl ${warmOverlayPanelClassName}`}
+          className={`sm:max-w-5xl ${warmOverlayPanelClassName}`}
         >
           <DialogHeader>
             <DialogTitle>
@@ -1357,8 +1393,8 @@ export function AdminTeachers({
             </DialogDescription>
           </DialogHeader>
 
-          <form className="space-y-5" onSubmit={handleSubmit}>
-            <div className="grid gap-4 sm:grid-cols-2">
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
               <TeacherField label="Nama">
                 <Input
                   className={warmFieldClassName}
@@ -1395,14 +1431,25 @@ export function AdminTeachers({
               </TeacherField>
 
               <TeacherField label="Mapel">
-                <Input
-                  className={warmFieldClassName}
+                <Select
                   value={formValues.subject}
-                  onChange={(event) =>
-                    updateFormValue("subject", event.target.value)
-                  }
-                  placeholder="Contoh: Matematika"
-                />
+                  onValueChange={(value) => updateFormValue("subject", value)}
+                >
+                  <SelectTrigger className={warmSelectTriggerClassName}>
+                    <SelectValue placeholder="Pilih mata pelajaran" />
+                  </SelectTrigger>
+                  <SelectContent className={warmSelectContentClassName}>
+                    {teacherSubjectOptions.map((option) => (
+                      <SelectItem
+                        key={option}
+                        value={option}
+                        className={warmSelectItemClassName}
+                      >
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </TeacherField>
 
               <TeacherField label="Password">
@@ -1472,30 +1519,6 @@ export function AdminTeachers({
                 />
               </TeacherField>
 
-              <TeacherField label="Jadwal mengajar">
-                <Input
-                  className={warmFieldClassName}
-                  value={formValues.schedule}
-                  onChange={(event) =>
-                    updateFormValue("schedule", event.target.value)
-                  }
-                  placeholder="Contoh: Sen, Rab 15.30 - 18.30"
-                />
-              </TeacherField>
-
-              <TeacherField label="Kelas aktif">
-                <Input
-                  className={warmFieldClassName}
-                  type="number"
-                  min="0"
-                  value={formValues.activeClasses}
-                  onChange={(event) =>
-                    updateFormValue("activeClasses", event.target.value)
-                  }
-                  placeholder="0"
-                />
-              </TeacherField>
-
               <TeacherField label="Status">
                 <Select
                   value={formValues.status}
@@ -1550,14 +1573,14 @@ export function AdminTeachers({
               </TeacherField>
 
               <div className="sm:col-span-2">
-                <TeacherField label="Kelas yang diampu">
-                  <Textarea
-                    className="min-h-[124px]"
+                <TeacherField label="Pendidikan Terakhir">
+                  <Input
+                    className={warmFieldClassName}
                     value={formValues.classList}
                     onChange={(event) =>
                       updateFormValue("classList", event.target.value)
                     }
-                    placeholder="Pisahkan dengan koma atau baris baru, misalnya: SMA UTBK 11A, SMA Intensif 11B"
+                    placeholder="Contoh: S1 Matematika"
                   />
                 </TeacherField>
               </div>

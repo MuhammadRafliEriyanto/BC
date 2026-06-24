@@ -31,7 +31,7 @@ const aboutCardMeta = [
     ],
     primaryHref: "#program",
     primaryLabel: "Lihat Program",
-    secondaryHref: "/register-online",
+    secondaryHref: "/register",
     secondaryLabel: "Daftar Online",
   },
   {
@@ -63,7 +63,7 @@ const aboutCardMeta = [
     ],
     primaryHref: "#pendaftaran",
     primaryLabel: "Lihat Alur Daftar",
-    secondaryHref: "/register-online",
+    secondaryHref: "/register",
     secondaryLabel: "Mulai Daftar",
   },
   {

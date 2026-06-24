@@ -4,7 +4,7 @@ import {
   GraduationCap,
   LayoutGrid,
   Users,
-  WalletCards
+  WalletCards,
 } from "lucide-react";
 
 export type AdminTab =
@@ -12,7 +12,8 @@ export type AdminTab =
   | "students"
   | "teachers"
   | "schedule"
-  | "payments";
+  | "payments"
+  | "profile";
 
 export type AdminTone = "slate" | "orange" | "amber" | "emerald" | "rose";
 
@@ -48,6 +49,7 @@ export type AdminTeacher = {
   activeClasses: number;
   classList: string;
   branch: string;
+  branches: string[];
   phone: string;
   status: "Aktif" | "Nonaktif";
   availability: "Tersedia" | "Padat" | "Cuti";

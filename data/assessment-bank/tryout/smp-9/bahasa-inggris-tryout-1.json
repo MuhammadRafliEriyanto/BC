@@ -1,0 +1,216 @@
+{
+  "schemaVersion": "1.0.0",
+  "questionSetId": "TO1-SMP9-BING",
+  "assessmentType": "Tryout",
+  "stage": 1,
+  "className": "SMP 9",
+  "grade": 9,
+  "phase": "Fase D",
+  "subject": "Bahasa Inggris",
+  "questionCount": 10,
+  "suggestedDurationMinutes": 60,
+  "reviewStatus": "Perlu Review Guru",
+  "curriculumNote": "Draft orisinal berbasis kompetensi umum Kurikulum Merdeka; cocokkan kembali dengan ATP dan materi yang telah diajarkan di cabang.",
+  "questions": [
+    {
+      "questionId": "TO1-SMP9-BING-001",
+      "number": 1,
+      "competency": "Comprehending written texts",
+      "topic": "Reading comprehension",
+      "indicator": "Identifying the main idea of a short text",
+      "cognitiveLevel": "C2",
+      "difficulty": "Mudah",
+      "question": "Read the text \"Mangrove Visit\". Last Saturday, the science club visited a mangrove area. A guide explained that mangrove roots reduce coastal erosion and provide shelter for young fish. The students recorded their observations without disturbing the habitat.\nWhat is the main idea of the text?",
+      "options": {
+        "A": "A problem that has no solution",
+        "B": "An invitation to cancel an activity",
+        "C": "Students learn the value of mangroves",
+        "D": "A list of objects owned by the science club"
+      },
+      "correctAnswer": "C",
+      "explanation": "The entire paragraph focuses on students learn the value of mangroves.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO1-SMP9-BING-002",
+      "number": 2,
+      "competency": "Comprehending written texts",
+      "topic": "Explicit information",
+      "indicator": "Locating stated information",
+      "cognitiveLevel": "C2",
+      "difficulty": "Mudah",
+      "question": "According to the text, when does the activity happen?",
+      "options": {
+        "A": "after the activity is cancelled",
+        "B": "last Saturday",
+        "C": "only at midnight",
+        "D": "once every ten years"
+      },
+      "correctAnswer": "B",
+      "explanation": "The text explicitly states: last Saturday.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO1-SMP9-BING-003",
+      "number": 3,
+      "competency": "Language features",
+      "topic": "Vocabulary",
+      "indicator": "Inferring word meaning from context",
+      "cognitiveLevel": "C3",
+      "difficulty": "Mudah",
+      "question": "The word \"shelter\" is closest in meaning to ...",
+      "options": {
+        "A": "a safe place for protection",
+        "B": "something that is never used",
+        "C": "a place that cannot be entered",
+        "D": "an action done without a reason"
+      },
+      "correctAnswer": "A",
+      "explanation": "In the paragraph, \"shelter\" means a safe place for protection.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO1-SMP9-BING-004",
+      "number": 4,
+      "competency": "Language features",
+      "topic": "Reference",
+      "indicator": "Identifying a pronoun reference",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "In the sentence \"The activity helps achieve the goal,\" the reference is most closely related to ...",
+      "options": {
+        "A": "an unrelated visitor",
+        "B": "the reader's family",
+        "C": "a cancelled plan",
+        "D": "a mangrove area"
+      },
+      "correctAnswer": "D",
+      "explanation": "The reference points back to a mangrove area.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO1-SMP9-BING-005",
+      "number": 5,
+      "competency": "Grammar in context",
+      "topic": "Simple present",
+      "indicator": "Using the correct verb form for a habitual action",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "the science club ... the plan carefully every week.",
+      "options": {
+        "A": "reviewed",
+        "B": "reviewing",
+        "C": "reviews",
+        "D": "review"
+      },
+      "correctAnswer": "C",
+      "explanation": "A singular subject in a habitual action takes the simple-present form \"reviews\".",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO1-SMP9-BING-006",
+      "number": 6,
+      "competency": "Grammar in context",
+      "topic": "Simple past",
+      "indicator": "Using the correct verb for a completed event",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Last week, the group ... a similar activity.",
+      "options": {
+        "A": "conducting",
+        "B": "conducted",
+        "C": "conducts",
+        "D": "conduct"
+      },
+      "correctAnswer": "B",
+      "explanation": "\"Last week\" signals the simple past, so the correct verb is \"conducted\".",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO1-SMP9-BING-007",
+      "number": 7,
+      "competency": "Interpreting functional texts",
+      "topic": "Functional text",
+      "indicator": "Interpreting a notice",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Notice: \"Please complete the activity log before leaving.\" What should participants do?",
+      "options": {
+        "A": "Fill in the log before they leave",
+        "B": "Leave without recording anything",
+        "C": "Take the log home permanently",
+        "D": "Wait until next month to read it"
+      },
+      "correctAnswer": "A",
+      "explanation": "The notice asks participants to complete the log before leaving.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO1-SMP9-BING-008",
+      "number": 8,
+      "competency": "Comprehending written texts",
+      "topic": "Inference",
+      "indicator": "Drawing a logical inference from a text",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sedang",
+      "question": "Why is the action in the text useful?",
+      "options": {
+        "A": "because it removes every rule",
+        "B": "because it prevents anyone from learning",
+        "C": "because it makes the activity impossible",
+        "D": "to observe the habitat responsibly"
+      },
+      "correctAnswer": "D",
+      "explanation": "The benefit can be inferred from the stated purpose: to observe the habitat responsibly.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO1-SMP9-BING-009",
+      "number": 9,
+      "competency": "Comprehending written texts",
+      "topic": "Text purpose",
+      "indicator": "Identifying communicative purpose",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sulit",
+      "question": "The writer's main purpose is to ...",
+      "options": {
+        "A": "describe a fictional monster",
+        "B": "forbid all school activities",
+        "C": "inform readers about an activity and its benefit",
+        "D": "sell an unrelated luxury product"
+      },
+      "correctAnswer": "C",
+      "explanation": "The paragraph informs readers about the activity and explains its benefit.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO1-SMP9-BING-010",
+      "number": 10,
+      "competency": "Interpersonal communication",
+      "topic": "Response",
+      "indicator": "Selecting an appropriate response in a discussion",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sulit",
+      "question": "A friend says, \"We will present our findings tomorrow.\" What is the best response?",
+      "options": {
+        "A": "The evidence should be hidden.",
+        "B": "Great. Let's check the evidence once more.",
+        "C": "I never listen to any findings.",
+        "D": "Tomorrow happened last year."
+      },
+      "correctAnswer": "B",
+      "explanation": "\"Great. Let's check the evidence once more\" is relevant, polite, and supports preparation.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    }
+  ]
+}

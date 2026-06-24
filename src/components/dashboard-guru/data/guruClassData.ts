@@ -14,6 +14,8 @@ export type AssignmentReviewStatus =
   | "Selesai";
 export type AttendanceSessionStatus = "Berlangsung" | "Ditutup";
 
+export const DEFAULT_SEMESTER_MEETING_TARGET = 24;
+
 export type GuruClassSummary = {
   kelasId: string;
   namaKelas: string;
@@ -47,11 +49,11 @@ export type ClassStudent = {
   id: string;
   name: string;
   classLevel: string;
+  branch: string;
   status: StudentStatus;
   history: StudentMeetingHistory[];
   scores: {
     tugas: number;
-    kuis: number;
     uts: number;
     uas: number;
   };
@@ -471,11 +473,10 @@ function createStudentScores(seed: number, studentIndex: number) {
     studentIndex % 9 === 0 ? -8 : studentIndex % 7 === 0 ? 6 : 0;
 
   const tugas = clamp(base + adjustment + 2, 60, 97);
-  const kuis = clamp(base + adjustment - 1, 58, 96);
   const uts = clamp(base + adjustment + 3, 60, 98);
   const uas = clamp(base + adjustment + 4, 61, 99);
 
-  return { tugas, kuis, uts, uas };
+  return { tugas, uts, uas };
 }
 
 function getStudentStatus(
@@ -483,7 +484,7 @@ function getStudentStatus(
   studentIndex: number,
 ): StudentStatus {
   const average = Math.round(
-    (scores.tugas + scores.kuis + scores.uts + scores.uas) / 4,
+    (scores.tugas + scores.uts + scores.uas) / 3,
   );
 
   if (average < 75) {
@@ -552,6 +553,7 @@ function createParticipants(
       id: `${summary.kelasId}-student-${studentIndex + 1}`,
       name: getStudentName(seed, studentIndex),
       classLevel: `${summary.jenjang} / ${summary.tingkat}`,
+      branch: summary.program,
       status: getStudentStatus(scores, studentIndex),
       history,
       scores,

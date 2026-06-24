@@ -1,0 +1,216 @@
+{
+  "schemaVersion": "1.0.0",
+  "questionSetId": "TO3-SMP9-IPA",
+  "assessmentType": "Tryout",
+  "stage": 3,
+  "className": "SMP 9",
+  "grade": 9,
+  "phase": "Fase D",
+  "subject": "IPA",
+  "questionCount": 10,
+  "suggestedDurationMinutes": 60,
+  "reviewStatus": "Perlu Review Guru",
+  "curriculumNote": "Draft orisinal berbasis kompetensi umum Kurikulum Merdeka; cocokkan kembali dengan ATP dan materi yang telah diajarkan di cabang.",
+  "questions": [
+    {
+      "questionId": "TO3-SMP9-IPA-001",
+      "number": 1,
+      "competency": "Pengukuran",
+      "topic": "Pengukuran",
+      "indicator": "Menentukan besaran dan satuan SI",
+      "cognitiveLevel": "C2",
+      "difficulty": "Mudah",
+      "question": "Pasangan besaran dan satuan SI yang tepat adalah ...",
+      "options": {
+        "A": "panjang - meter",
+        "B": "massa - liter",
+        "C": "waktu - kilogram",
+        "D": "suhu - sekon"
+      },
+      "correctAnswer": "A",
+      "explanation": "Satuan SI untuk panjang adalah meter.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO3-SMP9-IPA-002",
+      "number": 2,
+      "competency": "Zat dan perubahannya",
+      "topic": "Zat dan perubahannya",
+      "indicator": "Membedakan perubahan fisika dan kimia",
+      "cognitiveLevel": "C2",
+      "difficulty": "Mudah",
+      "question": "Peristiwa yang termasuk perubahan kimia adalah ...",
+      "options": {
+        "A": "gula larut dalam air",
+        "B": "besi berkarat",
+        "C": "kertas dipotong",
+        "D": "es mencair"
+      },
+      "correctAnswer": "B",
+      "explanation": "Besi berkarat menghasilkan zat baru berupa oksida besi.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO3-SMP9-IPA-003",
+      "number": 3,
+      "competency": "Organisasi kehidupan",
+      "topic": "Organisasi kehidupan",
+      "indicator": "Menghubungkan organel dengan fungsinya",
+      "cognitiveLevel": "C3",
+      "difficulty": "Mudah",
+      "question": "Organel sel yang berperan utama dalam menghasilkan energi melalui respirasi adalah ...",
+      "options": {
+        "A": "vakuola",
+        "B": "dinding sel",
+        "C": "ribosom",
+        "D": "mitokondria"
+      },
+      "correctAnswer": "D",
+      "explanation": "Mitokondria merupakan tempat utama respirasi seluler penghasil energi.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO3-SMP9-IPA-004",
+      "number": 4,
+      "competency": "Ekosistem",
+      "topic": "Ekosistem",
+      "indicator": "Menganalisis dampak perubahan populasi",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Dalam rantai makanan padi -> belalang -> katak -> ular, populasi katak menurun tajam. Dampak paling langsung adalah ...",
+      "options": {
+        "A": "seluruh organisme tetap",
+        "B": "belalang cenderung meningkat",
+        "C": "padi langsung meningkat",
+        "D": "ular langsung meningkat"
+      },
+      "correctAnswer": "B",
+      "explanation": "Berkurangnya pemangsa belalang membuat populasi belalang cenderung meningkat.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO3-SMP9-IPA-005",
+      "number": 5,
+      "competency": "Massa jenis",
+      "topic": "Massa jenis",
+      "indicator": "Menghitung massa jenis benda",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Benda bermassa 260 gram memiliki volume 130 cm3. Massa jenisnya adalah ...",
+      "options": {
+        "A": "2 g/cm3",
+        "B": "390 g/cm3",
+        "C": "0.5 g/cm3",
+        "D": "33800 g/cm3"
+      },
+      "correctAnswer": "A",
+      "explanation": "Massa jenis = massa/volume = 260/130 = 2 g/cm3.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO3-SMP9-IPA-006",
+      "number": 6,
+      "competency": "Gaya dan usaha",
+      "topic": "Gaya dan usaha",
+      "indicator": "Menghitung usaha oleh gaya searah perpindahan",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Gaya 35 N mendorong benda sejauh 7 m searah gaya. Usaha yang dilakukan adalah ...",
+      "options": {
+        "A": "245 J",
+        "B": "5 J",
+        "C": "0.2 J",
+        "D": "42 J"
+      },
+      "correctAnswer": "A",
+      "explanation": "Usaha W = F x s = 35 x 7 = 245 J.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO3-SMP9-IPA-007",
+      "number": 7,
+      "competency": "Kalor",
+      "topic": "Kalor",
+      "indicator": "Menjelaskan perpindahan kalor",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Gagang sendok logam ikut panas ketika ujungnya dicelupkan ke air panas. Peristiwa ini disebut ...",
+      "options": {
+        "A": "radiasi",
+        "B": "evaporasi",
+        "C": "konduksi",
+        "D": "konveksi"
+      },
+      "correctAnswer": "C",
+      "explanation": "Kalor merambat melalui zat padat tanpa perpindahan partikel secara keseluruhan, yaitu konduksi.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO3-SMP9-IPA-008",
+      "number": 8,
+      "competency": "Listrik",
+      "topic": "Listrik",
+      "indicator": "Menganalisis rangkaian listrik sederhana",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sedang",
+      "question": "Dua lampu identik disusun seri. Jika salah satu lampu putus, yang terjadi adalah ...",
+      "options": {
+        "A": "baterai menghasilkan tegangan tak terbatas",
+        "B": "lampu lain tetap menyala lebih terang",
+        "C": "lampu lain ikut padam",
+        "D": "arus menjadi dua kali lipat"
+      },
+      "correctAnswer": "C",
+      "explanation": "Rangkaian seri hanya memiliki satu jalur; ketika jalur terputus, arus berhenti di seluruh rangkaian.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO3-SMP9-IPA-009",
+      "number": 9,
+      "competency": "Pewarisan sifat",
+      "topic": "Pewarisan sifat",
+      "indicator": "Memprediksi hasil persilangan monohibrid sederhana",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sulit",
+      "question": "Tanaman tinggi heterozigot (Tt) disilangkan dengan tanaman pendek (tt). Peluang keturunan berfenotipe pendek adalah ...",
+      "options": {
+        "A": "0%",
+        "B": "25%",
+        "C": "50%",
+        "D": "100%"
+      },
+      "correctAnswer": "C",
+      "explanation": "Persilangan Tt x tt menghasilkan 1/2 Tt (tinggi) dan 1/2 tt (pendek).",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO3-SMP9-IPA-010",
+      "number": 10,
+      "competency": "Metode ilmiah",
+      "topic": "Metode ilmiah",
+      "indicator": "Menilai rancangan percobaan yang adil",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sulit",
+      "question": "Untuk menguji pengaruh cahaya terhadap pertumbuhan kecambah, rancangan terbaik adalah ...",
+      "options": {
+        "A": "menggunakan jenis biji, air, dan media sama; hanya cahaya yang dibedakan",
+        "B": "memberi jumlah air berbeda pada setiap kelompok",
+        "C": "mengamati satu kecambah tanpa kelompok pembanding",
+        "D": "mengubah cahaya dan jenis biji sekaligus"
+      },
+      "correctAnswer": "A",
+      "explanation": "Percobaan yang adil hanya mengubah variabel cahaya dan mengendalikan faktor lain.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    }
+  ]
+}

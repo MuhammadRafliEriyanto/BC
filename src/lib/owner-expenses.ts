@@ -2,6 +2,10 @@ import { requestAdminApi } from "@/lib/admin-api";
 import { fetchOwnerBranchAdminOptionsFromApi } from "@/lib/owner-branch-admins";
 
 export const ownerExpenseCategoryOptions = [
+  "Listrik",
+  "Internet",
+  "Sewa Gedung",
+  "Lainnya",
   "Gaji Guru",
   "Gaji Admin",
   "Operasional Cabang",
@@ -9,8 +13,17 @@ export const ownerExpenseCategoryOptions = [
 ] as const;
 
 export const ownerExpenseVisibleCategoryOptions = [
+  "Listrik",
+  "Internet",
+  "Sewa Gedung",
+  "Lainnya",
+] as const;
+
+export const ownerExpenseLegacyCategoryOptions = [
   "Gaji Guru",
   "Gaji Admin",
+  "Operasional Cabang",
+  "Teknologi",
 ] as const;
 
 export const ownerExpenseStatusOptions = [
@@ -21,7 +34,27 @@ export const ownerExpenseStatusOptions = [
 ] as const;
 
 export type OwnerExpenseCategory = (typeof ownerExpenseCategoryOptions)[number];
+export type OwnerExpenseUiCategory =
+  (typeof ownerExpenseVisibleCategoryOptions)[number];
+export type OwnerExpenseLegacyCategory =
+  (typeof ownerExpenseLegacyCategoryOptions)[number];
 export type OwnerExpenseStatus = (typeof ownerExpenseStatusOptions)[number];
+
+export function isOwnerExpenseLegacyCategory(
+  value: string | null | undefined,
+): value is OwnerExpenseLegacyCategory {
+  return ownerExpenseLegacyCategoryOptions.includes(
+    (value ?? "") as OwnerExpenseLegacyCategory,
+  );
+}
+
+export function normalizeOwnerExpenseFormCategory(
+  value: string | null | undefined,
+): OwnerExpenseUiCategory {
+  return ownerExpenseVisibleCategoryOptions.includes(value as OwnerExpenseUiCategory)
+    ? (value as OwnerExpenseUiCategory)
+    : "Lainnya";
+}
 
 export type OwnerExpense = {
   id: string;

@@ -1,5 +1,5 @@
-import { OwnerDashboardExpensesView } from "@/components/dashboard-owner/owner-dashboard-expenses-view";
+import { redirect } from "next/navigation";
 
 export default function DashboardOwnerPengeluaranPage() {
-  return <OwnerDashboardExpensesView />;
+  redirect("/dashboard-owner/aktivitas?tab=keluar");
 }

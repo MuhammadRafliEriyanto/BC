@@ -1,19 +1,24 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
 import {
-  ArrowRight,
-  BookOpen,
+  Check,
+  CheckCircle2,
+  ChevronRight,
   Clock3,
-  CreditCard,
   Eye,
   EyeOff,
+  GraduationCap,
+  Info,
+  type LucideIcon,
   LoaderCircle,
+  MapPin,
+  Package,
+  Phone,
+  User,
 } from "lucide-react";
 
 import { AuthShell } from "@/components/auth/AuthShell";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -35,19 +40,29 @@ import {
   type ProgramOptionValue,
   type RegisterBranchOption,
   type RegisterOnlinePayload,
+  getPriceByClassAndPackage,
 } from "@/lib/subscription";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useState, useEffect, useMemo } from "react";
 
 type RegisterOnlineViewProps = {
   initialPackageKey?: OnlinePackageKey;
 };
 
-const DEFAULT_PACKAGE_KEY: OnlinePackageKey = "3-bulan";
+const DEFAULT_PACKAGE_KEY: OnlinePackageKey = "2-semester";
 
 function resolvePackageKey(packageKey?: OnlinePackageKey): OnlinePackageKey {
-  const matchedPackage = ONLINE_PACKAGES.find((item) => item.packageKey === packageKey);
+  return packageKey && packageKey !== "12-bulan" ? packageKey : "2-semester";
+}
 
-  return matchedPackage?.packageKey ?? DEFAULT_PACKAGE_KEY;
+function normalizeRegisterPath(path?: string | null) {
+  if (!path) {
+    return "/register/status";
+  }
+
+  return path.replace(/^\/register-online(?=\/|$)/, "/register");
 }
 
 function InputError({ message }: { message?: string }) {
@@ -55,7 +70,38 @@ function InputError({ message }: { message?: string }) {
     return null;
   }
 
-  return <p className="mt-2 text-sm text-red-600">{message}</p>;
+  return (
+    <div className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-red-600">
+      <Info className="size-3.5" />
+      {message}
+    </div>
+  );
+}
+
+function FormSection({ 
+  title, 
+  icon: Icon, 
+  children,
+  className 
+}: { 
+  title: string; 
+  icon: LucideIcon; 
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("space-y-5", className)}>
+      <div className="flex items-center gap-3 pb-2 border-b border-slate-100/60">
+        <div className="flex size-8 items-center justify-center rounded-xl bg-orange-50/80 text-orange-500 shadow-sm shadow-orange-100/50">
+          <Icon className="size-4" />
+        </div>
+        <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wide">{title}</h3>
+      </div>
+      <div className="grid gap-5">
+        {children}
+      </div>
+    </div>
+  );
 }
 
 export default function RegisterOnlineView({ initialPackageKey }: RegisterOnlineViewProps) {
@@ -88,8 +134,14 @@ export default function RegisterOnlineView({ initialPackageKey }: RegisterOnline
     () => CLASS_OPTIONS_BY_PROGRAM[formValues.program],
     [formValues.program],
   );
-  const selectedPackage = getPackageByKey(formValues.packageKey);
-  const selectedMonthlyPrice = Math.round(selectedPackage.amount / selectedPackage.durationMonth);
+  
+  const basePackage = getPackageByKey(formValues.packageKey);
+  const dynamicAmount = getPriceByClassAndPackage(formValues.classLevel, formValues.packageKey);
+  const selectedPackage = { 
+    ...basePackage, 
+    amount: dynamicAmount, 
+    packageName: basePackage?.packageName ?? "Paket Belajar" 
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -140,6 +192,18 @@ export default function RegisterOnlineView({ initialPackageKey }: RegisterOnline
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    const phone = formValues.phone.trim();
+    if (!phone.startsWith("08")) {
+      setFieldErrors({ phone: "Nomor WhatsApp harus diawali dengan 08." });
+      return;
+    }
+
+    if (phone.length > 14) {
+      setFieldErrors({ phone: "Nomor WhatsApp maksimal 14 karakter." });
+      return;
+    }
+
     setLoading(true);
     setErrorMessage("");
     setFieldErrors({});
@@ -147,8 +211,8 @@ export default function RegisterOnlineView({ initialPackageKey }: RegisterOnline
     try {
       const response = await membershipService.register(formValues);
       const nextPath = response.data?.payment?.paymentId
-        ? `/register-online/payment/${response.data.payment.paymentId}`
-        : response.data?.statusPagePath ?? "/register-online/status";
+        ? `/register/payment/${response.data.payment.paymentId}`
+        : normalizeRegisterPath(response.data?.statusPagePath);
 
       router.push(nextPath);
     } catch (error) {
@@ -190,141 +254,206 @@ export default function RegisterOnlineView({ initialPackageKey }: RegisterOnline
 
   return (
     <AuthShell
-      variant="immersive"
-      title="Daftar online membership"
-      description="Lengkapi data siswa, pilih paket belajar, lalu lanjutkan ke proses pembayaran."
-      panelClassName="max-w-[980px]"
+      variant="split"
+      splitContentAlignment="start"
+      splitContentClassName="pt-8 lg:pt-10"
+      hideSplitVisualOnMobile
+      hideSplitTopBadge
+      allowDesktopScroll
+      title="Registrasi Siswa Baru"
+      description="Bergabung dengan membership kami untuk akses belajar yang terarah dan profesional."
       footer={
-        <div className="space-y-2 text-center text-sm text-slate-500">
+        <div className="text-sm text-slate-500 text-center space-y-4">
           <p>
             Sudah punya akun siswa?{" "}
             <Link
               href="/login"
-              className="font-semibold text-orange-600 transition hover:text-orange-700"
+              className="font-semibold text-orange-600 transition hover:text-orange-700 underline-offset-4 hover:underline"
             >
               Masuk di sini
             </Link>
           </p>
-          <p>
+          <div className="flex items-center justify-center gap-4 pt-4 border-t border-slate-100">
             <Link
               href="/"
-              className="font-medium text-slate-500 transition hover:text-orange-600"
+              className="text-xs font-medium text-slate-400 transition hover:text-slate-600"
             >
-              Kembali ke landing page
+              Beranda
             </Link>
-          </p>
+            <Link
+              href="#"
+              className="text-xs font-medium text-slate-400 transition hover:text-slate-600"
+            >
+              Bantuan
+            </Link>
+          </div>
         </div>
       }
     >
-      <form className="mx-auto max-w-[860px] space-y-3" onSubmit={handleSubmit}>
-        <div className="rounded-[28px] border border-orange-100/80 bg-[linear-gradient(180deg,rgba(255,250,244,0.96),rgba(255,255,255,0.98))] p-4 shadow-[0_26px_44px_-34px_rgba(249,115,22,0.22)] sm:p-5">
-          <div className="flex flex-wrap gap-2">
-            <span className="inline-flex items-center rounded-full border border-orange-100 bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-orange-600">
-              Paket {selectedPackage.packageName}
-            </span>
-            <span className="inline-flex items-center rounded-full border border-orange-100 bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-700">
-              {formatRupiah(selectedPackage.amount)}
-            </span>
-            <span className="inline-flex items-center rounded-full border border-orange-100 bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-700">
-              {selectedPackage.durationMonth} bulan
-            </span>
-            {initialPackageKey ? (
-              <span className="inline-flex items-center rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-orange-600">
-                Dipilih dari landing
-              </span>
-            ) : null}
+      <div className="space-y-8 pb-10">
+        {/* Billing Summary Mini */}
+        <div className="group relative overflow-hidden rounded-3xl border border-orange-100/50 bg-gradient-to-br from-orange-50/40 via-white to-white p-6 shadow-[0_8px_30px_-4px_rgba(249,115,22,0.04)] transition-all duration-500 hover:shadow-[0_12px_40px_-4px_rgba(249,115,22,0.08)] hover:-translate-y-0.5">
+          <div className="absolute right-0 top-0 -mr-4 -mt-4 size-32 rounded-full bg-orange-100/40 blur-3xl transition-transform duration-700 group-hover:scale-110" />
+          <div className="relative flex items-center justify-between">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <Package className="size-4 text-orange-500" />
+                <p className="text-[10px] font-bold uppercase tracking-widest text-orange-500/80">Paket Terpilih</p>
+              </div>
+              <h3 className="text-lg font-bold text-slate-800">{selectedPackage.packageName}</h3>
+              <p className="text-xs text-slate-500 flex items-center gap-1.5">
+                <Clock3 className="size-3.5" />
+                Akses selama {selectedPackage.durationMonth} bulan
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-black text-slate-800 tracking-tight">{formatRupiah(selectedPackage.amount)}</p>
+              <Badge variant="secondary" className="mt-1.5 bg-orange-50/80 text-orange-600 text-[10px] font-bold tracking-widest border border-orange-100/50">
+                PROMO AKTIF
+              </Badge>
+            </div>
           </div>
+        </div>
 
-          <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              <label htmlFor="nama" className="text-sm font-medium text-orange-700">
-                Nama siswa
+        <form className="space-y-10" onSubmit={handleSubmit}>
+          {/* Section 1: Data Diri */}
+          <FormSection title="Informasi Siswa" icon={User}>
+            <div className="space-y-2">
+              <label htmlFor="nama" className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Nama Lengkap
               </label>
-              <Input
-                id="nama"
-                value={formValues.nama}
-                onChange={(event) =>
-                  setFormValues((current) => ({
-                    ...current,
-                    nama: event.target.value,
-                  }))
-                }
-                placeholder="Masukkan nama lengkap siswa"
-                className="mt-2 h-[52px] rounded-[20px] border-orange-100 bg-white"
-                autoComplete="name"
-                required
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-400">
+                  <User className="size-4" />
+                </div>
+                <Input
+                  id="nama"
+                  value={formValues.nama}
+                  onChange={(event) =>
+                    setFormValues((current) => ({
+                      ...current,
+                      nama: event.target.value,
+                    }))
+                  }
+                  placeholder="Nama lengkap siswa"
+                  className="h-12 rounded-2xl border-slate-200/60 bg-slate-50/50 pl-11 transition-all duration-300 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-500/10 hover:border-slate-300"
+                  autoComplete="name"
+                  required
+                />
+              </div>
               <InputError message={fieldErrors.nama} />
             </div>
 
-            <div>
-              <label htmlFor="email" className="text-sm font-medium text-orange-700">
-                Email
-              </label>
-              <Input
-                id="email"
-                type="email"
-                value={formValues.email}
-                onChange={(event) =>
-                  setFormValues((current) => ({
-                    ...current,
-                    email: event.target.value,
-                  }))
-                }
-                placeholder="nama@email.com"
-                className="mt-2 h-[52px] rounded-[20px] border-orange-100 bg-white"
-                autoComplete="email"
-                required
-              />
-              <InputError message={fieldErrors.email} />
-            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <label htmlFor="email" className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Email
+                </label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formValues.email}
+                  onChange={(event) =>
+                    setFormValues((current) => ({
+                      ...current,
+                      email: event.target.value,
+                    }))
+                  }
+                  placeholder="contoh@email.com"
+                  className="h-12 rounded-2xl border-slate-200/60 bg-slate-50/50 px-4 transition-all duration-300 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-500/10 hover:border-slate-300"
+                  autoComplete="email"
+                  required
+                />
+                <InputError message={fieldErrors.email} />
+              </div>
 
-            <div>
-              <label htmlFor="phone" className="text-sm font-medium text-orange-700">
-                Nomor HP
-              </label>
-              <Input
-                id="phone"
-                value={formValues.phone}
-                onChange={(event) =>
-                  setFormValues((current) => ({
-                    ...current,
-                    phone: event.target.value,
-                  }))
-                }
-                placeholder="08xxxxxxxxxx"
-                className="mt-2 h-[52px] rounded-[20px] border-orange-100 bg-white"
-                autoComplete="tel"
-                required
-              />
-              <InputError message={fieldErrors.phone} />
+              <div className="space-y-2">
+                <label htmlFor="phone" className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  No. WhatsApp
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-400">
+                    <Phone className="size-4" />
+                  </div>
+                  <Input
+                    id="phone"
+                    value={formValues.phone}
+                    onChange={(event) =>
+                      setFormValues((current) => ({
+                        ...current,
+                        phone: event.target.value,
+                      }))
+                    }
+                    placeholder="08xxxxxxxxxx"
+                    className="h-12 rounded-2xl border-slate-200/60 bg-slate-50/50 pl-11 transition-all duration-300 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-500/10 hover:border-slate-300"
+                    autoComplete="tel"
+                    required
+                  />
+                </div>
+                <InputError message={fieldErrors.phone} />
+              </div>
             </div>
+          </FormSection>
 
-            <div>
-              <label htmlFor="program" className="text-sm font-medium text-orange-700">
-                Jenjang / Program
-              </label>
-              <Select value={formValues.program} onValueChange={updateProgram}>
-                <SelectTrigger
-                  id="program"
-                  className="mt-2 h-[52px] rounded-[20px] border-orange-100 bg-white"
+          {/* Section 2: Akademik */}
+          <FormSection title="Program & Cabang" icon={GraduationCap}>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <label htmlFor="program" className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Program Belajar
+                </label>
+                <Select value={formValues.program} onValueChange={updateProgram}>
+                  <SelectTrigger
+                    id="program"
+                    className="h-12 rounded-2xl border-slate-200/60 bg-slate-50/50 px-4 transition-all duration-300 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-500/10 hover:border-slate-300"
+                  >
+                    <SelectValue placeholder="Pilih program" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PROGRAM_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <InputError message={fieldErrors.program} />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="classLevel" className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Tingkat Kelas
+                </label>
+                <Select
+                  value={formValues.classLevel}
+                  onValueChange={(value) =>
+                    setFormValues((current) => ({
+                      ...current,
+                      classLevel: value,
+                    }))
+                  }
                 >
-                  <SelectValue placeholder="Pilih jenjang" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PROGRAM_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <InputError message={fieldErrors.program} />
+                  <SelectTrigger
+                    id="classLevel"
+                    className="h-12 rounded-2xl border-slate-200/60 bg-slate-50/50 px-4 transition-all duration-300 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-500/10 hover:border-slate-300"
+                  >
+                    <SelectValue placeholder="Pilih kelas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {classOptions.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {item}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <InputError message={fieldErrors.classLevel} />
+              </div>
             </div>
 
-            <div>
-              <label htmlFor="branch" className="text-sm font-medium text-orange-700">
-                Cabang
+            <div className="space-y-2">
+              <label htmlFor="branch" className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Cabang Pilihan
               </label>
               <Select
                 value={formValues.branch}
@@ -338,15 +467,18 @@ export default function RegisterOnlineView({ initialPackageKey }: RegisterOnline
               >
                 <SelectTrigger
                   id="branch"
-                  className="mt-2 h-[52px] rounded-[20px] border-orange-100 bg-white"
+                  className="h-12 rounded-xl border-slate-200 bg-white px-4 focus:ring-4 focus:ring-orange-500/10"
                 >
-                  <SelectValue
-                    placeholder={
-                      branchOptionsLoading
-                        ? "Memuat cabang aktif..."
-                        : "Pilih cabang"
-                    }
-                  />
+                  <div className="flex items-center gap-2">
+                    <MapPin className="size-4 text-slate-400" />
+                    <SelectValue
+                      placeholder={
+                        branchOptionsLoading
+                          ? "Memuat daftar cabang..."
+                          : "Pilih lokasi cabang"
+                      }
+                    />
+                  </div>
                 </SelectTrigger>
                 <SelectContent>
                   {branchOptions.map((branch) => (
@@ -360,126 +492,98 @@ export default function RegisterOnlineView({ initialPackageKey }: RegisterOnline
               </Select>
               <InputError message={fieldErrors.branch || branchOptionsError} />
             </div>
+          </FormSection>
 
-            <div>
-              <label htmlFor="classLevel" className="text-sm font-medium text-orange-700">
-                Kelas
-              </label>
-              <Select
-                value={formValues.classLevel}
-                onValueChange={(value) =>
-                  setFormValues((current) => ({
-                    ...current,
-                    classLevel: value,
-                  }))
-                }
-              >
-                <SelectTrigger
-                  id="classLevel"
-                  className="mt-2 h-[52px] rounded-[20px] border-orange-100 bg-white"
-                >
-                  <SelectValue placeholder="Pilih kelas" />
-                </SelectTrigger>
-                <SelectContent>
-                  {classOptions.map((item) => (
-                    <SelectItem key={item} value={item}>
-                      {item}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <InputError message={fieldErrors.classLevel} />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="text-sm font-medium text-orange-700">
-                Password
-              </label>
-              <div className="relative mt-2">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={formValues.password}
-                  onChange={(event) =>
-                    setFormValues((current) => ({
-                      ...current,
-                      password: event.target.value,
-                    }))
-                  }
-                  placeholder="Minimal 8 karakter"
-                  className="h-[52px] rounded-[20px] border-orange-100 bg-white pr-12"
-                  autoComplete="new-password"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((current) => !current)}
-                  className="absolute inset-y-0 right-0 inline-flex w-12 items-center justify-center text-slate-400 transition hover:text-orange-600"
-                  aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
-                >
-                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                </button>
+          {/* Section 3: Keamanan */}
+          <FormSection title="Kata Sandi Akun" icon={CheckCircle2}>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <label htmlFor="password" className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Password
+                </label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={formValues.password}
+                    onChange={(event) =>
+                      setFormValues((current) => ({
+                        ...current,
+                        password: event.target.value,
+                      }))
+                    }
+                    placeholder="Min. 8 karakter"
+                  className="h-12 rounded-2xl border-slate-200/60 bg-slate-50/50 px-4 pr-11 transition-all duration-300 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-500/10 hover:border-slate-300"
+                    autoComplete="new-password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((current) => !current)}
+                    className="absolute inset-y-0 right-0 inline-flex w-11 items-center justify-center text-slate-400 transition hover:text-orange-600"
+                  >
+                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                </div>
+                <InputError message={fieldErrors.password} />
               </div>
-              <InputError message={fieldErrors.password} />
-            </div>
 
-            <div>
-              <label htmlFor="confirmPassword" className="text-sm font-medium text-orange-700">
-                Konfirmasi password
-              </label>
-              <div className="relative mt-2">
-                <Input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  value={formValues.confirmPassword}
-                  onChange={(event) =>
-                    setFormValues((current) => ({
-                      ...current,
-                      confirmPassword: event.target.value,
-                    }))
-                  }
-                  placeholder="Ulangi password"
-                  className="h-[52px] rounded-[20px] border-orange-100 bg-white pr-12"
-                  autoComplete="new-password"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword((current) => !current)}
-                  className="absolute inset-y-0 right-0 inline-flex w-12 items-center justify-center text-slate-400 transition hover:text-orange-600"
-                  aria-label={
-                    showConfirmPassword
-                      ? "Sembunyikan konfirmasi password"
-                      : "Tampilkan konfirmasi password"
-                  }
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff className="size-4" />
-                  ) : (
-                    <Eye className="size-4" />
-                  )}
-                </button>
+              <div className="space-y-2">
+                <label htmlFor="confirmPassword" className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Konfirmasi Password
+                </label>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={formValues.confirmPassword}
+                    onChange={(event) =>
+                      setFormValues((current) => ({
+                        ...current,
+                        confirmPassword: event.target.value,
+                      }))
+                    }
+                    placeholder="Ulangi password"
+                  className="h-12 rounded-2xl border-slate-200/60 bg-slate-50/50 px-4 pr-11 transition-all duration-300 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-500/10 hover:border-slate-300"
+                    autoComplete="new-password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((current) => !current)}
+                    className="absolute inset-y-0 right-0 inline-flex w-11 items-center justify-center text-slate-400 transition hover:text-orange-600"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="size-4" />
+                    ) : (
+                      <Eye className="size-4" />
+                    )}
+                  </button>
+                </div>
+                <InputError message={fieldErrors.confirmPassword} />
               </div>
-              <InputError message={fieldErrors.confirmPassword} />
             </div>
-          </div>
+          </FormSection>
 
-          <div className="mt-5 rounded-[24px] border border-orange-100/80 bg-white/88 p-4">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900">Pilih paket belajar</h3>
-                <p className="mt-1 text-sm leading-6 text-slate-500">
-                  Membership aktif dimulai setelah pembayaran berhasil dikonfirmasi.
-                </p>
+          {/* Section 4: Paket */}
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="flex size-7 items-center justify-center rounded-lg bg-orange-50 text-orange-600">
+                  <Package className="size-4" />
+                </div>
+                <h3 className="text-sm font-bold text-slate-800 uppercase tracking-tight">Pilih Paket Belajar</h3>
               </div>
-              <span className="inline-flex w-fit items-center rounded-full border border-orange-100 bg-orange-50 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-orange-600">
-                {ONLINE_PACKAGES.length} pilihan paket
-              </span>
+              <Badge variant="outline" className="border-orange-200 text-orange-600 text-[10px] font-bold">
+                RECOMMENDED
+              </Badge>
             </div>
 
-            <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-3">
               {ONLINE_PACKAGES.map((item) => {
                 const isActive = formValues.packageKey === item.packageKey;
+                const displayAmount = getPriceByClassAndPackage(formValues.classLevel, item.packageKey);
+                const displayName = item.packageName;
 
                 return (
                   <button
@@ -487,106 +591,116 @@ export default function RegisterOnlineView({ initialPackageKey }: RegisterOnline
                     type="button"
                     onClick={() => updatePackage(item.packageKey)}
                     className={cn(
-                      "rounded-[22px] border p-4 text-left transition-all duration-300",
+                      "group relative flex items-center gap-5 rounded-3xl border p-5 text-left transition-all duration-500",
                       isActive
-                        ? "border-orange-300 bg-[linear-gradient(180deg,rgba(255,247,237,0.98),rgba(255,255,255,0.98))] shadow-[0_22px_34px_-30px_rgba(249,115,22,0.26)]"
-                        : "border-slate-200/90 bg-white hover:border-orange-200 hover:bg-orange-50/40",
+                        ? "border-orange-400 bg-orange-50/40 shadow-[0_8px_30px_-4px_rgba(249,115,22,0.12)] ring-1 ring-orange-400/30"
+                        : "border-slate-200/60 bg-white hover:border-orange-200 hover:bg-orange-50/10 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_25px_-4px_rgba(0,0,0,0.04)] hover:-translate-y-0.5",
                     )}
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-base font-semibold text-slate-900">{item.packageName}</p>
-                        <p className="mt-1 text-sm leading-6 text-slate-500">{item.highlight}</p>
+                    <div className={cn(
+                      "flex size-12 shrink-0 items-center justify-center rounded-2xl border transition-all duration-500",
+                      isActive ? "bg-orange-500 border-orange-400 text-white shadow-md shadow-orange-200/50" : "bg-slate-50 border-slate-100 text-slate-400 group-hover:bg-orange-100/50 group-hover:border-orange-200 group-hover:text-orange-500"
+                    )}>
+                      <Check className={cn("size-6 transition-all duration-500", isActive ? "scale-100 opacity-100" : "scale-50 opacity-0")} />
+                      {!isActive && <Package className="size-5 absolute transition-all duration-500 group-hover:scale-110" />}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className={cn(
+                          "text-sm font-bold transition-colors duration-300",
+                          isActive ? "text-orange-900" : "text-slate-700 group-hover:text-slate-900"
+                        )}>
+                          {displayName}
+                        </span>
+                        <span className={cn(
+                          "text-base font-black transition-colors duration-300",
+                          isActive ? "text-orange-600" : "text-slate-800"
+                        )}>
+                          {formatRupiah(displayAmount)}
+                        </span>
                       </div>
-                      <div
-                        className={cn(
-                          "flex size-10 items-center justify-center rounded-[16px] border",
-                          isActive
-                            ? "border-orange-200 bg-white text-orange-600"
-                            : "border-slate-200 bg-slate-50 text-slate-400",
-                        )}
-                      >
-                        <BookOpen className="size-4" />
+                      <div className="mt-1.5 flex items-center gap-3">
+                        <p className="text-xs text-slate-500 truncate max-w-[200px]">{item.highlight}</p>
+                        <div className="h-1 w-1 rounded-full bg-slate-200" />
+                        <p className="text-[10px] font-bold text-orange-500/80 uppercase tracking-widest">{item.durationMonth} Bulan</p>
                       </div>
                     </div>
 
-                    <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
-                      <span className="inline-flex items-center gap-2 rounded-full border border-orange-100 bg-white px-3 py-1.5 font-semibold text-slate-800">
-                        <CreditCard className="size-4 text-orange-500" />
-                        {formatRupiah(item.amount)}
-                      </span>
-                      <span className="inline-flex items-center gap-2 rounded-full border border-orange-100 bg-white px-3 py-1.5 text-slate-500">
-                        <Clock3 className="size-4 text-orange-500" />
-                        {item.durationMonth} bulan
-                      </span>
-                    </div>
+                    {isActive && (
+                      <div className="absolute -right-2 -top-2">
+                        <span className="flex size-6 items-center justify-center rounded-full bg-orange-500 text-white shadow-md ring-4 ring-white animate-in zoom-in duration-300">
+                          <Check className="size-3.5" />
+                        </span>
+                      </div>
+                    )}
                   </button>
                 );
               })}
             </div>
             <InputError message={fieldErrors.packageKey} />
-          </div>
-
-          <div className="mt-5 rounded-[24px] border border-orange-100/80 bg-white/88 p-4 shadow-[0_16px_28px_-26px_rgba(249,115,22,0.12)]">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-500">
-                  Ringkasan membership
-                </p>
-                <h3 className="mt-2 text-lg font-semibold text-slate-900">
-                  {selectedPackage.packageName}
-                </h3>
-                <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
-                  Status subscription dan pembayaran akan dibuat `pending`, lalu otomatis aktif
-                  setelah pembayaran dikonfirmasi.
-                </p>
+            
+            {/* Rincian Harga Card */}
+            <div className="mt-4 rounded-3xl border border-slate-200/60 bg-slate-50/50 p-6 shadow-inner">
+              <div className="mb-4 flex items-center gap-2">
+                <Info className="size-4 text-slate-400" />
+                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+                  Rincian Harga {ONLINE_PACKAGES.find((p) => p.packageKey === formValues.packageKey)?.packageName || "Paket Belajar"}
+                </h4>
               </div>
-
-              <div className="rounded-[18px] border border-orange-100 bg-orange-50/70 px-4 py-3 text-right">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Total harga
-                </p>
-                <p className="mt-2 text-2xl font-bold text-slate-900">
-                  {formatRupiah(selectedPackage.amount)}
-                </p>
-                <p className="mt-1 text-xs text-slate-500">
-                  {formatRupiah(selectedMonthlyPrice)} / bulan
-                </p>
-              </div>
+              <ul className="grid gap-2.5 sm:grid-cols-2">
+                {[
+                  { label: "Kelas 2–3", cls: "Kelas 2" },
+                  { label: "Kelas 4–5", cls: "Kelas 4" },
+                  { label: "Kelas 6", cls: "Kelas 6" },
+                  { label: "Kelas 7–8", cls: "Kelas 7" },
+                  { label: "Kelas 9", cls: "Kelas 9" },
+                  { label: "Kelas 10–11", cls: "Kelas 10" },
+                  { label: "Kelas 12", cls: "Kelas 12" },
+                ].map((tier, idx) => {
+                  const currentPrice = getPriceByClassAndPackage(tier.cls, formValues.packageKey);
+                  return (
+                    <li key={idx} className="flex items-center justify-between text-sm rounded-xl bg-white px-4 py-2 border border-slate-100 shadow-sm">
+                      <span className="font-medium text-slate-500">{tier.label}</span>
+                      <span className="font-bold text-slate-700">{formatRupiah(currentPrice)}</span>
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
           </div>
 
           {errorMessage ? (
-            <div className="mt-5 rounded-[22px] border border-red-100 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700">
-              {errorMessage}
+            <div className="flex items-start gap-3 rounded-xl border border-red-100 bg-red-50/50 p-4 text-sm leading-6 text-red-700">
+              <Info className="mt-1 size-4 shrink-0" />
+              <p>{errorMessage}</p>
             </div>
           ) : null}
 
-          <Button
-            type="submit"
-            variant="secondary"
-            className="mt-5 h-11 w-full justify-center rounded-[16px] bg-[linear-gradient(135deg,#f97316_0%,#f59e0b_100%)] text-sm shadow-[0_18px_34px_-24px_rgba(249,115,22,0.48)] hover:brightness-105"
-            disabled={isSubmitDisabled}
-          >
-            {loading ? (
-              <>
-                <LoaderCircle className="size-4 animate-spin" />
-                Membuat akun dan tagihan...
-              </>
-            ) : branchOptionsLoading ? (
-              <>
-                <LoaderCircle className="size-4 animate-spin" />
-                Memuat cabang aktif...
-              </>
-            ) : (
-              <>
-                Daftar & Buat Tagihan
-                <ArrowRight className="size-4" />
-              </>
-            )}
-          </Button>
-        </div>
-      </form>
+          <div className="pt-2">
+            <Button
+              type="submit"
+              className="group h-14 w-full rounded-2xl bg-orange-500 text-base font-bold text-white shadow-[0_8px_20px_-4px_rgba(249,115,22,0.3)] transition-all duration-300 hover:bg-orange-600 hover:shadow-[0_12px_25px_-4px_rgba(249,115,22,0.4)] hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50 disabled:hover:translate-y-0"
+              disabled={isSubmitDisabled}
+            >
+              {loading ? (
+                <>
+                  <LoaderCircle className="mr-2 size-5 animate-spin" />
+                  Memproses Pendaftaran...
+                </>
+              ) : (
+                <div className="flex items-center justify-center gap-2">
+                  Daftar & Buat Tagihan
+                  <ChevronRight className="size-5 transition-transform duration-300 group-hover:translate-x-1" />
+                </div>
+              )}
+            </Button>
+            <p className="mt-4 text-center text-[10px] text-slate-400 leading-relaxed px-4">
+              Dengan mengeklik tombol di atas, Anda menyetujui <span className="text-slate-600 font-medium cursor-pointer hover:underline">Syarat & Ketentuan</span> serta <span className="text-slate-600 font-medium cursor-pointer hover:underline">Kebijakan Privasi</span> Bina Cendekia.
+            </p>
+          </div>
+        </form>
+      </div>
     </AuthShell>
   );
 }

@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 
 import type {
   OwnerIncomingPaymentRecord,
+  OwnerOutgoingPaymentRecord,
   OwnerStudentActivationRecord,
   SurfaceTone,
 } from "./owner-activity-types";
@@ -33,14 +34,17 @@ import {
   formatLongDate,
   formatPaymentMethodLabel,
   incomingStatusMeta,
+  outgoingStatusMeta,
   paymentStatusMeta,
   surfaceToneStyles,
 } from "./owner-activity-utils";
 
 type OwnerActivityDetailDialogProps = {
   selectedIncomingPayment: OwnerIncomingPaymentRecord | null;
+  selectedOutgoingPayment: OwnerOutgoingPaymentRecord | null;
   selectedStudent: OwnerStudentActivationRecord | null;
   onCloseIncomingPayment: () => void;
+  onCloseOutgoingPayment: () => void;
   onCloseStudent: () => void;
 };
 
@@ -72,8 +76,10 @@ function DetailItem({
 
 export function OwnerActivityDetailDialog({
   selectedIncomingPayment,
+  selectedOutgoingPayment,
   selectedStudent,
   onCloseIncomingPayment,
+  onCloseOutgoingPayment,
   onCloseStudent,
 }: OwnerActivityDetailDialogProps) {
   return (
@@ -173,6 +179,116 @@ export function OwnerActivityDetailDialog({
                   variant="outline"
                   className="rounded-full"
                   onClick={onCloseIncomingPayment}
+                >
+                  Tutup
+                </Button>
+              </DialogFooter>
+            </>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={selectedOutgoingPayment !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            onCloseOutgoingPayment();
+          }
+        }}
+      >
+        <DialogContent className="max-w-3xl overflow-hidden border-slate-200/80 bg-white shadow-[0_24px_48px_-30px_rgba(15,23,42,0.22)]">
+          {selectedOutgoingPayment ? (
+            <>
+              <DialogHeader className="pr-10">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge
+                    variant={outgoingStatusMeta[selectedOutgoingPayment.status].badgeVariant}
+                    className="rounded-full px-3 py-1.5"
+                  >
+                    {outgoingStatusMeta[selectedOutgoingPayment.status].label}
+                  </Badge>
+                </div>
+                <DialogTitle className="text-2xl">
+                  {selectedOutgoingPayment.title}
+                </DialogTitle>
+                <DialogDescription>Detail pengeluaran operasional.</DialogDescription>
+              </DialogHeader>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <DetailItem
+                  tone="sky"
+                  label="Judul pengeluaran"
+                  value={selectedOutgoingPayment.title}
+                  icon={WalletCards}
+                />
+                <DetailItem
+                  tone="sky"
+                  label="Cabang"
+                  value={selectedOutgoingPayment.branch}
+                  icon={Building2}
+                />
+                <DetailItem
+                  tone="sky"
+                  label="Kategori"
+                  value={selectedOutgoingPayment.category}
+                  icon={WalletCards}
+                />
+                <DetailItem
+                  tone="sky"
+                  label="Vendor / penerima"
+                  value={selectedOutgoingPayment.vendor}
+                  icon={ShieldCheck}
+                />
+                <DetailItem
+                  tone="sky"
+                  label="Nominal"
+                  value={formatCurrency(selectedOutgoingPayment.amount)}
+                  icon={WalletCards}
+                />
+                <DetailItem
+                  tone="sky"
+                  label="Status"
+                  value={outgoingStatusMeta[selectedOutgoingPayment.status].label}
+                  icon={ShieldCheck}
+                />
+                <DetailItem
+                  tone="sky"
+                  label="Metode pembayaran"
+                  value={selectedOutgoingPayment.paymentMethod || "-"}
+                  icon={CreditCard}
+                />
+                <DetailItem
+                  tone="sky"
+                  label="Tanggal keluar"
+                  value={formatLongDate(selectedOutgoingPayment.disbursedAt)}
+                  icon={CalendarClock}
+                />
+                <DetailItem
+                  tone="sky"
+                  label="Jatuh tempo"
+                  value={formatLongDate(selectedOutgoingPayment.dueDate)}
+                  icon={CalendarClock}
+                />
+                <DetailItem
+                  tone="sky"
+                  label="Reference ID"
+                  value={selectedOutgoingPayment.referenceId}
+                  icon={CreditCard}
+                />
+                <DetailItem
+                  tone="sky"
+                  label="Catatan"
+                  value={selectedOutgoingPayment.note || "-"}
+                  icon={WalletCards}
+                />
+              </div>
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-full"
+                  onClick={onCloseOutgoingPayment}
                 >
                   Tutup
                 </Button>

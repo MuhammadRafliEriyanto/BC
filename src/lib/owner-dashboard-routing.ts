@@ -52,9 +52,9 @@ export function resolveOwnerNotificationHref(key: string) {
     case "student_activations_inactive":
       return "/dashboard-owner/aktivitas?tab=aktivasi&activationStatus=inactive";
     case "expenses_pending":
-      return "/dashboard-owner/pengeluaran";
+      return "/dashboard-owner/aktivitas?tab=keluar&outgoingStatus=menunggu";
     case "expenses_scheduled":
-      return "/dashboard-owner/pengeluaran";
+      return "/dashboard-owner/aktivitas?tab=keluar&outgoingStatus=dijadwalkan";
     case "branches_attention":
       return "/dashboard-owner/cabang?status=attention";
     default:

@@ -28,17 +28,17 @@ export default function TugasFormDialog({
 }: TugasFormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-3xl gap-0 rounded-none border border-orange-100 bg-white p-0 shadow-[0_28px_72px_-42px_rgba(15,23,42,0.4)]">
-        <DialogHeader className="border-b border-orange-100 bg-gradient-to-r from-orange-50/90 via-white to-amber-50/70 px-4 py-4 pr-14 text-left md:px-5">
+      <DialogContent className="top-2 flex max-h-[calc(100dvh-1rem)] max-w-3xl translate-y-0 flex-col gap-0 rounded-none border border-orange-100 bg-white p-0 shadow-[0_28px_72px_-42px_rgba(15,23,42,0.4)] sm:top-[50%] sm:max-h-[calc(100dvh-3rem)] sm:translate-y-[-50%]">
+        <DialogHeader className="shrink-0 border-b border-orange-100 bg-gradient-to-r from-orange-50/90 via-white to-amber-50/70 px-4 py-4 pr-14 text-left md:px-5">
           <DialogTitle className="text-lg font-semibold text-slate-800">
             {mode === "add" ? "Tambah Tugas Pertemuan" : "Edit Tugas Pertemuan"}
           </DialogTitle>
           <DialogDescription className="text-sm text-slate-500">
-            Atur tugas per pertemuan beserta lampiran file opsional tanpa mengubah alur CRUD yang sudah ada.
+            Atur tugas per pertemuan beserta lampiran file opsional. Jumlah pengumpulan dan status penilaian akan dihitung otomatis dari submission siswa dan nilai guru.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="overflow-y-auto">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
           <div className="grid gap-5 px-4 py-4 md:px-5 md:py-5">
             <div className="grid gap-4 md:grid-cols-2">
               <label className="grid gap-2 text-sm font-medium text-slate-700">
@@ -87,33 +87,35 @@ export default function TugasFormDialog({
               />
             </label>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="grid gap-2 text-sm font-medium text-slate-700">
-                Jumlah Mengumpulkan
-                <input
-                  type="number"
-                  min={0}
-                  value={draft?.jumlahMengumpulkan ?? 0}
-                  onChange={(event) =>
-                    onChange("jumlahMengumpulkan", Number(event.target.value))
-                  }
-                  className="border border-orange-100 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
-                />
-              </label>
-
-              <label className="grid gap-2 text-sm font-medium text-slate-700">
-                Status Penilaian
-                <select
-                  value={draft?.statusPenilaian ?? "Belum Dinilai"}
-                  onChange={(event) =>
-                    onChange("statusPenilaian", event.target.value)
-                  }
-                  className="border border-orange-100 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
-                >
-                  <option value="Belum Dinilai">Belum Dinilai</option>
-                  <option value="Sudah Dinilai">Sudah Dinilai</option>
-                </select>
-              </label>
+            <div className="grid gap-3 border border-orange-100 bg-orange-50/40 p-4">
+              <p className="text-sm font-semibold text-slate-700">
+                Status Pengumpulan dan Penilaian Otomatis
+              </p>
+              <p className="text-sm leading-6 text-slate-500">
+                Setelah tugas disimpan, sistem akan menghitung jumlah siswa yang
+                mengumpulkan dari data submission real. Status penilaian juga
+                akan berubah otomatis menjadi:
+              </p>
+              <div className="grid gap-2 text-sm text-slate-600">
+                <p>
+                  <span className="font-semibold text-slate-800">
+                    Belum Ada Pengumpulan
+                  </span>{" "}
+                  saat belum ada siswa yang submit.
+                </p>
+                <p>
+                  <span className="font-semibold text-slate-800">
+                    Belum Dinilai
+                  </span>{" "}
+                  saat sudah ada submission tetapi nilainya belum lengkap.
+                </p>
+                <p>
+                  <span className="font-semibold text-slate-800">
+                    Sudah Dinilai
+                  </span>{" "}
+                  saat semua submission pada tugas ini sudah dinilai.
+                </p>
+              </div>
             </div>
 
             <div className="grid gap-3 border border-orange-100 bg-orange-50/30 p-4 text-sm font-medium text-slate-700">
@@ -161,7 +163,7 @@ export default function TugasFormDialog({
           </div>
         </div>
 
-        <DialogFooter className="border-t border-orange-100 px-4 py-4 md:px-5">
+        <DialogFooter className="shrink-0 border-t border-orange-100 bg-white px-4 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:px-5">
           <DialogClose asChild>
             <button
               type="button"

@@ -1,4 +1,21 @@
+import type { AcademicGradeScheme, AcademicScores } from "@/lib/academic-grades";
+
 export type SubmissionMode = "file" | "text" | "drive";
+
+export type StudentAcademicSummary = {
+  classId: string;
+  className: string;
+  subject: string;
+  scheme: AcademicGradeScheme;
+  academicYear: string;
+  semester: string;
+  taskAverage: number | null;
+  gradedTaskCount: number;
+  scores: AcademicScores;
+  note: string;
+  finalAverage: number | null;
+  evaluatedAt: string | null;
+};
 
 export type StudentMaterial = {
   id: string;
@@ -21,10 +38,57 @@ export type StudentMaterial = {
 export type StudentTaskStatus =
   | "Belum Dikerjakan"
   | "Menunggu Dikirim"
+  | "Sudah Dikirim"
   | "Sudah Dinilai";
+
+export type StudentTaskGradeStatus = "Belum Dinilai" | "Sudah Dinilai";
+
+export type StudentTaskSubmissionSummary = {
+  submitted: boolean;
+  submissionId: string | null;
+  submissionMode: SubmissionMode | null;
+  submittedAt: string | null;
+  hasAttachment: boolean;
+  driveUrl: string;
+  answerTextPreview: string;
+};
+
+export type StudentTaskGradeSummary = {
+  graded: boolean;
+  gradeId: string | null;
+  score: number | null;
+  note: string;
+  status: StudentTaskGradeStatus;
+  gradedAt: string | null;
+};
+
+export type StudentTaskSubmissionAttachment = {
+  fileName: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+};
+
+export type StudentTaskSubmissionDetail = {
+  id: string;
+  submissionId: string;
+  classId: string;
+  taskId: string;
+  studentId: string;
+  submissionMode: SubmissionMode;
+  answerText: string;
+  driveUrl: string;
+  note: string;
+  attachment: StudentTaskSubmissionAttachment | null;
+  submittedAt: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+};
 
 export type StudentTask = {
   id: string;
+  classId: string;
+  className: string;
   mapel: string;
   judul: string;
   pertemuan: number;
@@ -39,24 +103,8 @@ export type StudentTask = {
   attachmentUrl?: string;
   submissionModes: SubmissionMode[];
   instruksiPengumpulan: string[];
-};
-
-export type StudentQuizStatus = "Aktif" | "Akan Datang" | "Selesai";
-
-export type StudentQuiz = {
-  id: string;
-  mapel: string;
-  judul: string;
-  jumlahSoal: number;
-  durasi: string;
-  status: StudentQuizStatus;
-  jadwal: string;
-  skor?: string;
-  deskripsi: string;
-  href: string;
-  answerModes: SubmissionMode[];
-  prompt: string;
-  panduanJawaban: string[];
+  mySubmission?: StudentTaskSubmissionSummary;
+  myGrade?: StudentTaskGradeSummary;
 };
 
 function createTextDownloadUrl(title: string, sections: string[]): string {
@@ -157,6 +205,8 @@ export const studentMaterials: StudentMaterial[] = [
 export const studentTasks: StudentTask[] = [
   {
     id: "tugas-bindo-esai",
+    classId: "class-demo-bahasa-indonesia",
+    className: "SMA 10",
     mapel: "Bahasa Indonesia",
     judul: "Menulis Esai",
     pertemuan: 3,
@@ -177,6 +227,8 @@ export const studentTasks: StudentTask[] = [
   },
   {
     id: "tugas-mtk-aljabar",
+    classId: "class-demo-matematika",
+    className: "SMA 10",
     mapel: "Matematika",
     judul: "Aljabar Dasar",
     pertemuan: 5,
@@ -197,6 +249,8 @@ export const studentTasks: StudentTask[] = [
   },
   {
     id: "tugas-fisika-gerak",
+    classId: "class-demo-fisika",
+    className: "SMA 10",
     mapel: "Fisika",
     judul: "Analisis Gerak Lurus",
     pertemuan: 2,
@@ -212,68 +266,6 @@ export const studentTasks: StudentTask[] = [
     instruksiPengumpulan: [
       "Tugas ini sudah dinilai, gunakan catatan guru untuk revisi mandiri.",
       "Jika diminta revisi, kamu bisa kirim ulang via teks, file, atau link Drive.",
-    ],
-  },
-];
-
-export const studentQuizzes: StudentQuiz[] = [
-  {
-    id: "kuis-bing-reading",
-    mapel: "Bahasa Inggris",
-    judul: "Reading Comprehension Checkpoint",
-    jumlahSoal: 15,
-    durasi: "20 Menit",
-    status: "Aktif",
-    jadwal: "Tersedia sampai 27 Mei 2026",
-    deskripsi:
-      "Kuis singkat untuk mengukur pemahaman bacaan dan vocabulary inti pekan ini.",
-    href: "/dashboard-siswa/kuis",
-    answerModes: ["text", "drive", "file"],
-    prompt:
-      "Jelaskan ide pokok teks bacaan dan tulis dua kosakata baru beserta arti singkatnya.",
-    panduanJawaban: [
-      "Jawaban singkat bisa ditulis langsung pada kolom teks.",
-      "Jika jawaban dikerjakan di dokumen terpisah, kirim link Drive yang dapat diakses.",
-      "Jika ada lampiran pendukung, kamu juga bisa unggah file.",
-    ],
-  },
-  {
-    id: "kuis-biologi-sel",
-    mapel: "Biologi",
-    judul: "Struktur Sel dan Fungsinya",
-    jumlahSoal: 20,
-    durasi: "25 Menit",
-    status: "Akan Datang",
-    jadwal: "Buka 28 Mei 2026, 08.00 WIB",
-    deskripsi:
-      "Persiapan evaluasi materi sel dengan fokus organel, fungsi, dan perbedaan sel.",
-    href: "/dashboard-siswa/kuis",
-    answerModes: ["text", "drive"],
-    prompt:
-      "Kuis akan berisi soal pilihan ganda dan satu soal uraian singkat tentang fungsi organel sel.",
-    panduanJawaban: [
-      "Siapkan ringkasan materi dalam bentuk teks atau catatan Drive sebelum kuis dibuka.",
-      "Pastikan link Drive bersifat terbuka untuk guru jika diminta mengirim lampiran.",
-    ],
-  },
-  {
-    id: "kuis-kimia-stoikiometri",
-    mapel: "Kimia",
-    judul: "Evaluasi Stoikiometri",
-    jumlahSoal: 18,
-    durasi: "25 Menit",
-    status: "Selesai",
-    jadwal: "Selesai 18 Mei 2026",
-    skor: "88/100",
-    deskripsi:
-      "Hasil evaluasi stoikiometri dengan catatan peningkatan pada perhitungan mol.",
-    href: "/dashboard-siswa/kuis",
-    answerModes: ["text", "file"],
-    prompt:
-      "Gunakan hasil evaluasi ini untuk merefleksikan langkah hitung yang masih perlu diperbaiki.",
-    panduanJawaban: [
-      "Review jawaban salah dan tulis ulang langkah hitung yang benar.",
-      "Jika perlu, unggah file catatan perbaikan untuk dokumentasi pribadi.",
     ],
   },
 ];

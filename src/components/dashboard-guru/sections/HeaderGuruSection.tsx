@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import {
+  AUTH_USER_UPDATED_EVENT,
   AuthRequestError,
   authService,
   clearAuthClientState,
@@ -91,6 +92,16 @@ function buildHeaderProfileFromAuthUser(user: AuthUser): HeaderGuruProfileState 
   };
 }
 
+function mergeHeaderProfileWithAuthUser(
+  currentProfile: HeaderGuruProfileState,
+  user: AuthUser,
+): HeaderGuruProfileState {
+  return {
+    ...currentProfile,
+    nama: user.nama,
+  };
+}
+
 function buildHeaderProfileFromTeacherPayload(
   payload: TeacherDashboardResponse["data"],
 ): HeaderGuruProfileState | null {
@@ -111,11 +122,11 @@ function buildHeaderProfileFromTeacherPayload(
 
 function EmptyProgramState({ message }: { message: string }) {
   return (
-    <div className="mt-4 flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-orange-200 bg-orange-50/50 p-5 text-center">
-      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100">
-        <Lock className="h-4 w-4 text-orange-400" />
+    <div className="mt-4 flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-5 text-center">
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100">
+        <Lock className="h-4 w-4 text-slate-400" />
       </div>
-      <p className="text-xs font-semibold text-orange-500">{message}</p>
+      <p className="text-xs font-semibold text-slate-600">{message}</p>
       <p className="text-[11px] text-gray-400">
         Akses menu ini disesuaikan dengan kesiapan modul pada dashboard guru.
       </p>
@@ -206,13 +217,13 @@ export default function HeaderGuruSection() {
         name: "Evaluasi",
         tabs: [
           {
-            name: "Tryout",
+            name: "Ujian",
             icon: Trophy,
-            href: "/dashboard-guru/tryout",
+            href: "/dashboard-guru/ujian",
             enabled: accessControl.tryout,
             content: {
-              title: "Program Tryout",
-              desc: "Kelola tryout akhir, publish, dan cek hasil siswa dari satu panel.",
+              title: "Program Ujian",
+              desc: "Kelola UTS, UAS, dan Tryout serta cek hasil siswa dari satu panel.",
               stats: "Fitur aktif",
             },
           },
@@ -251,7 +262,9 @@ export default function HeaderGuruSection() {
 
       if (response.data?.user) {
         persistAuthUser(response.data.user);
-        setProfile(buildHeaderProfileFromAuthUser(response.data.user));
+        setProfile((currentProfile) =>
+          mergeHeaderProfileWithAuthUser(currentProfile, response.data!.user),
+        );
       }
     } catch (error) {
       if (error instanceof AuthRequestError && error.status === 401) {
@@ -313,6 +326,27 @@ export default function HeaderGuruSection() {
   }, []);
 
   useEffect(() => {
+    function handleAuthUserUpdated() {
+      const persistedUser = readPersistedAuthUser();
+
+      if (persistedUser) {
+        setProfile((currentProfile) =>
+          mergeHeaderProfileWithAuthUser(currentProfile, persistedUser),
+        );
+        return;
+      }
+
+      setProfile(fallbackHeaderProfile);
+    }
+
+    window.addEventListener(AUTH_USER_UPDATED_EVENT, handleAuthUserUpdated);
+
+    return () => {
+      window.removeEventListener(AUTH_USER_UPDATED_EVENT, handleAuthUserUpdated);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!tabs.some((tab) => tab.name === activeTab)) {
       setActiveTab(tabs[0]?.name ?? "");
     }
@@ -320,42 +354,43 @@ export default function HeaderGuruSection() {
 
   return (
     <div className="flex h-full w-full flex-col gap-5 lg:gap-6">
-      <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-r from-orange-500 to-amber-500 shadow-[0_18px_36px_-28px_rgba(249,115,22,0.75)]">
-        <div className="absolute -right-4 top-0 h-36 w-36 rounded-full bg-white/10 blur-3xl" />
-        <div className="relative flex items-center gap-4 px-5 py-4 md:gap-5 md:px-6 md:py-5 lg:px-7">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur md:h-14 md:w-14">
-            <Flame className="h-6 w-6 text-white md:h-7 md:w-7" />
+      <div className="relative overflow-hidden rounded-2xl border border-orange-100 bg-orange-50/50 shadow-sm">
+        <div className="relative flex items-center gap-4 px-4 py-4 md:px-5">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-orange-100 shadow-sm">
+            <Flame className="h-6 w-6 text-orange-600" />
           </div>
-          <div className="min-w-0 flex-1 overflow-hidden text-white">
+          <div className="overflow-hidden text-slate-800">
             <p className="text-sm font-semibold md:text-base">
               Halo, {profile.nama}
             </p>
-            <p className="mt-1 text-xs text-white/90 md:text-sm">
-              {profile.subject || profile.branch
-                ? `Kelola kelas ${profile.subject || "guru"}${
-                    profile.branch ? ` di cabang ${profile.branch}` : ""
-                  } dari satu panel kerja yang ringkas.`
-                : "Kelola kelas, materi, penilaian, dan evaluasi dari satu panel kerja yang ringkas."}
-            </p>
+            <div className="overflow-hidden whitespace-nowrap">
+              <p className="animate-marquee text-xs text-slate-500 md:text-sm">
+                {profile.subject || profile.branch
+                  ? `Kelola kelas ${profile.subject || "guru"}${
+                      profile.branch ? ` di cabang ${profile.branch}` : ""
+                    } dari satu panel kerja yang ringkas.`
+                  : "Kelola kelas, materi, penilaian, dan evaluasi dari satu panel kerja yang ringkas."}
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_40px_-34px_rgba(15,23,42,0.5)]">
+      <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
         <div className="flex items-stretch">
-          <div className="flex w-14 items-center justify-center bg-gradient-to-b from-orange-500 to-amber-500 sm:w-16 md:w-20 lg:w-24">
-            <BookOpen className="h-6 w-6 text-white md:h-7 md:w-7" />
+          <div className="flex w-16 items-center justify-center bg-orange-50 md:w-20">
+            <BookOpen className="h-6 w-6 text-orange-400 md:h-7 md:w-7" />
           </div>
 
-          <div className="flex-1 px-5 py-4 md:px-6 md:py-5 lg:px-7">
-            <div className="mb-2.5 flex items-center gap-2.5">
+          <div className="flex-1 px-4 py-4">
+            <div className="mb-2 flex items-center gap-2">
               <Target className="h-4 w-4 text-orange-500" />
               <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                 Panel Guru
               </p>
             </div>
 
-            <div className="relative mt-3">
+            <div className="relative">
               <select
                 value={selectedProgram?.name ?? ""}
                 onChange={(event) => {
@@ -365,7 +400,7 @@ export default function HeaderGuruSection() {
                   );
                   setActiveTab(nextProgram?.tabs[0]?.name ?? "");
                 }}
-                className="h-11 w-full appearance-none rounded-2xl border border-slate-200 bg-white px-4 pr-11 text-sm font-medium text-slate-700 transition focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 md:h-12 md:px-5"
+                className="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 pr-10 text-sm font-medium text-gray-700 transition focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-100"
               >
                 {guruConfig.map((item) => (
                   <option key={item.name} value={item.name}>
@@ -378,7 +413,7 @@ export default function HeaderGuruSection() {
 
             {tabs.length > 0 ? (
               <>
-                <div className="mt-5 flex flex-wrap gap-2.5 md:gap-3">
+                <div className="mt-4 flex flex-wrap gap-2">
                   {tabs.map((tab) => {
                     const Icon = tab.icon;
 
@@ -387,13 +422,13 @@ export default function HeaderGuruSection() {
                         key={tab.name}
                         type="button"
                         onClick={() => setActiveTab(tab.name)}
-                        className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-medium transition-all active:scale-95 ${
+                        className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
                           activeTab === tab.name
-                            ? "bg-gradient-to-r from-orange-600 to-amber-500 text-white shadow-md shadow-orange-500/20"
-                            : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-800"
+                            ? "bg-orange-500 text-white shadow-sm"
+                            : "bg-slate-50 text-slate-600 hover:bg-orange-50 hover:text-orange-600"
                         }`}
                       >
-                        <Icon className="h-4 w-4" />
+                        <Icon className="h-3.5 w-3.5" />
                         {tab.name}
                       </button>
                     );
@@ -401,35 +436,35 @@ export default function HeaderGuruSection() {
                 </div>
 
                 {selectedTab ? (
-                  <div className="mt-5 rounded-[24px] border border-orange-100 bg-gradient-to-br from-orange-50 to-white p-5 md:p-6">
-                    <div className="flex items-start justify-between gap-4 md:items-center">
+                  <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+                    <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0 flex-1">
-                        <h3 className="text-sm font-bold text-slate-800 md:text-base">
+                        <h3 className="text-sm font-semibold text-slate-800 md:text-base">
                           {selectedTab.content.title}
                         </h3>
                         <p className="mt-1 text-xs text-slate-500 md:text-sm">
                           {selectedTab.content.desc}
                         </p>
                       </div>
-                      <div className="shrink-0 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-3 py-2 text-xs font-bold text-white shadow-sm">
+                      <div className="shrink-0 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm">
                         {selectedTab.content.stats}
                       </div>
                     </div>
 
-                    <div className="mt-6 flex flex-wrap gap-2.5">
+                    <div className="mt-4 flex flex-wrap gap-2">
                       {selectedTab.enabled ? (
                         <>
                           <button
                             type="button"
                             onClick={() => router.push(selectedTab.href)}
-                            className="h-10 rounded-xl bg-gradient-to-r from-orange-600 to-amber-500 px-5 text-sm font-bold text-white shadow-sm transition-all hover:from-orange-500 hover:to-amber-400 hover:shadow-orange-500/20 active:scale-95 md:h-11 md:px-6"
+                            className="rounded-xl bg-orange-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-orange-700"
                           >
                             Buka Sekarang
                           </button>
                           <button
                             type="button"
                             onClick={() => router.push(selectedTab.href)}
-                            className="h-10 rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-600 transition-all hover:bg-slate-50 hover:text-slate-800 active:scale-95 md:h-11 md:px-6"
+                            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
                           >
                             Lihat Detail
                           </button>

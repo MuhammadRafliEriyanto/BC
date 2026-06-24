@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useEffect, useEffectEvent, useState } from "react";
 import { BookOpen, CalendarDays, MapPin } from "lucide-react";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
+  AUTH_USER_UPDATED_EVENT,
   AuthRequestError,
   authService,
   clearAuthClientState,
@@ -24,8 +26,9 @@ type HeaderProfilGuruState = {
   nama: string;
   role: string;
   initials: string;
+  avatar: string | null;
   subject: string;
-  branch: string;
+  totalStudentsLabel: string;
   status: string;
   activeClassesLabel: string;
 };
@@ -55,14 +58,15 @@ type TeacherDashboardResponse = {
       name?: string;
       roleLabel?: string;
       initials?: string;
+      avatar?: string | null;
       subject?: string;
-      branch?: string;
       status?: string;
       activeClasses?: number;
     };
     classes?: TeacherDashboardClass[];
     summary?: {
       totalClasses?: number;
+      totalStudents?: number;
       todaySchedules?: number;
     };
   };
@@ -72,8 +76,9 @@ const fallbackProfile: HeaderProfilGuruState = {
   nama: "Guru",
   role: "Memuat profil...",
   initials: "GU",
+  avatar: null,
   subject: "-",
-  branch: "-",
+  totalStudentsLabel: "-",
   status: "-",
   activeClassesLabel: "-",
 };
@@ -111,10 +116,30 @@ function buildProfileFromAuthUser(user: AuthUser): HeaderProfilGuruState {
     nama: user.nama,
     role: formatRoleLabel(user.role),
     initials: getInitials(user.nama),
+    avatar: user.avatar,
     subject: "-",
-    branch: "-",
+    totalStudentsLabel: "-",
     status: "-",
     activeClassesLabel: "-",
+  };
+}
+
+function mergeProfileWithAuthUser(
+  currentProfile: HeaderProfilGuruState,
+  user: AuthUser,
+): HeaderProfilGuruState {
+  const authRole = formatRoleLabel(user.role);
+  const shouldPreserveCurrentRole =
+    currentProfile.role &&
+    currentProfile.role !== fallbackProfile.role &&
+    currentProfile.role !== authRole;
+
+  return {
+    ...currentProfile,
+    nama: user.nama,
+    role: shouldPreserveCurrentRole ? currentProfile.role : authRole,
+    initials: getInitials(user.nama),
+    avatar: user.avatar,
   };
 }
 
@@ -172,13 +197,16 @@ function buildProfileFromTeacherPayload(
     payload?.summary?.totalClasses ??
     teacher?.activeClasses ??
     0;
+  const totalStudents = payload?.summary?.totalStudents ?? 0;
 
   return {
     nama: teacherName,
     role: teacher?.roleLabel?.trim() || "Guru",
     initials: teacher?.initials?.trim() || getInitials(teacherName),
+    avatar: teacher?.avatar ?? null,
     subject: teacher?.subject?.trim() || "-",
-    branch: teacher?.branch?.trim() || "-",
+    totalStudentsLabel:
+      totalStudents > 0 ? `${totalStudents} siswa` : "Belum ada siswa",
     status: teacher?.status?.trim() || "-",
     activeClassesLabel:
       totalClasses > 0 ? `${totalClasses} kelas` : "Belum ada kelas",
@@ -197,7 +225,9 @@ export default function HeaderProfilGuru() {
 
       if (response.data?.user) {
         persistAuthUser(response.data.user);
-        setProfile(buildProfileFromAuthUser(response.data.user));
+        setProfile((currentProfile) =>
+          mergeProfileWithAuthUser(currentProfile, response.data!.user),
+        );
       }
     } catch (error) {
       if (error instanceof AuthRequestError && error.status === 401) {
@@ -268,29 +298,59 @@ export default function HeaderProfilGuru() {
     });
   }, []);
 
+  useEffect(() => {
+    function handleAuthUserUpdated() {
+      const persistedUser = readPersistedAuthUser();
+
+      if (persistedUser) {
+        setProfile((currentProfile) =>
+          mergeProfileWithAuthUser(currentProfile, persistedUser),
+        );
+        return;
+      }
+
+      setProfile(fallbackProfile);
+      setTodaySchedules([]);
+    }
+
+    window.addEventListener(AUTH_USER_UPDATED_EVENT, handleAuthUserUpdated);
+
+    return () => {
+      window.removeEventListener(AUTH_USER_UPDATED_EVENT, handleAuthUserUpdated);
+    };
+  }, []);
+
   return (
-    <div className="flex h-full flex-col space-y-4">
-      <div className="overflow-hidden rounded-xl bg-white shadow-sm">
+    <div className="flex h-full flex-col gap-4">
+      <section className="overflow-hidden rounded-[24px] border border-slate-100 bg-white shadow-sm">
         <div
-          className="relative flex items-center gap-4 px-4 py-4 text-white md:px-5"
+          className="relative flex items-center gap-4 overflow-hidden px-4 py-4 text-white md:px-5"
           style={{
             backgroundImage: `url(${bgImage})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-red-900/80 via-orange-700/70 to-amber-500/70" />
+          <div className="absolute inset-0 bg-gradient-to-r from-red-600/90 to-orange-500/90" />
 
           <div className="relative flex w-full items-center gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white text-lg font-bold text-orange-700 shadow">
-              {profile.initials}
-            </div>
+            <Avatar className="h-14 w-14 shrink-0 rounded-full border border-white/20 bg-white/10 shadow-none">
+              {profile.avatar ? (
+                <AvatarImage
+                  src={profile.avatar}
+                  alt={`Foto profil ${profile.nama}`}
+                />
+              ) : null}
+              <AvatarFallback className="bg-white text-lg font-bold text-orange-700">
+                {profile.initials}
+              </AvatarFallback>
+            </Avatar>
 
             <div className="min-w-0 leading-tight">
               <p className="truncate text-sm font-semibold md:text-base">
                 {profile.nama}
               </p>
-              <p className="mt-1 text-xs opacity-90 md:text-sm">
+              <p className="mt-1 text-xs text-white/90 md:text-sm">
                 {profile.role}
               </p>
             </div>
@@ -301,17 +361,17 @@ export default function HeaderProfilGuru() {
           {[
             ["Mapel", profile.subject],
             ["Status", profile.status],
-            ["Cabang", profile.branch],
             ["Kelas Aktif", profile.activeClassesLabel],
+            ["Total Siswa", profile.totalStudentsLabel],
           ].map(([label, value]) => (
             <div
               key={label}
-              className="flex items-center justify-between border-b border-white/40 px-4 py-3 last:border-none md:px-5"
+              className="flex items-center justify-between border-b border-slate-100 px-4 py-3 last:border-none md:px-5"
             >
-              <span className="text-gray-500">{label}</span>
+              <span className="text-slate-500">{label}</span>
               <span
                 className={`text-right font-medium ${
-                  label === "Status" ? "text-orange-600" : "text-gray-800"
+                  label === "Status" ? "text-orange-600" : "text-slate-800"
                 }`}
               >
                 {value}
@@ -319,15 +379,15 @@ export default function HeaderProfilGuru() {
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
-      <div className="flex-1 overflow-hidden rounded-xl bg-white shadow-sm">
-        <div className="h-1 bg-gradient-to-r from-red-800 via-orange-600 to-amber-500" />
+      <section className="overflow-hidden rounded-[24px] border border-slate-100 bg-white shadow-sm">
+        <div className="h-1 bg-gradient-to-r from-red-600 via-orange-500 to-orange-400" />
 
         <div className="flex h-full flex-col p-4 md:p-5">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h3 className="text-xs font-semibold text-gray-700 md:text-sm">
+              <h3 className="text-xs font-semibold text-slate-700 md:text-sm">
                 Jadwal Guru Hari Ini
               </h3>
               <p className="mt-1 text-[11px] text-slate-500">
@@ -345,22 +405,22 @@ export default function HeaderProfilGuru() {
             </Link>
           </div>
 
-          <div className="space-y-3 overflow-y-auto pr-1">
-            {todaySchedules.length > 0 ? (
-              todaySchedules.map((item) => (
+          {todaySchedules.length > 0 ? (
+            <div className="space-y-3 overflow-y-auto pr-1">
+              {todaySchedules.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-xl border border-gray-100 p-3 transition hover:shadow-sm"
+                  className="rounded-xl border border-slate-100 bg-white p-3 transition hover:border-orange-100 hover:shadow-sm"
                 >
                   <p className="text-[11px] font-semibold text-orange-600 md:text-xs">
                     {item.waktu}
                   </p>
 
-                  <h4 className="mt-1 text-sm font-semibold text-gray-800 md:text-base">
+                  <h4 className="mt-1 text-sm font-semibold text-slate-800 md:text-base">
                     {item.kelas}
                   </h4>
 
-                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-gray-500 md:text-xs">
+                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-500 md:text-xs">
                     <span className="inline-flex items-center gap-1">
                       <BookOpen className="h-3.5 w-3.5 text-orange-500" />
                       {item.mapel}
@@ -371,29 +431,29 @@ export default function HeaderProfilGuru() {
                     </span>
                   </div>
                 </div>
-              ))
-            ) : (
-              <div className="rounded-2xl border border-dashed border-orange-200 bg-orange-50/50 p-5 text-center">
-                <CalendarDays className="mx-auto h-5 w-5 text-orange-400" />
-                <p className="mt-2 text-xs font-semibold text-orange-600">
-                  Belum ada jadwal mengajar untuk hari ini.
-                </p>
-                <p className="mt-1 text-[11px] text-slate-500">
-                  Cek halaman jadwal untuk melihat sesi di hari lain.
-                </p>
-              </div>
-            )}
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-orange-200 bg-orange-50/50 p-5 text-center">
+              <CalendarDays className="mx-auto h-5 w-5 text-orange-400" />
+              <p className="mt-2 text-xs font-semibold text-orange-600">
+                Belum ada jadwal mengajar untuk hari ini.
+              </p>
+              <p className="mt-1 text-[11px] text-slate-500">
+                Cek halaman jadwal untuk melihat sesi di hari lain.
+              </p>
+            </div>
+          )}
 
-            <Link
-              href="/dashboard-guru/jadwal"
-              className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-orange-200 bg-orange-50/60 px-4 py-3 text-xs font-semibold text-orange-700 transition hover:bg-orange-100/70"
-            >
-              <CalendarDays className="h-4 w-4" />
-              Buka halaman jadwal lengkap
-            </Link>
-          </div>
+          <Link
+            href="/dashboard-guru/jadwal"
+            className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-dashed border-orange-200 bg-orange-50/60 px-4 py-3 text-xs font-semibold text-orange-700 transition hover:bg-orange-100/70"
+          >
+            <CalendarDays className="h-4 w-4" />
+            Buka halaman jadwal lengkap
+          </Link>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

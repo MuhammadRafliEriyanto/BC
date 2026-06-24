@@ -7,10 +7,7 @@ import {
   CheckCircle2,
   Eye,
   EyeOff,
-  KeyRound,
   LoaderCircle,
-  LockKeyhole,
-  Mail,
 } from "lucide-react";
 
 import { AuthShell } from "@/components/auth/AuthShell";
@@ -155,131 +152,118 @@ export function ResetPasswordView({
 
   return (
     <AuthShell
-      variant="immersive"
-      eyebrow="Reset Password"
-      title="Masukkan kode reset password"
-      description="Gunakan kode 6 digit yang sudah dikirim ke email Anda, lalu simpan password baru."
+      variant="split"
+      title="Reset Password"
+      description="Enter the 6-digit code sent to your email and set your new password."
       footer={
-        <div className="flex flex-wrap gap-3">
-          <Link href="/login">
-            <Button variant="secondary">Kembali ke login</Button>
-          </Link>
+        <div className="flex flex-col gap-4">
+          <div className="text-sm text-slate-500 text-center">
+            Remember your password?{" "}
+            <Link
+              href="/login"
+              className="font-semibold text-orange-600 transition hover:text-orange-700 underline-offset-4 hover:underline"
+            >
+              Sign in
+            </Link>
+          </div>
           {source === "dashboard-admin" ? (
             <Button
               type="button"
               variant="outline"
+              size="sm"
+              className="w-full rounded-lg border-slate-200"
               onClick={() => {
                 startTransition(() => {
                   router.push("/dashboard-admin");
                 });
               }}
             >
-              Kembali ke dashboard admin
+              Back to admin dashboard
             </Button>
           ) : null}
         </div>
       }
     >
-      <form className="mx-auto max-w-[520px] space-y-3" onSubmit={handleSubmit}>
-        <div className="rounded-[28px] border border-orange-100/80 bg-[linear-gradient(180deg,rgba(255,250,244,0.96),rgba(255,255,255,0.98))] p-4 shadow-[0_26px_44px_-34px_rgba(249,115,22,0.22)] sm:p-5">
-          {successMessage ? (
-            <div className="rounded-[22px] border border-emerald-100 bg-emerald-50/90 p-4">
-              <div className="flex items-start gap-3">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-[0_16px_26px_-18px_rgba(16,185,129,0.45)]">
-                  <CheckCircle2 className="size-4.5" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-emerald-800">
-                    Password berhasil diperbarui
-                  </p>
-                  <p className="mt-1 text-sm leading-6 text-emerald-700">
-                    {successMessage}
-                  </p>
-                </div>
+      <div className="space-y-6">
+        {successMessage ? (
+          <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-4">
+            <div className="flex gap-3">
+              <CheckCircle2 className="size-5 shrink-0 text-emerald-500" />
+              <div>
+                <p className="text-sm font-semibold text-emerald-800">Success</p>
+                <p className="mt-1 text-sm text-emerald-700">{successMessage}</p>
               </div>
             </div>
-          ) : null}
+          </div>
+        ) : null}
 
-          {errorMessage ? (
-            <div className="rounded-[22px] border border-rose-100 bg-rose-50/90 p-4 text-sm leading-6 text-rose-700">
-              {errorMessage}
-            </div>
-          ) : null}
+        {errorMessage && !successMessage ? (
+          <div className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700">
+            {errorMessage}
+          </div>
+        ) : null}
 
-          <div className="space-y-3">
-            <div>
-              <label
-                htmlFor="reset-password-email"
-                className="text-sm font-medium text-orange-700"
-              >
-                E-mail
+        <form className="space-y-5" onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-sm font-medium text-slate-700">
+                Email address
               </label>
-              <div className="relative mt-2">
-                <Mail className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-orange-400" />
-                <Input
-                  id="reset-password-email"
-                  type="email"
-                  value={formValues.email}
-                  onChange={(event) => {
-                    setErrorMessage(null);
-                    clearFieldError("email");
-                    setFormValues((current) => ({
-                      ...current,
-                      email: event.target.value,
-                    }));
-                  }}
-                  placeholder="nama@email.com"
-                  className="h-[52px] rounded-[20px] border-orange-100 bg-white pl-11"
-                  autoComplete="email"
-                  disabled={loading}
-                />
-              </div>
+              <Input
+                id="email"
+                type="email"
+                value={formValues.email}
+                onChange={(event) => {
+                  setErrorMessage(null);
+                  clearFieldError("email");
+                  setFormValues((current) => ({
+                    ...current,
+                    email: event.target.value,
+                  }));
+                }}
+                placeholder="name@example.com"
+                className="h-11 rounded-lg border-slate-200 bg-white px-4 transition-all focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
+                autoComplete="email"
+                required
+                disabled={loading}
+              />
               <InputError message={fieldErrors.email} />
             </div>
 
-            <div>
-              <label
-                htmlFor="reset-password-code"
-                className="text-sm font-medium text-orange-700"
-              >
-                Kode Reset
+            <div className="space-y-2">
+              <label htmlFor="code" className="text-sm font-medium text-slate-700">
+                Reset Code
               </label>
-              <div className="relative mt-2">
-                <KeyRound className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-orange-400" />
-                <Input
-                  id="reset-password-code"
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={6}
-                  value={formValues.code}
-                  onChange={(event) => {
-                    const digitsOnly = event.target.value.replace(/\D/g, "").slice(0, 6);
-                    setErrorMessage(null);
-                    clearFieldError("code");
-                    setFormValues((current) => ({
-                      ...current,
-                      code: digitsOnly,
-                    }));
-                  }}
-                  placeholder="Masukkan 6 digit kode"
-                  className="h-[52px] rounded-[20px] border-orange-100 bg-white pl-11 tracking-[0.24em]"
-                  disabled={loading}
-                />
-              </div>
+              <Input
+                id="code"
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                value={formValues.code}
+                onChange={(event) => {
+                  const digitsOnly = event.target.value.replace(/\D/g, "").slice(0, 6);
+                  setErrorMessage(null);
+                  clearFieldError("code");
+                  setFormValues((current) => ({
+                    ...current,
+                    code: digitsOnly,
+                  }));
+                }}
+                placeholder="6-digit code"
+                className="h-11 rounded-lg border-slate-200 bg-white px-4 tracking-[0.2em] transition-all focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
+                required
+                disabled={loading}
+              />
               <InputError message={fieldErrors.code} />
             </div>
 
-            <div>
-              <label
-                htmlFor="reset-password-new"
-                className="text-sm font-medium text-orange-700"
-              >
-                Password Baru
+            <div className="space-y-2">
+              <label htmlFor="newPassword" className="text-sm font-medium text-slate-700">
+                New Password
               </label>
-              <div className="relative mt-2">
-                <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-orange-400" />
+              <div className="relative">
                 <Input
-                  id="reset-password-new"
+                  id="newPassword"
                   type={passwordVisibility.newPassword ? "text" : "password"}
                   value={formValues.newPassword}
                   onChange={(event) => {
@@ -290,9 +274,10 @@ export function ResetPasswordView({
                       newPassword: event.target.value,
                     }));
                   }}
-                  placeholder="Minimal 8 karakter"
-                  className="h-[52px] rounded-[20px] border-orange-100 bg-white pl-11 pr-12"
+                  placeholder="At least 8 characters"
+                  className="h-11 rounded-lg border-slate-200 bg-white px-4 pr-11 transition-all focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
                   autoComplete="new-password"
+                  required
                   disabled={loading}
                 />
                 <button
@@ -303,38 +288,24 @@ export function ResetPasswordView({
                       newPassword: !current.newPassword,
                     }))
                   }
-                  className="absolute inset-y-0 right-0 inline-flex w-12 items-center justify-center text-slate-400 transition hover:text-orange-600"
-                  aria-label={
-                    passwordVisibility.newPassword
-                      ? "Sembunyikan password baru"
-                      : "Tampilkan password baru"
-                  }
+                  className="absolute inset-y-0 right-0 inline-flex w-11 items-center justify-center text-slate-400 transition hover:text-orange-600"
+                  aria-label={passwordVisibility.newPassword ? "Hide" : "Show"}
                   disabled={loading}
                 >
-                  {passwordVisibility.newPassword ? (
-                    <EyeOff className="size-4" />
-                  ) : (
-                    <Eye className="size-4" />
-                  )}
+                  {passwordVisibility.newPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </button>
               </div>
               <InputError message={fieldErrors.newPassword} />
             </div>
 
-            <div>
-              <label
-                htmlFor="reset-password-confirm"
-                className="text-sm font-medium text-orange-700"
-              >
-                Konfirmasi Password Baru
+            <div className="space-y-2">
+              <label htmlFor="confirmNewPassword" className="text-sm font-medium text-slate-700">
+                Confirm New Password
               </label>
-              <div className="relative mt-2">
-                <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-orange-400" />
+              <div className="relative">
                 <Input
-                  id="reset-password-confirm"
-                  type={
-                    passwordVisibility.confirmNewPassword ? "text" : "password"
-                  }
+                  id="confirmNewPassword"
+                  type={passwordVisibility.confirmNewPassword ? "text" : "password"}
                   value={formValues.confirmNewPassword}
                   onChange={(event) => {
                     setErrorMessage(null);
@@ -344,9 +315,10 @@ export function ResetPasswordView({
                       confirmNewPassword: event.target.value,
                     }));
                   }}
-                  placeholder="Ulangi password baru"
-                  className="h-[52px] rounded-[20px] border-orange-100 bg-white pl-11 pr-12"
+                  placeholder="Repeat new password"
+                  className="h-11 rounded-lg border-slate-200 bg-white px-4 pr-11 transition-all focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
                   autoComplete="new-password"
+                  required
                   disabled={loading}
                 />
                 <button
@@ -357,49 +329,39 @@ export function ResetPasswordView({
                       confirmNewPassword: !current.confirmNewPassword,
                     }))
                   }
-                  className="absolute inset-y-0 right-0 inline-flex w-12 items-center justify-center text-slate-400 transition hover:text-orange-600"
-                  aria-label={
-                    passwordVisibility.confirmNewPassword
-                      ? "Sembunyikan konfirmasi password baru"
-                      : "Tampilkan konfirmasi password baru"
-                  }
+                  className="absolute inset-y-0 right-0 inline-flex w-11 items-center justify-center text-slate-400 transition hover:text-orange-700"
+                  aria-label={passwordVisibility.confirmNewPassword ? "Hide" : "Show"}
                   disabled={loading}
                 >
-                  {passwordVisibility.confirmNewPassword ? (
-                    <EyeOff className="size-4" />
-                  ) : (
-                    <Eye className="size-4" />
-                  )}
+                  {passwordVisibility.confirmNewPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </button>
               </div>
               <InputError message={fieldErrors.confirmNewPassword} />
             </div>
           </div>
 
-          <div className="mt-3 rounded-[20px] border border-orange-100 bg-orange-50/70 px-4 py-3 text-sm leading-6 text-slate-600">
-            Kode reset dikirim ke email dan berlaku dalam waktu terbatas. Jika
-            belum menerima email, kirim ulang permintaan reset dari dashboard
-            atau halaman sebelumnya.
-          </div>
-
           <Button
             type="submit"
-            variant="secondary"
-            size="lg"
-            className="mt-4 h-11 w-full rounded-[16px] bg-[linear-gradient(135deg,#f97316_0%,#f59e0b_100%)] text-sm shadow-[0_18px_34px_-24px_rgba(249,115,22,0.48)] hover:brightness-105"
+            className="h-11 w-full rounded-lg bg-orange-600 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-700 active:scale-[0.98] disabled:opacity-50"
             disabled={loading}
           >
             {loading ? (
               <>
-                <LoaderCircle className="size-4 animate-spin" />
-                Menyimpan password baru...
+                <LoaderCircle className="mr-2 size-4 animate-spin" />
+                Updating password...
               </>
             ) : (
-              "Simpan Password Baru"
+              "Reset Password"
             )}
           </Button>
+        </form>
+
+        <div className="rounded-lg bg-slate-50 p-4 text-xs leading-5 text-slate-500">
+          <p>
+            The reset code is sent to your email and is valid for a limited time. If you haven&apos;t received the email, please check your spam folder.
+          </p>
         </div>
-      </form>
+      </div>
     </AuthShell>
   );
 }

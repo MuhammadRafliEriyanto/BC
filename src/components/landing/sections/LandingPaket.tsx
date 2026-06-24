@@ -31,65 +31,35 @@ type PackageCardMeta = {
 };
 
 const packageCardMeta: Record<OnlinePackageKey, PackageCardMeta> = {
-  "1-bulan": {
-    badge: "Starter",
-    label: "Mulai dari adaptasi yang ringan dulu.",
+  "1-semester": {
+    badge: "1 Semester",
+    label: "Fokus pada pondasi materi selama satu semester.",
     accent:
       "from-orange-100/95 via-white to-amber-50/90 border-orange-100/80 shadow-[0_28px_60px_-42px_rgba(249,115,22,0.18)]",
     icon: Sparkles,
     benefits: [
-      "Cocok untuk coba ritme belajar dan mengenal sistem kelas lebih dulu.",
-      "Nominal awal terasa lebih ringan untuk tahap eksplorasi program.",
-      "Pas untuk evaluasi awal sebelum lanjut ke durasi yang lebih panjang.",
+      "Persiapan maksimal untuk UTS dan UAS dalam 1 semester.",
+      "Durasi 6 bulan penuh untuk menguasai materi dasar.",
+      "Pas untuk adaptasi dan evaluasi awal tahun ajaran.",
     ],
-    status: "Tanpa komitmen panjang",
-    note: "Pilihan awal yang aman untuk siswa yang masih menyesuaikan jadwal belajar.",
-    buttonLabel: "Coba Paket Ini",
-  },
-  "3-bulan": {
-    badge: "Recommended",
-    label: "Paling seimbang untuk progres rutin tiap minggu.",
-    accent:
-      "from-rose-100/95 via-white to-orange-50/92 border-orange-200/90 shadow-[0_40px_80px_-42px_rgba(190,24,93,0.28)]",
-    icon: BadgeCheck,
-    benefits: [
-      "Durasi cukup panjang untuk melihat progres belajar yang lebih terasa.",
-      "Pilihan paling pas untuk siswa yang ingin ritme belajar tetap konsisten.",
-      "Jadi paket default di form daftar karena paling seimbang untuk mayoritas siswa.",
-    ],
-    status: "Paling sering dipilih",
-    note: "Cocok untuk siswa yang sudah siap belajar lebih rutin tanpa terasa terlalu berat.",
-    buttonLabel: "Pilih Favorit Ini",
+    status: "Aktif 1 Semester",
+    note: "Pilihan yang tepat untuk fokus di setengah tahun pertama.",
+    buttonLabel: "Pilih 1 Semester",
     spotlight: true,
   },
-  "6-bulan": {
-    badge: "Commitment",
-    label: "Lebih panjang untuk target yang ingin dijaga terus.",
-    accent:
-      "from-amber-100/95 via-white to-orange-50/90 border-orange-100/80 shadow-[0_28px_60px_-42px_rgba(245,158,11,0.18)]",
-    icon: Gem,
-    benefits: [
-      "Pas untuk target belajar yang butuh kesinambungan lebih panjang.",
-      "Membantu siswa menjaga momentum tanpa sering ganti keputusan paket.",
-      "Durasi aktif paling panjang untuk progres yang ingin terus dipantau.",
-    ],
-    status: "Durasi aktif terpanjang",
-    note: "Pilihan tepat untuk komitmen jangka menengah yang lebih stabil sampai beberapa bulan.",
-    buttonLabel: "Ambil Paket Ini",
-  },
-  "12-bulan": {
-    badge: "Annual",
-    label: "Paket tahunan untuk siswa yang ingin ritme belajar stabil sepanjang tahun.",
+  "2-semester": {
+    badge: "2 Semester",
+    label: "Paket tahunan untuk ritme belajar stabil sepanjang tahun.",
     accent:
       "from-slate-100/95 via-white to-orange-50/92 border-slate-200/90 shadow-[0_34px_72px_-44px_rgba(15,23,42,0.22)]",
     icon: ShieldCheck,
     benefits: [
-      "Cocok untuk target belajar jangka panjang yang ingin dijaga lebih konsisten.",
-      "Memberi ruang progres yang lebih matang tanpa sering mengganti paket.",
-      "Pas untuk komitmen tahunan agar fokus belajar tetap berjalan penuh.",
+      "Perlindungan akademik penuh selama 2 semester berturut-turut.",
+      "Memberi ruang progres yang matang tanpa repot perpanjang.",
+      "Satu keputusan tenang untuk mendukung target jangka panjang.",
     ],
-    status: "Komitmen penuh 1 tahun",
-    note: "Pilihan paling panjang untuk keluarga yang sudah yakin dengan ritme belajar dan ingin satu keputusan yang lebih tenang.",
+    status: "Aktif 1 Tahun Penuh",
+    note: "Pilihan paling direkomendasikan untuk stabilitas nilai siswa.",
     buttonLabel: "Ambil Paket Tahunan",
   },
 };
@@ -97,13 +67,13 @@ const packageCardMeta: Record<OnlinePackageKey, PackageCardMeta> = {
 const packageFacts = [
   {
     icon: BookOpenCheck,
-    title: "4 pilihan membership",
+    title: "2 pilihan membership",
     description: "Semua paket tetap mengikuti flow siswa baru yang sama: daftar, bayar, lalu aktif.",
   },
   {
     icon: Clock3,
-    title: "Durasi 1, 3, 6, dan 12 bulan",
-    description: "Tinggal pilih ritme belajar yang paling pas dengan kebutuhan dan target siswa.",
+    title: "Sistem Akademik Terpadu",
+    description: "Membership disesuaikan dengan ritme akademik sekolah agar sinkron dengan jadwal ujian.",
   },
   {
     icon: ShieldCheck,
@@ -111,8 +81,6 @@ const packageFacts = [
     description: "Akses dashboard siswa baru dibuka ketika verifikasi dan konfirmasi pembayaran selesai.",
   },
 ] as const;
-
-const singleMonthPackage = ONLINE_PACKAGES.find((item) => item.durationMonth === 1) ?? ONLINE_PACKAGES[0];
 
 export default function LandingPaket() {
   return (
@@ -132,9 +100,8 @@ export default function LandingPaket() {
           </h2>
 
           <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">
-            Empat pilihan membership ini mengikuti flow yang sudah kamu bangun: pilih durasi,
-            lanjut pembayaran manual, lalu akses siswa aktif saat status pembayaran sudah
-            terkonfirmasi.
+            Dua pilihan membership ini mengikuti kalender akademik: pilih 1 semester (6 bulan) 
+            atau langsung 2 semester (1 tahun) penuh untuk ketenangan belajar.
           </p>
         </div>
 
@@ -151,12 +118,14 @@ export default function LandingPaket() {
               const Icon = meta.icon;
               const monthlyPrice = Math.round(item.amount / item.durationMonth);
               const savings =
-                singleMonthPackage.amount * item.durationMonth - item.amount;
+                item.packageKey === "2-semester"
+                  ? (ONLINE_PACKAGES[0].amount * 2) - item.amount
+                  : 0;
 
               return (
                 <Link
                   key={item.packageKey}
-                  href={`/register-online?package=${item.packageKey}`}
+                  href={`/register?package=${item.packageKey}`}
                   className="group/card block rounded-[30px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 focus-visible:ring-offset-2"
                 >
                   <Card

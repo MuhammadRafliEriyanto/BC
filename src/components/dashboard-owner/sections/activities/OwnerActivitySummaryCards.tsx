@@ -25,7 +25,7 @@ type OwnerActivitySectionPanelProps = {
   badgeLabel: string;
   title: string;
   description: string;
-  metrics: ActivitySectionMetric[];
+  metrics?: ActivitySectionMetric[];
   actions: ReactNode;
   filters: ReactNode;
   note: string;
@@ -142,14 +142,16 @@ export function OwnerActivitySectionPanel({
             </p>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-3">
-            {metrics.map((metric) => (
-              <SectionMetricPill
-                key={`${metric.label}-${metric.value}`}
-                {...metric}
-              />
-            ))}
-          </div>
+          {metrics && metrics.length > 0 ? (
+            <div className="grid gap-3 md:grid-cols-3">
+              {metrics.map((metric) => (
+                <SectionMetricPill
+                  key={`${metric.label}-${metric.value}`}
+                  {...metric}
+                />
+              ))}
+            </div>
+          ) : null}
         </div>
 
         <div className={cn("rounded-[24px] border p-4", styles.toolbar)}>

@@ -2,11 +2,14 @@
 
 import {
   Activity,
+  ArrowDownCircle,
   BanknoteArrowUp,
   Building2,
   CalendarRange,
   Clock3,
+  Landmark,
   ShieldCheck,
+  WalletCards,
 } from "lucide-react";
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 
@@ -20,6 +23,7 @@ import {
   type OwnerDashboardStatCardProps,
 } from "@/components/dashboard-owner/components";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -47,6 +51,10 @@ type OwnerActivitySummary = {
   unsettledRevenue: number;
   incomingCount: number;
   paidIncomingCount: number;
+  expenseCount: number;
+  settledExpenseCount: number;
+  settledExpenseAmount: number;
+  pendingExpenseAmount: number;
   totalActivityCount: number;
   activeActivationCount: number;
   attentionActivationCount: number;
@@ -150,6 +158,125 @@ function formatCompactCurrency(value: number) {
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(value)}`;
+}
+
+function OwnerFinanceOverviewPanel({
+  summary,
+}: {
+  summary: OwnerActivitySummary | null;
+}) {
+  const paidRevenue = summary?.paidRevenue ?? 0;
+  const unsettledRevenue = summary?.unsettledRevenue ?? 0;
+  const settledExpenseAmount = summary?.settledExpenseAmount ?? 0;
+  const pendingExpenseAmount = summary?.pendingExpenseAmount ?? 0;
+  const netBalance = paidRevenue - settledExpenseAmount;
+  const items = [
+    {
+      label: "Pemasukan lunas",
+      value: summary ? formatCompactCurrency(paidRevenue) : unavailableValue,
+      helper:
+        summary && unsettledRevenue > 0
+          ? `${formatCompactCurrency(unsettledRevenue)} masih belum lunas.`
+          : "Pembayaran membership yang sudah tervalidasi.",
+      icon: WalletCards,
+      tone: "emerald",
+    },
+    {
+      label: "Pengeluaran selesai",
+      value: summary ? formatCompactCurrency(settledExpenseAmount) : unavailableValue,
+      helper:
+        summary && pendingExpenseAmount > 0
+          ? `${formatCompactCurrency(pendingExpenseAmount)} masih menunggu/dijadwalkan.`
+          : "Operasional cabang yang sudah selesai dibayar.",
+      icon: ArrowDownCircle,
+      tone: "orange",
+    },
+    {
+      label: "Saldo bersih",
+      value: summary ? formatCompactCurrency(netBalance) : unavailableValue,
+      helper: "Pemasukan lunas dikurangi pengeluaran selesai.",
+      icon: Landmark,
+      tone: netBalance >= 0 ? "sky" : "slate",
+    },
+  ] as const;
+  const toneStyles = {
+    emerald: {
+      label: "text-emerald-700",
+      iconWrap: "border-emerald-100 bg-emerald-50 text-emerald-500",
+      dot: "bg-emerald-500",
+    },
+    orange: {
+      label: "text-orange-700",
+      iconWrap: "border-orange-100 bg-orange-50 text-orange-500",
+      dot: "bg-orange-500",
+    },
+    sky: {
+      label: "text-sky-700",
+      iconWrap: "border-sky-100 bg-sky-50 text-sky-500",
+      dot: "bg-sky-500",
+    },
+    slate: {
+      label: "text-slate-700",
+      iconWrap: "border-slate-200 bg-slate-50 text-slate-500",
+      dot: "bg-slate-500",
+    },
+  } as const;
+
+  return (
+    <section className="rounded-[24px] border border-slate-200/80 bg-white px-5 py-5 shadow-[0_16px_34px_-28px_rgba(15,23,42,0.16)]">
+      <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <h3 className="text-lg font-semibold tracking-tight text-slate-950">
+            Ringkasan Keuangan
+          </h3>
+          <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
+            Gabungan pemasukan pembayaran dan pengeluaran operasional dari data backend.
+          </p>
+        </div>
+        <Badge variant="secondary" className="w-fit rounded-full px-3 py-1.5">
+          Pembayaran + Pengeluaran
+        </Badge>
+      </div>
+
+      <div className="mt-4 grid gap-3 md:grid-cols-3">
+        {items.map((item) => {
+          const Icon = item.icon;
+          const styles = toneStyles[item.tone];
+
+
+
+  return (
+            <div
+              key={item.label}
+              className="rounded-[18px] border border-slate-200/80 bg-slate-50/70 px-4 py-4"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className={`size-2 rounded-full ${styles.dot}`} />
+                    <p
+                      className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${styles.label}`}
+                    >
+                      {item.label}
+                    </p>
+                  </div>
+                  <p className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">
+                    {item.value}
+                  </p>
+                </div>
+                <span
+                  className={`flex size-10 shrink-0 items-center justify-center rounded-2xl border ${styles.iconWrap}`}
+                >
+                  <Icon className="size-5" />
+                </span>
+              </div>
+              <p className="mt-3 text-sm leading-6 text-slate-500">{item.helper}</p>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
 }
 
 function calculateProgress(numerator: number, denominator: number) {
@@ -600,6 +727,7 @@ export function OwnerDashboardCanvasSection() {
   const [activitySummary, setActivitySummary] = useState<OwnerActivitySummary | null>(null);
   const [incomingPayments, setIncomingPayments] = useState<OwnerActivityIncomingPayment[]>([]);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const isRefreshingRef = useRef(false);
 
   const loadDashboardCardValues = useEffectEvent(async () => {
@@ -645,7 +773,8 @@ export function OwnerDashboardCanvasSection() {
       }
 
       if (activitiesResult.status === "fulfilled") {
-        const { incomingPayments, activationStudents } = activitiesResult.value;
+        const { incomingPayments, outgoingPayments, activationStudents } =
+          activitiesResult.value;
         const paidRevenue = incomingPayments
           .filter((payment) => payment.status === "paid")
           .reduce((total, payment) => total + payment.amount, 0);
@@ -655,6 +784,21 @@ export function OwnerDashboardCanvasSection() {
         const paidIncomingCount = incomingPayments.filter(
           (payment) => payment.status === "paid",
         ).length;
+        const settledExpenses = outgoingPayments.filter(
+          (expense) => expense.status === "Selesai",
+        );
+        const pendingExpenses = outgoingPayments.filter(
+          (expense) =>
+            expense.status === "Menunggu" || expense.status === "Dijadwalkan",
+        );
+        const settledExpenseAmount = settledExpenses.reduce(
+          (total, expense) => total + expense.amount,
+          0,
+        );
+        const pendingExpenseAmount = pendingExpenses.reduce(
+          (total, expense) => total + expense.amount,
+          0,
+        );
         const activeActivationCount = activationStudents.filter(
           (student) => student.activationStatus === "Aktif",
         ).length;
@@ -667,7 +811,12 @@ export function OwnerDashboardCanvasSection() {
           unsettledRevenue,
           incomingCount: incomingPayments.length,
           paidIncomingCount,
-          totalActivityCount: incomingPayments.length + activationStudents.length,
+          expenseCount: outgoingPayments.length,
+          settledExpenseCount: settledExpenses.length,
+          settledExpenseAmount,
+          pendingExpenseAmount,
+          totalActivityCount:
+            incomingPayments.length + outgoingPayments.length + activationStudents.length,
           activeActivationCount,
           attentionActivationCount,
         });
@@ -675,6 +824,7 @@ export function OwnerDashboardCanvasSection() {
 
         latestTimestamps.push(
           ...incomingPayments.map((payment) => payment.updatedAt),
+          ...outgoingPayments.map((expense) => expense.updatedAt),
           ...activationStudents.map((student) => student.registeredAt),
         );
       }
@@ -686,6 +836,7 @@ export function OwnerDashboardCanvasSection() {
       }
     } finally {
       isRefreshingRef.current = false;
+      setIsInitialLoading(false);
     }
   });
 
@@ -838,6 +989,60 @@ export function OwnerDashboardCanvasSection() {
         },
   ];
 
+  if (isInitialLoading) {
+    return (
+      <div className="space-y-4">
+        <div>
+          <Skeleton className="h-8 w-40" />
+        </div>
+        <Skeleton className="h-6 w-32 rounded-full" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className="space-y-4 rounded-[24px] border border-slate-200/80 bg-white p-5"
+            >
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-8 w-32" />
+              <Skeleton className="h-2 w-full rounded-full" />
+              <Skeleton className="h-4 w-36" />
+            </div>
+          ))}
+        </div>
+        <div className="rounded-[24px] border border-slate-200/80 bg-white p-5 space-y-4">
+          <Skeleton className="h-5 w-48" />
+          <Skeleton className="h-4 w-72" />
+          <div className="grid gap-3 md:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div
+                key={index}
+                className="space-y-3 rounded-[18px] border border-slate-200/80 bg-slate-50/70 p-4"
+              >
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-7 w-28" />
+                <Skeleton className="h-4 w-full" />
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.9fr)]">
+          <div className="space-y-4 rounded-[24px] border border-slate-200/80 bg-white p-5">
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-4 w-72" />
+            <Skeleton className="h-64 w-full" />
+          </div>
+          <div className="space-y-4 rounded-[24px] border border-slate-200/80 bg-white p-5">
+            <Skeleton className="h-5 w-48" />
+            <Skeleton className="h-4 w-56" />
+            {Array.from({ length: 3 }).map((_, index) => (
+              <Skeleton key={index} className="h-14 w-full" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div>
@@ -858,6 +1063,8 @@ export function OwnerDashboardCanvasSection() {
           <OwnerDashboardStatCard key={card.title} {...card} />
         ))}
       </div>
+
+      <OwnerFinanceOverviewPanel summary={activitySummary} />
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.9fr)]">
         <OwnerDashboardPerformanceChart

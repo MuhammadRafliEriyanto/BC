@@ -5,7 +5,7 @@ import type {
   OwnerActivityStudentActivation,
 } from "@/lib/owner-activities";
 
-export type PaymentTab = "masuk" | "aktivasi";
+export type PaymentTab = "masuk" | "keluar" | "aktivasi";
 
 export type IncomingPaymentStatus = OwnerActivityIncomingPayment["status"];
 export const combinedIncomingPaymentStatusFilter = "Gagal / Expired" as const;
@@ -13,6 +13,12 @@ export type IncomingPaymentStatusFilter =
   | "Semua"
   | IncomingPaymentStatus
   | typeof combinedIncomingPaymentStatusFilter;
+export const allIncomingPaymentPeriodFilter = "Semua Periode" as const;
+export type IncomingPaymentPeriodFilter =
+  | typeof allIncomingPaymentPeriodFilter
+  | "Minggu ini"
+  | "Bulan ini"
+  | "Tahun ini";
 
 export type OutgoingPaymentStatus = OwnerActivityOutgoingPayment["status"];
 export type OutgoingPaymentStatusFilter = "Semua" | OutgoingPaymentStatus;

@@ -3,18 +3,29 @@
 
 import Link from "next/link";
 import { useEffect, useEffectEvent, useMemo, useState, type ReactNode } from "react";
-import { AlertCircle, ArrowLeft, School } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  Building2,
+  CalendarDays,
+  Clock3,
+  MapPin,
+  School,
+  Users,
+} from "lucide-react";
 
 import {
+  AUTH_USER_UPDATED_EVENT,
   clearAuthClientState,
   readPersistedAuthUser,
 } from "@/lib/auth";
-import type {
-  ClassAttendanceSession,
-  ClassDetailData,
-  ClassStatus,
-  ClassStudent,
-  PresenceStatus,
+import {
+  type AssignmentReviewStatus,
+  type ClassDetailData,
+  type ClassStatus,
+  type ClassStudent,
+  type PresenceStatus,
+  DEFAULT_SEMESTER_MEETING_TARGET,
 } from "@/components/dashboard-guru/data/guruClassData";
 import AbsensiPertemuanTable from "@/components/dashboard-guru/detail-kelas/AbsensiPertemuanTable";
 import BelumDinilaiTable from "@/components/dashboard-guru/detail-kelas/BelumDinilaiTable";
@@ -24,6 +35,7 @@ import MateriFormDialog from "@/components/dashboard-guru/detail-kelas/MateriFor
 import NilaiFormDialog from "@/components/dashboard-guru/detail-kelas/NilaiFormDialog";
 import PesertaKelasTable from "@/components/dashboard-guru/detail-kelas/PesertaKelasTable";
 import TabelNilaiTable from "@/components/dashboard-guru/detail-kelas/TabelNilaiTable";
+import TaskSubmissionReviewDialog from "@/components/dashboard-guru/detail-kelas/TaskSubmissionReviewDialog";
 import TugasFormDialog from "@/components/dashboard-guru/detail-kelas/TugasFormDialog";
 import TugasPertemuanTable from "@/components/dashboard-guru/detail-kelas/TugasPertemuanTable";
 import {
@@ -38,8 +50,17 @@ import type {
   MateriPertemuan,
   NilaiDraft,
   NilaiSiswa,
+  TaskSubmissionDetail,
+  TaskSubmissionListItem,
   TugasPertemuan,
 } from "@/components/dashboard-guru/detail-kelas/types";
+import {
+  EMPTY_ACADEMIC_SCORES,
+  getAcademicGradeScheme,
+  type AcademicGradeScheme,
+  type AcademicScoreKey,
+  type AcademicScores,
+} from "@/lib/academic-grades";
 
 type DetailKelasGuruSectionProps = {
   kelasId?: string | null;
@@ -63,6 +84,7 @@ type TeacherClassApiDetailItem = {
   room?: string;
   studentCount?: number;
   scheduleCount?: number;
+  targetMeetingCount?: number;
   nextSchedule?: TeacherClassApiNextSchedule;
   status?: string;
 };
@@ -155,6 +177,7 @@ type TeacherClassApiTaskItem = {
   description?: string;
   deadline?: string;
   submittedCount?: number;
+  gradedCount?: number;
   reviewStatus?: string;
   subject?: string;
   room?: string;
@@ -173,6 +196,20 @@ type TeacherClassApiGradeItem = {
   note?: string;
   status?: string;
   gradedAt?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+};
+
+type TeacherClassApiAcademicGradeItem = {
+  academicGradeId?: string;
+  classId?: string;
+  studentId?: string;
+  academicYear?: string;
+  semester?: string;
+  scheme?: AcademicGradeScheme;
+  scores?: Partial<AcademicScores>;
+  note?: string;
+  evaluatedAt?: string | null;
   createdAt?: string | null;
   updatedAt?: string | null;
 };
@@ -211,6 +248,12 @@ type TeacherClassGradesResponse = {
   message?: string;
   data?: {
     grades?: TeacherClassApiGradeItem[];
+    academicGrades?: TeacherClassApiAcademicGradeItem[];
+    scheme?: AcademicGradeScheme;
+    period?: {
+      academicYear?: string;
+      semester?: string;
+    };
   };
 };
 
@@ -219,6 +262,78 @@ type TeacherClassGradeMutationResponse = {
   message?: string;
   data?: {
     grade?: TeacherClassApiGradeItem;
+  };
+};
+
+type TeacherClassAcademicGradeMutationResponse = {
+  success: boolean;
+  message?: string;
+  data?: {
+    academicGrade?: TeacherClassApiAcademicGradeItem | null;
+    scheme?: AcademicGradeScheme;
+  };
+};
+
+type TeacherClassSettingMutationResponse = {
+  success: boolean;
+  message?: string;
+  data?: {
+    classSetting?: {
+      classId?: string;
+      targetMeetingCount?: number;
+      createdAt?: string | null;
+      updatedAt?: string | null;
+    };
+  };
+};
+
+type TeacherTaskSubmissionApiAttachmentItem = {
+  fileName?: string;
+  originalName?: string;
+  mimeType?: string;
+  size?: number;
+} | null;
+
+type TeacherTaskSubmissionApiItem = {
+  id?: string;
+  submissionId?: string;
+  classId?: string;
+  taskId?: string;
+  studentId?: string;
+  studentName?: string;
+  submissionMode?: "file" | "text" | "drive";
+  submittedAt?: string | null;
+  hasAttachment?: boolean;
+  driveUrl?: string;
+  answerTextPreview?: string;
+  answerText?: string;
+  note?: string;
+  attachment?: TeacherTaskSubmissionApiAttachmentItem;
+  gradeStatus?: string;
+  score?: number | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+};
+
+type TeacherTaskSubmissionListResponse = {
+  success: boolean;
+  message?: string;
+  data?: {
+    taskId?: string;
+    submissions?: TeacherTaskSubmissionApiItem[];
+    summary?: {
+      submittedCount?: number;
+      gradedCount?: number;
+      pendingGradeCount?: number;
+    };
+  };
+};
+
+type TeacherTaskSubmissionDetailResponse = {
+  success: boolean;
+  message?: string;
+  data?: {
+    submission?: TeacherTaskSubmissionApiItem | null;
   };
 };
 
@@ -234,6 +349,16 @@ type TeacherTaskGradeEntry = {
   gradedAt: string | null;
   createdAt: string | null;
   updatedAt: string | null;
+};
+
+type TeacherAcademicGradeEntry = {
+  academicGradeId: string;
+  classId: string;
+  studentId: string;
+  scheme: AcademicGradeScheme;
+  scores: AcademicScores;
+  note: string;
+  evaluatedAt: string | null;
 };
 
 const DETAIL_CLASS_ERROR_MESSAGE =
@@ -267,6 +392,22 @@ function buildTeacherTaskAttachmentUrl(classId: string, taskId: string) {
   return `/api/teacher/me/classes/${encodeURIComponent(normalizedClassId)}/tasks/${encodeURIComponent(normalizedTaskId)}/attachment`;
 }
 
+function buildTeacherTaskSubmissionAttachmentUrl(
+  classId: string,
+  taskId: string,
+  submissionId: string,
+) {
+  const normalizedClassId = normalizeText(classId);
+  const normalizedTaskId = normalizeText(taskId);
+  const normalizedSubmissionId = normalizeText(submissionId);
+
+  if (!normalizedClassId || !normalizedTaskId || !normalizedSubmissionId) {
+    return "";
+  }
+
+  return `/api/teacher/me/classes/${encodeURIComponent(normalizedClassId)}/tasks/${encodeURIComponent(normalizedTaskId)}/submissions/${encodeURIComponent(normalizedSubmissionId)}/attachment`;
+}
+
 async function readFileAsBase64(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -291,6 +432,17 @@ async function readFileAsBase64(file: File) {
 
 function toSafeNumber(value: unknown) {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function toNullableScore(value: unknown) {
+  if (value === null || value === undefined || normalizeText(String(value)) === "") {
+    return null;
+  }
+
+  const parsedValue = Number(value);
+  return Number.isFinite(parsedValue)
+    ? Math.max(0, Math.min(100, Math.round(parsedValue)))
+    : null;
 }
 
 function formatTimeLabel(value: string) {
@@ -463,9 +615,17 @@ function toMateriStatus(
 function toTugasStatusPenilaian(
   value: string | null | undefined,
 ): TugasPertemuan["statusPenilaian"] {
-  return normalizeText(value).toLowerCase() === "sudah dinilai"
-    ? "Sudah Dinilai"
-    : "Belum Dinilai";
+  const normalizedValue = normalizeText(value).toLowerCase();
+
+  if (normalizedValue === "sudah dinilai") {
+    return "Sudah Dinilai";
+  }
+
+  if (normalizedValue === "belum ada pengumpulan") {
+    return "Belum Ada Pengumpulan";
+  }
+
+  return "Belum Dinilai";
 }
 
 function toTaskGradeStatus(
@@ -601,6 +761,148 @@ function mapTeacherGradesToEntries(
   );
 }
 
+function mapTeacherApiAcademicGradeToEntry(
+  grade: TeacherClassApiAcademicGradeItem,
+  kelasId: string,
+  fallbackScheme: AcademicGradeScheme,
+): TeacherAcademicGradeEntry {
+  return {
+    academicGradeId: normalizeText(grade.academicGradeId),
+    classId: normalizeText(grade.classId) || kelasId,
+    studentId: normalizeText(grade.studentId),
+    scheme: grade.scheme ?? fallbackScheme,
+    scores: {
+      uts: toNullableScore(grade.scores?.uts),
+      uas: toNullableScore(grade.scores?.uas),
+      tryout1: toNullableScore(grade.scores?.tryout1),
+      tryout2: toNullableScore(grade.scores?.tryout2),
+      tryout3: toNullableScore(grade.scores?.tryout3),
+    },
+    note: normalizeText(grade.note),
+    evaluatedAt: normalizeText(grade.evaluatedAt) || null,
+  };
+}
+
+function mapTeacherAcademicGradesToEntries(
+  payload: NonNullable<TeacherClassGradesResponse["data"]>,
+  kelasId: string,
+  fallbackScheme: AcademicGradeScheme,
+) {
+  return (payload.academicGrades ?? []).map((grade) =>
+    mapTeacherApiAcademicGradeToEntry(grade, kelasId, fallbackScheme),
+  );
+}
+
+function mapTeacherApiTaskSubmissionToListItem(
+  submission: TeacherTaskSubmissionApiItem,
+): TaskSubmissionListItem {
+  return {
+    id:
+      normalizeText(submission.id) ||
+      normalizeText(submission.submissionId) ||
+      `submission-${Date.now()}`,
+    submissionId:
+      normalizeText(submission.submissionId) ||
+      normalizeText(submission.id) ||
+      `submission-${Date.now()}`,
+    studentId: normalizeText(submission.studentId),
+    studentName:
+      normalizeText(submission.studentName) || "Nama siswa belum diatur",
+    submissionMode: submission.submissionMode ?? "text",
+    submittedAt: normalizeText(submission.submittedAt) || null,
+    hasAttachment: Boolean(submission.hasAttachment),
+    driveUrl: normalizeText(submission.driveUrl),
+    answerTextPreview: normalizeText(submission.answerTextPreview),
+    gradeStatus: toTaskGradeStatus(submission.gradeStatus),
+    score:
+      typeof submission.score === "number" && Number.isFinite(submission.score)
+        ? submission.score
+        : null,
+  };
+}
+
+function mapTeacherApiTaskSubmissionToDetail(
+  submission: TeacherTaskSubmissionApiItem,
+  classId: string,
+  taskId: string,
+): TaskSubmissionDetail {
+  const listItem = mapTeacherApiTaskSubmissionToListItem(submission);
+
+  return {
+    ...listItem,
+    classId: normalizeText(submission.classId) || classId,
+    taskId: normalizeText(submission.taskId) || taskId,
+    answerText: normalizeText(submission.answerText),
+    note: normalizeText(submission.note),
+    attachmentFileName: normalizeText(submission.attachment?.fileName) || undefined,
+    attachmentOriginalName:
+      normalizeText(submission.attachment?.originalName) || undefined,
+    attachmentMimeType:
+      normalizeText(submission.attachment?.mimeType) || undefined,
+    attachmentSize: Math.max(toSafeNumber(submission.attachment?.size), 0),
+    attachmentUrl: normalizeText(submission.attachment?.fileName)
+      ? buildTeacherTaskSubmissionAttachmentUrl(
+          normalizeText(submission.classId) || classId,
+          normalizeText(submission.taskId) || taskId,
+          normalizeText(submission.submissionId) ||
+            normalizeText(submission.id),
+        )
+      : undefined,
+    createdAt: normalizeText(submission.createdAt) || null,
+    updatedAt: normalizeText(submission.updatedAt) || null,
+  };
+}
+
+function applyLatestGradesToSubmissionList(
+  submissions: TaskSubmissionListItem[],
+  gradeEntries: TeacherTaskGradeEntry[],
+  taskId: string,
+) {
+  return submissions.map((submission) => {
+    const matchedGrade = gradeEntries.find(
+      (grade) =>
+        normalizeText(grade.taskId) === normalizeText(taskId) &&
+        normalizeText(grade.studentId) === normalizeText(submission.studentId),
+    );
+
+    if (!matchedGrade) {
+      return submission;
+    }
+
+    return {
+      ...submission,
+      gradeStatus: matchedGrade.status,
+      score: matchedGrade.status === "Sudah Dinilai" ? matchedGrade.score : null,
+    } satisfies TaskSubmissionListItem;
+  });
+}
+
+function applyLatestGradeToSubmissionDetail(
+  submissionDetail: TaskSubmissionDetail | null,
+  gradeEntries: TeacherTaskGradeEntry[],
+) {
+  if (!submissionDetail) {
+    return null;
+  }
+
+  const matchedGrade = gradeEntries.find(
+    (grade) =>
+      normalizeText(grade.taskId) === normalizeText(submissionDetail.taskId) &&
+      normalizeText(grade.studentId) === normalizeText(submissionDetail.studentId),
+  );
+
+  if (!matchedGrade) {
+    return submissionDetail;
+  }
+
+  return {
+    ...submissionDetail,
+    gradeStatus: matchedGrade.status,
+    score:
+      matchedGrade.status === "Sudah Dinilai" ? matchedGrade.score : null,
+  } satisfies TaskSubmissionDetail;
+}
+
 function resolveExpectedGradeCount(
   task: TugasPertemuan,
   participantCount: number,
@@ -613,33 +915,31 @@ function applyGradeStatusToTasks(
   participants: ClassStudent[],
   gradeEntries: TeacherTaskGradeEntry[],
 ) {
-  const participantIds = new Set(
-    participants.map((participant) => normalizeText(participant.id).toLowerCase()),
-  );
-
   return sortTasksByMeeting(
     taskRows.map((task) => {
+      const submittedCount = Math.max(task.jumlahMengumpulkan, 0);
       const gradedStudentIds = new Set(
         gradeEntries
           .filter(
             (grade) =>
               normalizeText(grade.taskId) === normalizeText(task.id) &&
-              grade.status === "Sudah Dinilai" &&
-              participantIds.has(normalizeText(grade.studentId).toLowerCase()),
+              grade.status === "Sudah Dinilai",
           )
           .map((grade) => normalizeText(grade.studentId).toLowerCase()),
       );
-      const expectedGradeCount = resolveExpectedGradeCount(
-        task,
-        participants.length,
-      );
+      const expectedGradeCount =
+        submittedCount > 0
+          ? submittedCount
+          : resolveExpectedGradeCount(task, participants.length);
 
       return {
         ...task,
         statusPenilaian:
-          expectedGradeCount > 0 && gradedStudentIds.size >= expectedGradeCount
-            ? "Sudah Dinilai"
-            : "Belum Dinilai",
+          submittedCount <= 0
+            ? "Belum Ada Pengumpulan"
+            : expectedGradeCount > 0 && gradedStudentIds.size >= expectedGradeCount
+              ? "Sudah Dinilai"
+              : "Belum Dinilai",
       } satisfies TugasPertemuan;
     }),
   );
@@ -648,6 +948,7 @@ function applyGradeStatusToTasks(
 function buildNilaiRows(
   participants: ClassStudent[],
   gradeEntries: TeacherTaskGradeEntry[],
+  academicGradeEntries: TeacherAcademicGradeEntry[],
 ) {
   return participants.map((student) => {
     const studentGrades = gradeEntries.filter(
@@ -660,14 +961,17 @@ function buildNilaiRows(
           studentGrades.reduce((total, grade) => total + grade.score, 0) /
             studentGrades.length,
         )
-      : 0;
+      : null;
+    const academicGrade = academicGradeEntries.find(
+      (grade) =>
+        normalizeText(grade.studentId) === normalizeText(student.id),
+    );
 
     return {
       studentId: student.id,
       tugas: tugasScore,
-      kuis: 0,
-      uts: 0,
-      uas: 0,
+      scores: academicGrade?.scores ?? { ...EMPTY_ACADEMIC_SCORES },
+      note: academicGrade?.note ?? "",
     } satisfies NilaiSiswa;
   });
 }
@@ -677,6 +981,7 @@ function createNilaiDraft(
   taskId: string,
   nilaiRows: NilaiSiswa[],
   gradeEntries: TeacherTaskGradeEntry[],
+  academicGradeEntries: TeacherAcademicGradeEntry[],
 ): NilaiDraft {
   const currentValue =
     nilaiRows.find((nilai) => nilai.studentId === studentId) ??
@@ -686,14 +991,16 @@ function createNilaiDraft(
       normalizeText(grade.studentId) === normalizeText(studentId) &&
       normalizeText(grade.taskId) === normalizeText(taskId),
   );
+  const existingAcademicGrade = academicGradeEntries.find(
+    (grade) =>
+      normalizeText(grade.studentId) === normalizeText(studentId),
+  );
 
   return {
     studentId,
-    tugas: existingGrade?.score ?? currentValue.tugas,
-    kuis: currentValue.kuis,
-    uts: currentValue.uts,
-    uas: currentValue.uas,
-    note: existingGrade?.note ?? "",
+    tugas: existingGrade?.score ?? null,
+    scores: existingAcademicGrade?.scores ?? currentValue.scores,
+    note: existingAcademicGrade?.note ?? existingGrade?.note ?? "",
   };
 }
 
@@ -847,11 +1154,14 @@ function mapTeacherDetailToClassData(
       id: participantId,
       name: normalizeText(participant.name) || "Nama siswa belum diatur",
       classLevel: `${participantJenjang} / ${participantLevel}`,
+      branch:
+        normalizeText(participant.branch) ||
+        normalizeText(classItem?.branch) ||
+        "Cabang belum diatur",
       status: toParticipantStatus(participant.status),
       history,
       scores: {
         tugas: 0,
-        kuis: 0,
         uts: 0,
         uas: 0,
       },
@@ -861,6 +1171,7 @@ function mapTeacherDetailToClassData(
     toSafeNumber(classItem?.studentCount),
     participants.length,
   );
+  const configuredTotalPertemuan = DEFAULT_SEMESTER_MEETING_TARGET;
 
   return {
     kelasId,
@@ -877,10 +1188,7 @@ function mapTeacherDetailToClassData(
       normalizeText(schedules[0]?.room) ||
       "Ruangan belum diatur",
     totalSiswa,
-    totalPertemuan: Math.max(
-      toSafeNumber(classItem?.scheduleCount),
-      schedules.length,
-    ),
+    totalPertemuan: configuredTotalPertemuan,
     pertemuanSelesai: attendanceSessions.filter(
       (session) => session.status === "Ditutup",
     ).length,
@@ -940,10 +1248,6 @@ function getProgressPercentage(completedMeetings: number, totalMeetings: number)
   }
 
   return Math.min(Math.round((completedMeetings / totalMeetings) * 100), 100);
-}
-
-function clampScore(value: number) {
-  return Math.max(0, Math.min(100, value));
 }
 
 function StatePanel({
@@ -1011,9 +1315,8 @@ function SectionBadge({
 export default function DetailKelasGuruSection({
   kelasId,
 }: DetailKelasGuruSectionProps) {
-  const teacherName = useMemo(
+  const [teacherName, setTeacherName] = useState(
     () => readPersistedAuthUser()?.nama ?? "Guru login",
-    [],
   );
   const emptyClassDetail = useMemo(
     () => buildEmptyClassDetail(kelasId, teacherName),
@@ -1024,13 +1327,29 @@ export default function DetailKelasGuruSection({
   );
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const activeClass = realClassDetail ?? emptyClassDetail;
+  const activeClass = useMemo(
+    () =>
+      realClassDetail
+        ? {
+            ...realClassDetail,
+            guru: teacherName,
+          }
+        : emptyClassDetail,
+    [emptyClassDetail, realClassDetail, teacherName],
+  );
   const defaultStudentId = activeClass.participants[0]?.id ?? "";
+  const academicScheme = useMemo(
+    () => getAcademicGradeScheme(`${activeClass.namaKelas} ${activeClass.tingkat}`),
+    [activeClass.namaKelas, activeClass.tingkat],
+  );
 
   const [activeSection, setActiveSection] = useState<DetailSection>("peserta");
   const [materials, setMaterials] = useState<MateriPertemuan[]>([]);
   const [tasks, setTasks] = useState<TugasPertemuan[]>([]);
   const [gradeEntries, setGradeEntries] = useState<TeacherTaskGradeEntry[]>([]);
+  const [academicGradeEntries, setAcademicGradeEntries] = useState<
+    TeacherAcademicGradeEntry[]
+  >([]);
   const [nilaiRows, setNilaiRows] = useState<NilaiSiswa[]>([]);
 
   const [isMateriDialogOpen, setIsMateriDialogOpen] = useState(false);
@@ -1057,6 +1376,35 @@ export default function DetailKelasGuruSection({
   const [selectedStudentId, setSelectedStudentId] = useState(defaultStudentId);
   const [selectedTaskForScore, setSelectedTaskForScore] =
     useState<TugasPertemuan | null>(null);
+  const [isTaskSubmissionDialogOpen, setIsTaskSubmissionDialogOpen] =
+    useState(false);
+  const [selectedTaskForSubmissions, setSelectedTaskForSubmissions] =
+    useState<TugasPertemuan | null>(null);
+  const [taskSubmissionRows, setTaskSubmissionRows] = useState<
+    TaskSubmissionListItem[]
+  >([]);
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState("");
+  const [selectedSubmissionDetail, setSelectedSubmissionDetail] =
+    useState<TaskSubmissionDetail | null>(null);
+  const [isTaskSubmissionListLoading, setIsTaskSubmissionListLoading] =
+    useState(false);
+  const [isTaskSubmissionDetailLoading, setIsTaskSubmissionDetailLoading] =
+    useState(false);
+  const [isMeetingTargetEditing, setIsMeetingTargetEditing] = useState(false);
+  const [isSavingMeetingTarget, setIsSavingMeetingTarget] = useState(false);
+  const [meetingTargetDraft, setMeetingTargetDraft] = useState("");
+
+  useEffect(() => {
+    function handleAuthUserUpdated() {
+      setTeacherName(readPersistedAuthUser()?.nama ?? "Guru login");
+    }
+
+    window.addEventListener(AUTH_USER_UPDATED_EVENT, handleAuthUserUpdated);
+
+    return () => {
+      window.removeEventListener(AUTH_USER_UPDATED_EVENT, handleAuthUserUpdated);
+    };
+  }, []);
 
   async function saveMaterialRequest(
     draft: MateriPertemuan,
@@ -1139,8 +1487,6 @@ export default function DetailKelasGuruSection({
       title: draft.judulTugas,
       description: draft.deskripsi,
       deadline: draft.deadline,
-      submittedCount: draft.jumlahMengumpulkan,
-      reviewStatus: draft.statusPenilaian,
     };
 
     if (tugasAttachmentFile) {
@@ -1294,6 +1640,188 @@ export default function DetailKelasGuruSection({
     return mapTeacherApiGradeToEntry(payload.data.grade, normalizedClassId);
   }
 
+  async function saveAcademicGradeRequest(draft: NilaiDraft) {
+    const normalizedClassId = normalizeText(activeClass.kelasId);
+    const normalizedStudentId = normalizeText(draft.studentId);
+
+    if (!normalizedClassId || !normalizedStudentId) {
+      throw new Error("Kelas atau siswa untuk penilaian belum dipilih.");
+    }
+
+    const response = await fetch(
+      `/api/teacher/me/classes/${encodeURIComponent(normalizedClassId)}/academic-grades/${encodeURIComponent(normalizedStudentId)}`,
+      {
+        method: "PUT",
+        credentials: "include",
+        cache: "no-store",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          scores: draft.scores,
+          note: normalizeText(draft.note),
+        }),
+      },
+    );
+    const payload = (await response.json().catch(() => null)) as
+      | TeacherClassAcademicGradeMutationResponse
+      | null;
+
+    if (response.status === 401) {
+      clearAuthClientState();
+      throw new Error("Sesi login berakhir. Silakan login ulang.");
+    }
+
+    if (!response.ok || !payload?.success) {
+      throw new Error(payload?.message || "Nilai evaluasi belum bisa disimpan.");
+    }
+
+    return payload.data?.academicGrade
+      ? mapTeacherApiAcademicGradeToEntry(
+          payload.data.academicGrade,
+          normalizedClassId,
+          academicScheme,
+        )
+      : null;
+  }
+
+  async function saveMeetingTargetRequest(targetMeetingCount: number) {
+    const normalizedClassId = normalizeText(activeClass.kelasId);
+
+    if (!normalizedClassId) {
+      throw new Error(DETAIL_CLASS_ERROR_MESSAGE);
+    }
+
+    const response = await fetch(
+      `/api/teacher/me/classes/${encodeURIComponent(normalizedClassId)}/settings`,
+      {
+        method: "PATCH",
+        credentials: "include",
+        cache: "no-store",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          targetMeetingCount,
+        }),
+      },
+    );
+    const payload = (await response.json().catch(() => null)) as
+      | TeacherClassSettingMutationResponse
+      | null;
+
+    if (response.status === 401) {
+      clearAuthClientState();
+      throw new Error("Sesi login berakhir. Silakan login ulang.");
+    }
+
+    const savedTargetMeetingCount = toSafeNumber(
+      payload?.data?.classSetting?.targetMeetingCount,
+    );
+
+    if (!response.ok || !payload?.success || savedTargetMeetingCount < 1) {
+      throw new Error(
+        payload?.message || "Target total pertemuan belum bisa disimpan.",
+      );
+    }
+
+    return savedTargetMeetingCount;
+  }
+
+  async function loadTaskSubmissionsRequest(task: TugasPertemuan) {
+    const normalizedClassId = normalizeText(activeClass.kelasId);
+    const normalizedTaskId = normalizeText(task.id);
+
+    if (!normalizedClassId) {
+      throw new Error(DETAIL_CLASS_ERROR_MESSAGE);
+    }
+
+    if (!normalizedTaskId) {
+      throw new Error("Tugas kelas tidak ditemukan.");
+    }
+
+    const response = await fetch(
+      `/api/teacher/me/classes/${encodeURIComponent(normalizedClassId)}/tasks/${encodeURIComponent(normalizedTaskId)}/submissions`,
+      {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
+      },
+    );
+    const payload = (await response.json().catch(() => null)) as
+      | TeacherTaskSubmissionListResponse
+      | null;
+
+    if (response.status === 401) {
+      clearAuthClientState();
+      throw new Error("Sesi login berakhir. Silakan login ulang.");
+    }
+
+    if (!response.ok || !payload?.success) {
+      throw new Error(
+        payload?.message || "Daftar submission tugas belum bisa diambil.",
+      );
+    }
+
+    const submissionRows = (payload.data?.submissions ?? []).map((submission) =>
+      mapTeacherApiTaskSubmissionToListItem(submission),
+    );
+
+    return {
+      submissions: submissionRows,
+      submittedCount: Math.max(
+        toSafeNumber(payload.data?.summary?.submittedCount),
+        submissionRows.length,
+      ),
+    };
+  }
+
+  async function loadTaskSubmissionDetailRequest(
+    task: TugasPertemuan,
+    submissionId: string,
+  ) {
+    const normalizedClassId = normalizeText(activeClass.kelasId);
+    const normalizedTaskId = normalizeText(task.id);
+    const normalizedSubmissionId = normalizeText(submissionId);
+
+    if (!normalizedClassId) {
+      throw new Error(DETAIL_CLASS_ERROR_MESSAGE);
+    }
+
+    if (!normalizedTaskId || !normalizedSubmissionId) {
+      throw new Error("Submission tugas tidak ditemukan.");
+    }
+
+    const response = await fetch(
+      `/api/teacher/me/classes/${encodeURIComponent(normalizedClassId)}/tasks/${encodeURIComponent(normalizedTaskId)}/submissions/${encodeURIComponent(normalizedSubmissionId)}`,
+      {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
+      },
+    );
+    const payload = (await response.json().catch(() => null)) as
+      | TeacherTaskSubmissionDetailResponse
+      | null;
+
+    if (response.status === 401) {
+      clearAuthClientState();
+      throw new Error("Sesi login berakhir. Silakan login ulang.");
+    }
+
+    if (!response.ok || !payload?.success || !payload.data?.submission) {
+      throw new Error(
+        payload?.message || "Detail submission tugas belum bisa diambil.",
+      );
+    }
+
+    return mapTeacherApiTaskSubmissionToDetail(
+      payload.data.submission,
+      normalizedClassId,
+      normalizedTaskId,
+    );
+  }
+
   const loadTeacherClassDetail = useEffectEvent(async () => {
     setIsLoading(true);
     setLoadError(null);
@@ -1372,15 +1900,27 @@ export default function DetailKelasGuruSection({
         gradesPayload.data ?? {},
         nextClassDetail.kelasId,
       );
+      const nextAcademicScheme =
+        gradesPayload.data?.scheme ??
+        getAcademicGradeScheme(
+          `${nextClassDetail.namaKelas} ${nextClassDetail.tingkat}`,
+        );
+      const nextAcademicGradeEntries = mapTeacherAcademicGradesToEntries(
+        gradesPayload.data ?? {},
+        nextClassDetail.kelasId,
+        nextAcademicScheme,
+      );
       const nextNilaiRows = buildNilaiRows(
         nextClassDetail.participants,
         nextGradeEntries,
+        nextAcademicGradeEntries,
       );
 
       setRealClassDetail(nextClassDetail);
       setMaterials(nextMaterials);
       setTasks(nextTasks);
       setGradeEntries(nextGradeEntries);
+      setAcademicGradeEntries(nextAcademicGradeEntries);
       setNilaiRows(nextNilaiRows);
     } catch (error) {
       console.error("[detail-kelas-guru] load_class_detail_failed", {
@@ -1398,9 +1938,20 @@ export default function DetailKelasGuruSection({
     setMaterials([]);
     setTasks([]);
     setGradeEntries([]);
+    setAcademicGradeEntries([]);
     setNilaiRows([]);
     setSelectedStudentId("");
     setSelectedTaskForScore(null);
+    setIsTaskSubmissionDialogOpen(false);
+    setSelectedTaskForSubmissions(null);
+    setTaskSubmissionRows([]);
+    setSelectedSubmissionId("");
+    setSelectedSubmissionDetail(null);
+    setIsTaskSubmissionListLoading(false);
+    setIsTaskSubmissionDetailLoading(false);
+    setIsMeetingTargetEditing(false);
+    setIsSavingMeetingTarget(false);
+    setMeetingTargetDraft("");
 
     queueMicrotask(() => {
       void loadTeacherClassDetail();
@@ -1410,6 +1961,14 @@ export default function DetailKelasGuruSection({
   useEffect(() => {
     setSelectedStudentId(activeClass.participants[0]?.id ?? "");
   }, [activeClass.participants]);
+
+  useEffect(() => {
+    if (!isMeetingTargetEditing) {
+      setMeetingTargetDraft(
+        activeClass.totalPertemuan > 0 ? String(activeClass.totalPertemuan) : "",
+      );
+    }
+  }, [activeClass.totalPertemuan, isMeetingTargetEditing]);
 
   const tasksWithGradeStatus = useMemo(
     () => applyGradeStatusToTasks(tasks, activeClass.participants, gradeEntries),
@@ -1435,6 +1994,73 @@ export default function DetailKelasGuruSection({
     () => getProgressPercentage(materials.length, activeClass.totalPertemuan),
     [activeClass.totalPertemuan, materials.length],
   );
+  const taskSubmissionsWithLatestGrades = useMemo(
+    () =>
+      selectedTaskForSubmissions
+        ? applyLatestGradesToSubmissionList(
+            taskSubmissionRows,
+            gradeEntries,
+            selectedTaskForSubmissions.id,
+          )
+        : taskSubmissionRows,
+    [gradeEntries, selectedTaskForSubmissions, taskSubmissionRows],
+  );
+  const selectedTaskSubmissionDetail = useMemo(
+    () => applyLatestGradeToSubmissionDetail(selectedSubmissionDetail, gradeEntries),
+    [gradeEntries, selectedSubmissionDetail],
+  );
+
+  function openMeetingTargetEditor() {
+    setMeetingTargetDraft(
+      activeClass.totalPertemuan > 0 ? String(activeClass.totalPertemuan) : "",
+    );
+    setIsMeetingTargetEditing(true);
+  }
+
+  function cancelMeetingTargetEditor() {
+    setMeetingTargetDraft(
+      activeClass.totalPertemuan > 0 ? String(activeClass.totalPertemuan) : "",
+    );
+    setIsMeetingTargetEditing(false);
+  }
+
+  async function handleSaveMeetingTarget() {
+    const normalizedTarget = Number.parseInt(
+      normalizeText(meetingTargetDraft),
+      10,
+    );
+
+    if (!Number.isInteger(normalizedTarget) || normalizedTarget < 1) {
+      window.alert("Target total pertemuan wajib berupa angka bulat minimal 1.");
+      return;
+    }
+
+    try {
+      setIsSavingMeetingTarget(true);
+      const savedTargetMeetingCount = await saveMeetingTargetRequest(
+        normalizedTarget,
+      );
+
+      setRealClassDetail((current) =>
+        current
+          ? {
+              ...current,
+              totalPertemuan: savedTargetMeetingCount,
+            }
+          : current,
+      );
+      setMeetingTargetDraft(String(savedTargetMeetingCount));
+      setIsMeetingTargetEditing(false);
+    } catch (error) {
+      window.alert(
+        error instanceof Error
+          ? error.message
+          : "Target total pertemuan belum bisa disimpan.",
+      );
+    } finally {
+      setIsSavingMeetingTarget(false);
+    }
+  }
 
   function handleMateriDialogOpenChange(open: boolean) {
     setIsMateriDialogOpen(open);
@@ -1459,6 +2085,93 @@ export default function DetailKelasGuruSection({
     if (!open) {
       setSelectedTaskForScore(null);
       setNilaiDraft(null);
+    }
+  }
+
+  function handleTaskSubmissionDialogOpenChange(open: boolean) {
+    setIsTaskSubmissionDialogOpen(open);
+
+    if (!open) {
+      setSelectedTaskForSubmissions(null);
+      setTaskSubmissionRows([]);
+      setSelectedSubmissionId("");
+      setSelectedSubmissionDetail(null);
+      setIsTaskSubmissionListLoading(false);
+      setIsTaskSubmissionDetailLoading(false);
+    }
+  }
+
+  async function handleSelectTaskSubmission(
+    submissionId: string,
+    taskOverride?: TugasPertemuan | null,
+  ) {
+    const activeTask = taskOverride ?? selectedTaskForSubmissions;
+    const normalizedSubmissionId = normalizeText(submissionId);
+
+    if (!activeTask || !normalizedSubmissionId) {
+      return;
+    }
+
+    setSelectedSubmissionId(normalizedSubmissionId);
+    setIsTaskSubmissionDetailLoading(true);
+
+    try {
+      const submissionDetail = await loadTaskSubmissionDetailRequest(
+        activeTask,
+        normalizedSubmissionId,
+      );
+
+      setSelectedSubmissionDetail(submissionDetail);
+    } catch (error) {
+      window.alert(
+        error instanceof Error
+          ? error.message
+          : "Detail submission tugas belum bisa diambil.",
+      );
+    } finally {
+      setIsTaskSubmissionDetailLoading(false);
+    }
+  }
+
+  async function openTaskSubmissionDialog(task: TugasPertemuan) {
+    setSelectedTaskForSubmissions(task);
+    setTaskSubmissionRows([]);
+    setSelectedSubmissionId("");
+    setSelectedSubmissionDetail(null);
+    setIsTaskSubmissionDialogOpen(true);
+    setIsTaskSubmissionListLoading(true);
+    setIsTaskSubmissionDetailLoading(false);
+
+    try {
+      const { submissions, submittedCount } = await loadTaskSubmissionsRequest(task);
+      const normalizedTaskId = normalizeText(task.id);
+
+      setTaskSubmissionRows(submissions);
+      setTasks((current) =>
+        sortTasksByMeeting(
+          current.map((taskItem) =>
+            taskItem.id === normalizedTaskId
+              ? {
+                  ...taskItem,
+                  jumlahMengumpulkan: submittedCount,
+                }
+              : taskItem,
+          ),
+        ),
+      );
+
+      if (submissions[0]?.submissionId) {
+        void handleSelectTaskSubmission(submissions[0].submissionId, task);
+      }
+    } catch (error) {
+      window.alert(
+        error instanceof Error
+          ? error.message
+          : "Daftar submission tugas belum bisa diambil.",
+      );
+      handleTaskSubmissionDialogOpenChange(false);
+    } finally {
+      setIsTaskSubmissionListLoading(false);
     }
   }
 
@@ -1683,12 +2396,21 @@ export default function DetailKelasGuruSection({
     try {
       await deleteTaskRequest(taskId);
       setTasks((current) => current.filter((task) => task.id !== taskId));
+      if (normalizeText(selectedTaskForSubmissions?.id) === normalizeText(taskId)) {
+        handleTaskSubmissionDialogOpenChange(false);
+      }
       setGradeEntries((current) => {
         const nextGradeEntries = current.filter(
           (grade) => normalizeText(grade.taskId) !== normalizeText(taskId),
         );
 
-        setNilaiRows(buildNilaiRows(activeClass.participants, nextGradeEntries));
+        setNilaiRows(
+          buildNilaiRows(
+            activeClass.participants,
+            nextGradeEntries,
+            academicGradeEntries,
+          ),
+        );
         return nextGradeEntries;
       });
     } catch (error) {
@@ -1714,20 +2436,16 @@ export default function DetailKelasGuruSection({
   }
 
   function openNilaiDialogForStudent(studentId: string) {
-    if (!defaultTaskForScore) {
-      window.alert("Belum ada tugas kelas yang bisa dinilai.");
-      return;
-    }
-
     setNilaiMode("edit");
     setSelectedTaskForScore(defaultTaskForScore);
     setSelectedStudentId(studentId);
     setNilaiDraft(
       createNilaiDraft(
         studentId,
-        defaultTaskForScore.id,
+        defaultTaskForScore?.id ?? "",
         nilaiRows,
         gradeEntries,
+        academicGradeEntries,
       ),
     );
     setIsNilaiDialogOpen(true);
@@ -1745,7 +2463,13 @@ export default function DetailKelasGuruSection({
     setSelectedTaskForScore(task);
     setSelectedStudentId(nextStudentId);
     setNilaiDraft(
-      createNilaiDraft(nextStudentId, task.id, nilaiRows, gradeEntries),
+      createNilaiDraft(
+        nextStudentId,
+        task.id,
+        nilaiRows,
+        gradeEntries,
+        academicGradeEntries,
+      ),
     );
     setIsNilaiDialogOpen(true);
   }
@@ -1755,13 +2479,27 @@ export default function DetailKelasGuruSection({
 
     if (!nextTaskId) {
       setSelectedStudentId(studentId);
-      setNilaiDraft(createNilaiDraft(studentId, "", nilaiRows, gradeEntries));
+      setNilaiDraft(
+        createNilaiDraft(
+          studentId,
+          "",
+          nilaiRows,
+          gradeEntries,
+          academicGradeEntries,
+        ),
+      );
       return;
     }
 
     setSelectedStudentId(studentId);
     setNilaiDraft(
-      createNilaiDraft(studentId, nextTaskId, nilaiRows, gradeEntries),
+      createNilaiDraft(
+        studentId,
+        nextTaskId,
+        nilaiRows,
+        gradeEntries,
+        academicGradeEntries,
+      ),
     );
   }
 
@@ -1776,6 +2514,7 @@ export default function DetailKelasGuruSection({
         normalizeText(nextTask?.id),
         nilaiRows,
         gradeEntries,
+        academicGradeEntries,
       ),
     );
   }
@@ -1791,39 +2530,71 @@ export default function DetailKelasGuruSection({
             [field]:
               field === "studentId" || field === "note"
                 ? String(value)
-                : clampScore(Number(value)),
+                : field === "tugas"
+                  ? toNullableScore(value)
+                  : current[field],
+          }
+        : current,
+    );
+  }
+
+  function handleAcademicScoreChange(
+    field: AcademicScoreKey,
+    value: string | number,
+  ) {
+    setNilaiDraft((current) =>
+      current
+        ? {
+            ...current,
+            scores: {
+              ...current.scores,
+              [field]: toNullableScore(value),
+            },
           }
         : current,
     );
   }
 
   async function handleSaveNilai() {
-    if (!nilaiDraft || !selectedTaskForScore) {
+    if (!nilaiDraft) {
       return;
     }
 
     try {
-      const savedGrade = await saveGradeRequest(nilaiDraft, selectedTaskForScore);
-      const nextGradeEntries = (() => {
-        const otherGrades = gradeEntries.filter(
-          (grade) => grade.id !== savedGrade.id,
-        );
-
-        return [savedGrade, ...otherGrades];
-      })();
+      const [savedGrade, savedAcademicGrade] = await Promise.all([
+        selectedTaskForScore && nilaiDraft.tugas !== null
+          ? saveGradeRequest(nilaiDraft, selectedTaskForScore)
+          : Promise.resolve(null),
+        saveAcademicGradeRequest(nilaiDraft),
+      ]);
+      const nextGradeEntries = savedGrade
+        ? [
+            savedGrade,
+            ...gradeEntries.filter((grade) => grade.id !== savedGrade.id),
+          ]
+        : gradeEntries;
+      const otherAcademicGrades = academicGradeEntries.filter(
+        (grade) =>
+          normalizeText(grade.studentId) !== normalizeText(nilaiDraft.studentId),
+      );
+      const nextAcademicGradeEntries = savedAcademicGrade
+        ? [savedAcademicGrade, ...otherAcademicGrades]
+        : otherAcademicGrades;
       const nextNilaiRows = buildNilaiRows(
         activeClass.participants,
         nextGradeEntries,
+        nextAcademicGradeEntries,
       );
 
       setGradeEntries(nextGradeEntries);
+      setAcademicGradeEntries(nextAcademicGradeEntries);
       setNilaiRows(nextNilaiRows);
       setIsNilaiDialogOpen(false);
       setSelectedTaskForScore(null);
       setNilaiDraft(null);
     } catch (error) {
       window.alert(
-        error instanceof Error ? error.message : "Nilai tugas belum bisa disimpan.",
+        error instanceof Error ? error.message : "Nilai siswa belum bisa disimpan.",
       );
     }
   }
@@ -1860,6 +2631,7 @@ export default function DetailKelasGuruSection({
             onDelete={handleDeleteTugas}
             onEdit={openEditTugasDialog}
             onGradeNow={openNilaiDialogForTask}
+            onViewSubmissions={openTaskSubmissionDialog}
           />
         );
       case "belum-dinilai":
@@ -1876,6 +2648,7 @@ export default function DetailKelasGuruSection({
             participants={activeClass.participants}
             nilaiRows={nilaiRows}
             onEditNilai={openNilaiDialogForStudent}
+            scheme={academicScheme}
           />
         );
       default:
@@ -1961,6 +2734,10 @@ export default function DetailKelasGuruSection({
                     <SectionBadge className="border-white/25 bg-white/15 text-white/90">
                       {activeClass.tingkat}
                     </SectionBadge>
+                    <SectionBadge className="border-white/25 bg-white/15 text-white/90">
+                      <Building2 className="mr-1 h-3.5 w-3.5" />
+                      Cabang {activeClass.program}
+                    </SectionBadge>
                   </div>
 
                   <h1 className="mt-4 text-2xl font-bold tracking-tight md:text-3xl">
@@ -1971,6 +2748,25 @@ export default function DetailKelasGuruSection({
                     Peserta, absensi, materi, tugas, dan penilaian tugas siswa
                     sudah terhubung dengan backend kelas guru yang sedang login.
                   </p>
+
+                  <div className="mt-4 grid grid-cols-2 gap-2 text-sm sm:flex sm:flex-wrap sm:gap-2.5">
+                    <div className="flex min-h-10 items-center gap-2 border border-white/25 bg-white/12 px-3 py-2 text-white/90 backdrop-blur-sm">
+                      <Users className="h-4 w-4" />
+                      {activeClass.totalSiswa} siswa
+                    </div>
+                    <div className="flex min-h-10 items-center gap-2 border border-white/25 bg-white/12 px-3 py-2 text-white/90 backdrop-blur-sm">
+                      <Clock3 className="h-4 w-4" />
+                      Target {activeClass.totalPertemuan} sesi
+                    </div>
+                    <div className="col-span-2 flex min-h-10 items-center gap-2 border border-white/25 bg-white/12 px-3 py-2 text-white/90 backdrop-blur-sm">
+                      <CalendarDays className="h-4 w-4" />
+                      {activeClass.jadwal}
+                    </div>
+                    <div className="col-span-2 flex min-h-10 items-center gap-2 border border-white/25 bg-white/12 px-3 py-2 text-white/90 backdrop-blur-sm">
+                      <MapPin className="h-4 w-4" />
+                      {activeClass.ruangan}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
@@ -1980,7 +2776,10 @@ export default function DetailKelasGuruSection({
                     Status {activeClass.status}
                   </SectionBadge>
                   <SectionBadge className="border-white/25 bg-white/15 text-white/90">
-                    {materials.length}/{activeClass.totalPertemuan} sesi
+                    Target {activeClass.totalPertemuan} sesi
+                  </SectionBadge>
+                  <SectionBadge className="border-white/25 bg-white/15 text-white/90">
+                    Materi {materials.length}/{activeClass.totalPertemuan}
                   </SectionBadge>
                 </div>
               </div>
@@ -2004,7 +2803,7 @@ export default function DetailKelasGuruSection({
                 </div>
                 <div className="border border-white/20 bg-white/14 px-4 py-3 backdrop-blur-sm">
                   <p className="text-[11px] uppercase tracking-[0.2em] text-white/70">
-                    Program
+                    Cabang
                   </p>
                   <p className="mt-1 text-sm font-semibold text-white">
                     {activeClass.program}
@@ -2036,10 +2835,77 @@ export default function DetailKelasGuruSection({
                 </div>
                 <div className="border border-white/20 bg-white/14 px-4 py-3 backdrop-blur-sm">
                   <p className="text-[11px] uppercase tracking-[0.2em] text-white/70">
-                    Total Pertemuan
+                    Target Semester
                   </p>
                   <p className="mt-1 text-sm font-semibold text-white">
                     {activeClass.totalPertemuan} sesi
+                  </p>
+                  <div className="mt-3">
+                    {isMeetingTargetEditing ? (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <input
+                          inputMode="numeric"
+                          min={1}
+                          step={1}
+                          type="number"
+                          value={meetingTargetDraft}
+                          onChange={(event) =>
+                            setMeetingTargetDraft(event.target.value)
+                          }
+                          className="w-24 border border-white/25 bg-white/90 px-3 py-1.5 text-sm font-medium text-slate-800 outline-none transition focus:border-orange-200 focus:ring-2 focus:ring-orange-100"
+                        />
+                        <span className="text-xs font-medium text-white/80">
+                          sesi
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void handleSaveMeetingTarget();
+                          }}
+                          disabled={isSavingMeetingTarget}
+                          className="border border-white/20 bg-orange-400 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-orange-300 disabled:cursor-not-allowed disabled:opacity-70"
+                        >
+                          {isSavingMeetingTarget
+                            ? "Menyimpan..."
+                            : "Simpan Target"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={cancelMeetingTargetEditor}
+                          disabled={isSavingMeetingTarget}
+                          className="border border-white/25 bg-white/12 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-70"
+                        >
+                          Batal
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={openMeetingTargetEditor}
+                        className="border border-white/25 bg-white/12 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/20"
+                      >
+                        Ubah target
+                      </button>
+                    )}
+                  </div>
+                  <p className="mt-2 text-[11px] leading-5 text-white/70">
+                    Target default {DEFAULT_SEMESTER_MEETING_TARGET} pertemuan.
+                  </p>
+                </div>
+                <div className="border border-white/20 bg-white/14 px-4 py-3 backdrop-blur-sm">
+                  <p className="text-[11px] uppercase tracking-[0.2em] text-white/70">
+                    Pertemuan selesai
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-white">
+                    {activeClass.pertemuanSelesai} sesi
+                  </p>
+                </div>
+                <div className="border border-white/20 bg-white/14 px-4 py-3 backdrop-blur-sm">
+                  <p className="text-[11px] uppercase tracking-[0.2em] text-white/70">
+                    Sisa pertemuan
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-white">
+                    {Math.max(0, activeClass.totalPertemuan - activeClass.pertemuanSelesai)} sesi
                   </p>
                 </div>
                 <div className="border border-white/20 bg-white/14 px-4 py-3 backdrop-blur-sm">
@@ -2047,7 +2913,7 @@ export default function DetailKelasGuruSection({
                     Progress
                   </p>
                   <p className="mt-1 text-sm font-semibold text-white">
-                    {progressPercentage}% selesai
+                    {activeClass.pertemuanSelesai}/{activeClass.totalPertemuan}
                   </p>
                 </div>
               </div>
@@ -2124,9 +2990,25 @@ export default function DetailKelasGuruSection({
         selectedAttachmentName={tugasAttachmentFile?.name}
       />
 
+      <TaskSubmissionReviewDialog
+        kelasName={activeClass.namaKelas}
+        isDetailLoading={isTaskSubmissionDetailLoading}
+        isListLoading={isTaskSubmissionListLoading}
+        onOpenChange={handleTaskSubmissionDialogOpenChange}
+        onSelectSubmission={(submissionId) => {
+          void handleSelectTaskSubmission(submissionId);
+        }}
+        open={isTaskSubmissionDialogOpen}
+        selectedSubmissionId={selectedSubmissionId}
+        submissionDetail={selectedTaskSubmissionDetail}
+        submissions={taskSubmissionsWithLatestGrades}
+        task={selectedTaskForSubmissions}
+      />
+
       <NilaiFormDialog
         draft={nilaiDraft}
         mode={nilaiMode}
+        onAcademicScoreChange={handleAcademicScoreChange}
         onChange={handleNilaiDraftChange}
         onOpenChange={handleNilaiDialogOpenChange}
         onStudentChange={handleSelectedStudentChange}
@@ -2137,6 +3019,7 @@ export default function DetailKelasGuruSection({
         selectedStudentId={selectedStudentId}
         selectedTask={selectedTaskForScore}
         tasks={tasksWithGradeStatus}
+        scheme={academicScheme}
       />
     </div>
   );

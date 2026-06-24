@@ -158,9 +158,14 @@ export function createInitialNilai(activeClass: ClassDetailData): NilaiSiswa[] {
   return activeClass.participants.map((student) => ({
     studentId: student.id,
     tugas: student.scores.tugas,
-    kuis: student.scores.kuis,
-    uts: student.scores.uts,
-    uas: student.scores.uas,
+    scores: {
+      uts: student.scores.uts,
+      uas: student.scores.uas,
+      tryout1: null,
+      tryout2: null,
+      tryout3: null,
+    },
+    note: "",
   }));
 }
 
@@ -192,17 +197,22 @@ export function createEmptyTugas(
     deskripsi: "",
     deadline: "",
     jumlahMengumpulkan: 0,
-    statusPenilaian: "Belum Dinilai",
+    statusPenilaian: "Belum Ada Pengumpulan",
   };
 }
 
 export function createEmptyNilai(studentId: string): NilaiSiswa {
   return {
     studentId,
-    tugas: 0,
-    kuis: 0,
-    uts: 0,
-    uas: 0,
+    tugas: null,
+    scores: {
+      uts: null,
+      uas: null,
+      tryout1: null,
+      tryout2: null,
+      tryout3: null,
+    },
+    note: "",
   };
 }
 

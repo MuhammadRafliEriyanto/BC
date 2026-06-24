@@ -1,0 +1,216 @@
+{
+  "schemaVersion": "1.0.0",
+  "questionSetId": "TO2-SMP9-BIND",
+  "assessmentType": "Tryout",
+  "stage": 2,
+  "className": "SMP 9",
+  "grade": 9,
+  "phase": "Fase D",
+  "subject": "Bahasa Indonesia",
+  "questionCount": 10,
+  "suggestedDurationMinutes": 60,
+  "reviewStatus": "Perlu Review Guru",
+  "curriculumNote": "Draft orisinal berbasis kompetensi umum Kurikulum Merdeka; cocokkan kembali dengan ATP dan materi yang telah diajarkan di cabang.",
+  "questions": [
+    {
+      "questionId": "TO2-SMP9-BIND-001",
+      "number": 1,
+      "competency": "Gagasan utama",
+      "topic": "Gagasan utama",
+      "indicator": "Menentukan gagasan utama teks informatif",
+      "cognitiveLevel": "C2",
+      "difficulty": "Mudah",
+      "question": "Bacalah teks \"Transportasi Umum\" berikut.\nPemerintah kota menambah jadwal bus pada jam berangkat sekolah. Perubahan itu membuat waktu tunggu pelajar lebih singkat. Namun, halte di beberapa wilayah belum memiliki atap yang memadai. Pemerintah perlu memperbaiki fasilitas halte agar penggunaan bus semakin nyaman.\nGagasan utama teks tersebut adalah ...",
+      "options": {
+        "A": "Masalah dalam teks tidak memiliki hubungan dengan pembaca.",
+        "B": "Peningkatan layanan bus perlu disertai perbaikan fasilitas halte.",
+        "C": "Seluruh kegiatan harus dihentikan.",
+        "D": "Teks hanya berisi daftar nama orang."
+      },
+      "correctAnswer": "B",
+      "explanation": "Gagasan tersebut merangkum seluruh uraian, yaitu peningkatan layanan bus perlu disertai perbaikan fasilitas halte.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO2-SMP9-BIND-002",
+      "number": 2,
+      "competency": "Informasi tersurat",
+      "topic": "Informasi tersurat",
+      "indicator": "Menemukan informasi yang dinyatakan langsung",
+      "cognitiveLevel": "C2",
+      "difficulty": "Mudah",
+      "question": "Pernyataan yang sesuai dengan isi teks adalah ...",
+      "options": {
+        "A": "Jadwal bus ditambah pada jam berangkat sekolah.",
+        "B": "Kegiatan dalam teks tidak pernah dilakukan.",
+        "C": "Seluruh data dalam teks berasal dari perkiraan tanpa pengamatan.",
+        "D": "Teks menyatakan bahwa tidak ada manfaat yang diperoleh."
+      },
+      "correctAnswer": "A",
+      "explanation": "Pernyataan itu disebutkan secara langsung dalam teks.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO2-SMP9-BIND-003",
+      "number": 3,
+      "competency": "Inferensi",
+      "topic": "Inferensi",
+      "indicator": "Menyimpulkan informasi tersirat secara logis",
+      "cognitiveLevel": "C3",
+      "difficulty": "Mudah",
+      "question": "Simpulan tersirat yang paling logis adalah ...",
+      "options": {
+        "A": "Penulis menolak semua bentuk perubahan.",
+        "B": "Masalah akan selesai tanpa tindakan apa pun.",
+        "C": "Tokoh dalam teks tidak mempertimbangkan bukti.",
+        "D": "Kenyamanan dapat memengaruhi minat menggunakan bus."
+      },
+      "correctAnswer": "D",
+      "explanation": "Simpulan tersebut didukung oleh hubungan sebab-akibat dalam teks.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO2-SMP9-BIND-004",
+      "number": 4,
+      "competency": "Makna kata",
+      "topic": "Makna kata",
+      "indicator": "Menentukan makna kata berdasarkan konteks",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Makna kata \"memadai\" pada teks adalah ...",
+      "options": {
+        "A": "nama tempat yang tidak dikenal",
+        "B": "tindakan yang selalu merugikan",
+        "C": "cukup dan sesuai kebutuhan",
+        "D": "kegiatan yang tidak memiliki tujuan"
+      },
+      "correctAnswer": "C",
+      "explanation": "Dalam konteks kalimat, \"memadai\" berarti cukup dan sesuai kebutuhan.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO2-SMP9-BIND-005",
+      "number": 5,
+      "competency": "Tujuan teks",
+      "topic": "Tujuan teks",
+      "indicator": "Mengidentifikasi tujuan komunikatif penulis",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Tujuan penulis menyajikan teks tersebut adalah ...",
+      "options": {
+        "A": "memberikan petunjuk memasak",
+        "B": "menilai layanan bus dan mengusulkan perbaikannya",
+        "C": "menghibur pembaca dengan cerita fantasi",
+        "D": "mengiklankan barang tanpa menjelaskan manfaat"
+      },
+      "correctAnswer": "B",
+      "explanation": "Isi dan cara penyajian teks menunjukkan tujuan untuk menilai layanan bus dan mengusulkan perbaikannya.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO2-SMP9-BIND-006",
+      "number": 6,
+      "competency": "Kalimat efektif",
+      "topic": "Kalimat efektif",
+      "indicator": "Memilih kalimat yang hemat dan logis",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Kalimat yang paling efektif adalah ...",
+      "options": {
+        "A": "Siswa memeriksa sumber informasi sebelum membagikannya.",
+        "B": "Para siswa-siswa memeriksa sumber informasi terlebih dahulu sebelumnya.",
+        "C": "Sumber informasi diperiksa oleh siswa agar supaya dapat dibagikan.",
+        "D": "Siswa mereka memeriksa daripada sumber informasi."
+      },
+      "correctAnswer": "A",
+      "explanation": "Kalimat \"Siswa memeriksa sumber informasi sebelum membagikannya\" hemat, memiliki subjek-predikat jelas, dan tidak mengandung kata mubazir.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO2-SMP9-BIND-007",
+      "number": 7,
+      "competency": "Konjungsi",
+      "topic": "Konjungsi",
+      "indicator": "Memilih konjungsi yang sesuai hubungan makna",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Kegiatan itu memerlukan biaya awal yang besar, ... manfaat jangka panjangnya tetap perlu dipertimbangkan.",
+      "options": {
+        "A": "karena",
+        "B": "sehingga",
+        "C": "setelah",
+        "D": "tetapi"
+      },
+      "correctAnswer": "D",
+      "explanation": "Konjungsi \"tetapi\" menyatakan pertentangan antara biaya awal dan manfaat jangka panjang.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO2-SMP9-BIND-008",
+      "number": 8,
+      "competency": "Ejaan",
+      "topic": "Ejaan",
+      "indicator": "Menerapkan huruf kapital dan tanda baca",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sedang",
+      "question": "Penulisan kalimat yang sesuai kaidah adalah ...",
+      "options": {
+        "A": "Pada jum'at, Siswa mengunjungi perpustakaan daerah tegal.",
+        "B": "Pada Jumat siswa, mengunjungi Perpustakaan daerah Tegal.",
+        "C": "Pada Jumat, siswa mengunjungi Perpustakaan Daerah Tegal.",
+        "D": "pada Jumat siswa mengunjungi perpustakaan daerah Tegal"
+      },
+      "correctAnswer": "C",
+      "explanation": "Kalimat \"Pada Jumat, siswa mengunjungi Perpustakaan Daerah Tegal\" menggunakan huruf kapital dan tanda baca secara tepat.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO2-SMP9-BIND-009",
+      "number": 9,
+      "competency": "Ringkasan",
+      "topic": "Ringkasan",
+      "indicator": "Menilai ringkasan yang mewakili isi teks",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sulit",
+      "question": "Ringkasan yang paling tepat untuk teks tersebut adalah ...",
+      "options": {
+        "A": "Teks membahas hal yang sama sekali berbeda dari judul.",
+        "B": "Peningkatan layanan bus perlu disertai perbaikan fasilitas halte.",
+        "C": "Jadwal bus ditambah pada jam berangkat sekolah.",
+        "D": "Kata \"memadai\" memiliki arti tertentu."
+      },
+      "correctAnswer": "B",
+      "explanation": "Ringkasan harus memuat inti teks, bukan hanya satu rincian.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "TO2-SMP9-BIND-010",
+      "number": 10,
+      "competency": "Evaluasi argumen",
+      "topic": "Evaluasi argumen",
+      "indicator": "Menentukan bukti yang paling relevan untuk memperkuat gagasan",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sulit",
+      "question": "Bukti yang paling tepat untuk memperkuat gagasan utama teks adalah ...",
+      "options": {
+        "A": "data hasil pengamatan sebelum dan sesudah tindakan",
+        "B": "pendapat anonim tanpa alasan",
+        "C": "gambar yang tidak berkaitan dengan topik",
+        "D": "dugaan yang tidak dapat diperiksa"
+      },
+      "correctAnswer": "A",
+      "explanation": "Data perbandingan sebelum dan sesudah tindakan paling relevan untuk menunjukkan dampak.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    }
+  ]
+}

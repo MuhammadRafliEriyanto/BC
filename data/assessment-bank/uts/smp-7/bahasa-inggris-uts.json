@@ -1,0 +1,216 @@
+{
+  "schemaVersion": "1.0.0",
+  "questionSetId": "UTS-SMP7-BING",
+  "assessmentType": "UTS",
+  "stage": null,
+  "className": "SMP 7",
+  "grade": 7,
+  "phase": "Fase D",
+  "subject": "Bahasa Inggris",
+  "questionCount": 10,
+  "suggestedDurationMinutes": 60,
+  "reviewStatus": "Perlu Review Guru",
+  "curriculumNote": "Draft orisinal berbasis kompetensi umum Kurikulum Merdeka; cocokkan kembali dengan ATP dan materi yang telah diajarkan di cabang.",
+  "questions": [
+    {
+      "questionId": "UTS-SMP7-BING-001",
+      "number": 1,
+      "competency": "Comprehending written texts",
+      "topic": "Reading comprehension",
+      "indicator": "Identifying the main idea of a short text",
+      "cognitiveLevel": "C2",
+      "difficulty": "Mudah",
+      "question": "Read the text \"Public Transport\". Arman began taking the bus to school three weeks ago. He checks the schedule before leaving home and arrives at the stop ten minutes early. The trip takes longer than riding a motorcycle, but it reduces fuel use.\nWhat is the main idea of the text?",
+      "options": {
+        "A": "An invitation to cancel an activity",
+        "B": "Arman uses the bus in a planned way",
+        "C": "A list of objects owned by Arman",
+        "D": "A problem that has no solution"
+      },
+      "correctAnswer": "B",
+      "explanation": "The entire paragraph focuses on arman uses the bus in a planned way.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UTS-SMP7-BING-002",
+      "number": 2,
+      "competency": "Comprehending written texts",
+      "topic": "Explicit information",
+      "indicator": "Locating stated information",
+      "cognitiveLevel": "C2",
+      "difficulty": "Mudah",
+      "question": "According to the text, when does the activity happen?",
+      "options": {
+        "A": "before leaving home",
+        "B": "only at midnight",
+        "C": "once every ten years",
+        "D": "after the activity is cancelled"
+      },
+      "correctAnswer": "A",
+      "explanation": "The text explicitly states: before leaving home.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UTS-SMP7-BING-003",
+      "number": 3,
+      "competency": "Language features",
+      "topic": "Vocabulary",
+      "indicator": "Inferring word meaning from context",
+      "cognitiveLevel": "C3",
+      "difficulty": "Mudah",
+      "question": "The word \"schedule\" is closest in meaning to ...",
+      "options": {
+        "A": "something that is never used",
+        "B": "a place that cannot be entered",
+        "C": "an action done without a reason",
+        "D": "a plan showing times of events"
+      },
+      "correctAnswer": "D",
+      "explanation": "In the paragraph, \"schedule\" means a plan showing times of events.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UTS-SMP7-BING-004",
+      "number": 4,
+      "competency": "Language features",
+      "topic": "Reference",
+      "indicator": "Identifying a pronoun reference",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "In the sentence \"The activity helps achieve the goal,\" the reference is most closely related to ...",
+      "options": {
+        "A": "the reader's family",
+        "B": "a cancelled plan",
+        "C": "the bus",
+        "D": "an unrelated visitor"
+      },
+      "correctAnswer": "C",
+      "explanation": "The reference points back to the bus.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UTS-SMP7-BING-005",
+      "number": 5,
+      "competency": "Grammar in context",
+      "topic": "Simple present",
+      "indicator": "Using the correct verb form for a habitual action",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Arman ... the plan carefully every week.",
+      "options": {
+        "A": "reviewing",
+        "B": "reviews",
+        "C": "review",
+        "D": "reviewed"
+      },
+      "correctAnswer": "B",
+      "explanation": "A singular subject in a habitual action takes the simple-present form \"reviews\".",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UTS-SMP7-BING-006",
+      "number": 6,
+      "competency": "Grammar in context",
+      "topic": "Simple past",
+      "indicator": "Using the correct verb for a completed event",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Last week, the group ... a similar activity.",
+      "options": {
+        "A": "conducted",
+        "B": "conducts",
+        "C": "conduct",
+        "D": "conducting"
+      },
+      "correctAnswer": "A",
+      "explanation": "\"Last week\" signals the simple past, so the correct verb is \"conducted\".",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UTS-SMP7-BING-007",
+      "number": 7,
+      "competency": "Interpreting functional texts",
+      "topic": "Functional text",
+      "indicator": "Interpreting a notice",
+      "cognitiveLevel": "C3",
+      "difficulty": "Sedang",
+      "question": "Notice: \"Please complete the activity log before leaving.\" What should participants do?",
+      "options": {
+        "A": "Leave without recording anything",
+        "B": "Take the log home permanently",
+        "C": "Wait until next month to read it",
+        "D": "Fill in the log before they leave"
+      },
+      "correctAnswer": "D",
+      "explanation": "The notice asks participants to complete the log before leaving.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UTS-SMP7-BING-008",
+      "number": 8,
+      "competency": "Comprehending written texts",
+      "topic": "Inference",
+      "indicator": "Drawing a logical inference from a text",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sedang",
+      "question": "Why is the action in the text useful?",
+      "options": {
+        "A": "because it prevents anyone from learning",
+        "B": "because it makes the activity impossible",
+        "C": "to reduce fuel use",
+        "D": "because it removes every rule"
+      },
+      "correctAnswer": "C",
+      "explanation": "The benefit can be inferred from the stated purpose: to reduce fuel use.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UTS-SMP7-BING-009",
+      "number": 9,
+      "competency": "Comprehending written texts",
+      "topic": "Text purpose",
+      "indicator": "Identifying communicative purpose",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sulit",
+      "question": "The writer's main purpose is to ...",
+      "options": {
+        "A": "forbid all school activities",
+        "B": "inform readers about an activity and its benefit",
+        "C": "sell an unrelated luxury product",
+        "D": "describe a fictional monster"
+      },
+      "correctAnswer": "B",
+      "explanation": "The paragraph informs readers about the activity and explains its benefit.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    },
+    {
+      "questionId": "UTS-SMP7-BING-010",
+      "number": 10,
+      "competency": "Interpersonal communication",
+      "topic": "Response",
+      "indicator": "Selecting an appropriate response in a discussion",
+      "cognitiveLevel": "C4",
+      "difficulty": "Sulit",
+      "question": "A friend says, \"We will present our findings tomorrow.\" What is the best response?",
+      "options": {
+        "A": "Great. Let's check the evidence once more.",
+        "B": "I never listen to any findings.",
+        "C": "Tomorrow happened last year.",
+        "D": "The evidence should be hidden."
+      },
+      "correctAnswer": "A",
+      "explanation": "\"Great. Let's check the evidence once more\" is relevant, polite, and supports preparation.",
+      "reviewStatus": "Perlu Review Guru",
+      "reviewerNotes": ""
+    }
+  ]
+}

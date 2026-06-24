@@ -22,6 +22,7 @@ import {
 } from "react";
 
 import { requestAdminApi } from "@/lib/admin-api";
+import { fetchAdminPaymentActivations } from "@/lib/admin-payments";
 import {
   defaultAdminDashboardConfig,
   type AdminDashboardConfigData,
@@ -68,6 +69,7 @@ import {
   type AdminColumnDefinition,
 } from "./components/AdminDataTable";
 import { AdminPaginationFooter } from "./components/AdminPaginationFooter";
+import { AdminSummaryLineSkeleton } from "./components/AdminLoadingState";
 import { AdminSectionCard } from "./components/AdminSectionCard";
 import { AdminStatusBadge } from "./components/AdminStatusBadge";
 
@@ -121,6 +123,8 @@ type StudentActionFeedback = {
   tone: "success" | "warning";
   message: string;
 };
+
+type StudentMembershipStatus = "Sudah Membership" | "Belum Membership";
 
 type StudentLevelFilterOption = AdminStudent["level"] | "Semua";
 type StudentStatusFilterOption = AdminStudent["status"] | "Semua";
@@ -187,7 +191,7 @@ function normalizePhone(value: string) {
 
 function normalizeClassNameInput(value: string) {
   const cleanedValue = value.trim().toUpperCase().replace(/\s+/g, " ");
-  const gradeMatch = cleanedValue.match(/\b(4|5|6|7|8|9|10|11|12)\b/);
+  const gradeMatch = cleanedValue.match(/\b(2|3|4|5|6|7|8|9|10|11|12)\b/);
 
   if (!gradeMatch) {
     return null;
@@ -196,7 +200,7 @@ function normalizeClassNameInput(value: string) {
   const grade = Number(gradeMatch[1]);
 
   if (cleanedValue.includes("SD")) {
-    return grade >= 4 && grade <= 6 ? `SD ${grade}` : null;
+    return grade >= 2 && grade <= 6 ? `SD ${grade}` : null;
   }
 
   if (cleanedValue.includes("SMP")) {
@@ -207,7 +211,7 @@ function normalizeClassNameInput(value: string) {
     return grade >= 10 && grade <= 12 ? `SMA ${grade}` : null;
   }
 
-  if (grade >= 4 && grade <= 6) {
+  if (grade >= 2 && grade <= 6) {
     return `SD ${grade}`;
   }
 
@@ -270,6 +274,10 @@ function formatBirthDateForDisplay(birthDate: string) {
   return `${day}/${month}/${year}`;
 }
 
+function normalizeStudentMembershipId(value: string | null | undefined) {
+  return value?.trim() ?? "";
+}
+
 function toStudentFormValues(student: AdminStudent): StudentFormValues {
   return {
     name: student.name,
@@ -330,11 +338,13 @@ function DetailItem({ label, value }: { label: string; value: string }) {
 
 function StudentActions({
   student,
+  membershipStatus,
   onEdit,
   onDelete,
   onToggleStatus,
 }: {
   student: AdminStudent;
+  membershipStatus: StudentMembershipStatus;
   onEdit: (student: AdminStudent) => void;
   onDelete: (student: AdminStudent) => void;
   onToggleStatus: (student: AdminStudent) => void;
@@ -390,6 +400,7 @@ function StudentActions({
               <DetailItem label="Program" value={student.program} />
               <DetailItem label="Jenjang" value={student.level} />
               <DetailItem label="Kelas" value={student.className} />
+              <DetailItem label="Membership" value={membershipStatus} />
               <DetailItem
                 label="Tanggal lahir"
                 value={formatBirthDateForDisplay(student.birthDate)}
@@ -399,6 +410,12 @@ function StudentActions({
 
             <div className="flex flex-wrap items-center gap-3">
               <AdminStatusBadge status={student.status} />
+              <AdminStatusBadge
+                status={membershipStatus}
+                tone={
+                  membershipStatus === "Sudah Membership" ? "success" : "warning"
+                }
+              />
             </div>
           </div>
         </SheetContent>
@@ -504,6 +521,11 @@ export function AdminStudents({
   const [pageLimit, setPageLimit] = useState(20);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [studentsWithMembershipIds, setStudentsWithMembershipIds] = useState<
+    string[]
+  >([]);
+  const [membershipLoading, setMembershipLoading] = useState(true);
+  const [membershipError, setMembershipError] = useState<string | null>(null);
   const [summary, setSummary] = useState<AdminStudentsSummary>({
     totalItems: 0,
     activeCount: 0,
@@ -613,14 +635,56 @@ export function AdminStudents({
     [classFilter, combinedSearchQuery, levelFilter, page, pageLimit, statusFilter],
   );
 
+  const loadMembershipCoverage = useCallback(async () => {
+    setMembershipLoading(true);
+    setMembershipError(null);
+
+    try {
+      const knownStudentIds = new Set<string>();
+      let nextPage = 1;
+      let totalPagesCount = 1;
+
+      do {
+        const result = await fetchAdminPaymentActivations({
+          page: nextPage,
+          limit: 100,
+        });
+
+        result.items.forEach((item) => {
+          const normalizedStudentId = normalizeStudentMembershipId(item.studentId);
+
+          if (normalizedStudentId) {
+            knownStudentIds.add(normalizedStudentId);
+          }
+        });
+
+        totalPagesCount = Math.max(result.pagination.totalPages, 1);
+        nextPage += 1;
+      } while (nextPage <= totalPagesCount);
+
+      setStudentsWithMembershipIds([...knownStudentIds]);
+      setMembershipError(null);
+    } catch (requestError) {
+      setStudentsWithMembershipIds([]);
+      setMembershipError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Gagal memuat status membership siswa.",
+      );
+    } finally {
+      setMembershipLoading(false);
+    }
+  }, []);
+
   const refreshStudentViews = useCallback(
     async (nextPage: number = page) => {
       await Promise.allSettled([
         refreshStudents(nextPage),
+        loadMembershipCoverage(),
         Promise.resolve(onRefresh?.()),
       ]);
     },
-    [onRefresh, page, refreshStudents],
+    [loadMembershipCoverage, onRefresh, page, refreshStudents],
   );
 
   useEffect(() => {
@@ -644,6 +708,16 @@ export function AdminStudents({
     };
   }, [page, refreshStudents, requestKey]);
 
+  useEffect(() => {
+    const timerId = window.setTimeout(() => {
+      void loadMembershipCoverage();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timerId);
+    };
+  }, [loadMembershipCoverage]);
+
   const resolvedBranchOptions = useMemo(() => {
     const currentBranch = formValues.branch.trim();
 
@@ -661,14 +735,34 @@ export function AdminStudents({
       ? []
       : (classOptionsByLevel[levelFilter as AdminStudent["level"]] ?? []);
   const filteredStudents = students;
+  const studentMembershipIdSet = useMemo(
+    () =>
+      new Set(
+        studentsWithMembershipIds.map((studentId) =>
+          normalizeStudentMembershipId(studentId),
+        ),
+      ),
+    [studentsWithMembershipIds],
+  );
+
+  function getStudentMembershipStatus(student: AdminStudent): StudentMembershipStatus {
+    return studentMembershipIdSet.has(normalizeStudentMembershipId(student.id))
+      ? "Sudah Membership"
+      : "Belum Membership";
+  }
 
   const activeStudents = summary.activeCount;
   const inactiveStudents = summary.inactiveCount;
+  const filteredStudentsWithMembershipCount = filteredStudents.filter(
+    (student) => getStudentMembershipStatus(student) === "Sudah Membership",
+  ).length;
+  const filteredStudentsWithoutMembershipCount =
+    filteredStudents.length - filteredStudentsWithMembershipCount;
   const isEditing = editingStudentId !== null;
   const generatedPasswordPreview =
     buildGeneratedPasswordFromBirthDate(formValues.birthDate) || "-";
   const studentNumberMap = new Map(
-    filteredStudents.map((student, index) => [student.id, index + 1]),
+    filteredStudents.map((student, index) => [student.id, (page - 1) * pageLimit + index + 1]),
   );
 
   const openCreateDialog = () => {
@@ -1038,6 +1132,20 @@ export function AdminStudents({
       cell: (student) => student.className,
     },
     {
+      key: "membershipStatus",
+      header: "Membership",
+      cell: (student) => {
+        const membershipStatus = getStudentMembershipStatus(student);
+
+        return (
+          <AdminStatusBadge
+            status={membershipStatus}
+            tone={membershipStatus === "Sudah Membership" ? "success" : "warning"}
+          />
+        );
+      },
+    },
+    {
       key: "birthDate",
       header: "Tanggal Lahir",
       cell: (student) => formatBirthDateForDisplay(student.birthDate),
@@ -1062,6 +1170,7 @@ export function AdminStudents({
       cell: (student) => (
         <StudentActions
           student={student}
+          membershipStatus={getStudentMembershipStatus(student)}
           onEdit={openEditDialog}
           onDelete={setStudentToDelete}
           onToggleStatus={handleToggleStatus}
@@ -1107,6 +1216,9 @@ export function AdminStudents({
           </div>
         }
       >
+        {isLoading || membershipLoading ? (
+          <AdminSummaryLineSkeleton className="mb-4" badges={5} />
+        ) : (
         <div className="mb-4 flex flex-wrap items-center gap-2 text-sm text-slate-500">
           <span>
             Menampilkan {filteredStudents.length} dari {totalItems} siswa.
@@ -1120,7 +1232,14 @@ export function AdminStudents({
           <Badge variant="secondary" className="bg-slate-100 text-slate-700">
             Kelas {summary.classCount}
           </Badge>
+          <Badge variant="secondary" className="bg-emerald-50 text-emerald-700">
+            Sudah membership {filteredStudentsWithMembershipCount}
+          </Badge>
+          <Badge variant="secondary" className="bg-amber-50 text-amber-700">
+            Belum membership {filteredStudentsWithoutMembershipCount}
+          </Badge>
         </div>
+        )}
 
         {importResult ? (
           <div
@@ -1164,6 +1283,12 @@ export function AdminStudents({
           </div>
         ) : null}
 
+        {membershipError ? (
+          <div className="mb-4 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            {membershipError}
+          </div>
+        ) : null}
+
         {actionFeedback ? (
           <div
             className={`mb-4 rounded-xl border px-4 py-3 text-sm ${
@@ -1173,12 +1298,6 @@ export function AdminStudents({
             }`}
           >
             {actionFeedback.message}
-          </div>
-        ) : null}
-
-        {isLoading ? (
-          <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-            Menyinkronkan data siswa terbaru dari server...
           </div>
         ) : null}
 
@@ -1276,13 +1395,14 @@ export function AdminStudents({
           keyExtractor={(student) => student.id}
           emptyTitle="Tidak ada siswa yang cocok"
           emptyDescription="Coba ubah kata kunci pencarian atau kombinasi filter."
+          isLoading={isLoading || membershipLoading}
           square
           getRowClassName={(student) =>
             student.status === "Nonaktif"
               ? "bg-slate-50/70 hover:bg-slate-100/70"
               : undefined
           }
-          minWidthClassName="min-w-[1340px]"
+          minWidthClassName="min-w-[1480px]"
         />
         <div className="mt-4">
           <AdminPaginationFooter
@@ -1312,7 +1432,7 @@ export function AdminStudents({
         }}
       >
         <DialogContent
-          className={`max-h-[85vh] overflow-y-auto sm:max-w-3xl ${warmOverlayPanelClassName}`}
+          className={`sm:max-w-5xl ${warmOverlayPanelClassName}`}
         >
           <DialogHeader>
             <DialogTitle>
@@ -1324,8 +1444,8 @@ export function AdminStudents({
             </DialogDescription>
           </DialogHeader>
 
-          <form className="space-y-5" onSubmit={handleSubmit}>
-            <div className="grid gap-4 sm:grid-cols-2">
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
               <StudentField label="Nama">
                 <Input
                   className={warmFieldClassName}

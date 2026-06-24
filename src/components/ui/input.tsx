@@ -3,7 +3,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
-  ({ className, type, ...props }, ref) => {
+  ({ className, type, suppressHydrationWarning, ...props }, ref) => {
     return (
       <input
         type={type}
@@ -12,6 +12,8 @@ const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLI
           className,
         )}
         ref={ref}
+        // Browser extensions can inject attributes into form fields before React hydrates.
+        suppressHydrationWarning={suppressHydrationWarning ?? true}
         {...props}
       />
     );

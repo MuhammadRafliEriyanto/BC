@@ -1,4 +1,6 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useEffect, useState, type ReactNode } from "react";
 
 import Image from "next/image";
 import { Poppins } from "next/font/google";
@@ -28,9 +30,16 @@ type AuthShellProps = {
   description: string;
   children: ReactNode;
   footer?: ReactNode;
-  variant?: "default" | "showcase" | "immersive" | "compact";
+  variant?: "default" | "showcase" | "immersive" | "compact" | "split";
+  image?: string;
   panelClassName?: string;
   bodyClassName?: string;
+  splitContentAlignment?: "center" | "start";
+  hideSplitVisualOnMobile?: boolean;
+  hideSplitTopBadge?: boolean;
+  splitContentClassName?: string;
+  splitInnerClassName?: string;
+  allowDesktopScroll?: boolean;
 };
 
 const authHighlights = [
@@ -51,6 +60,102 @@ const authHighlights = [
   },
 ];
 
+const splitRotatingMessages = [
+  "Satu portal login untuk owner, admin, guru, dan siswa dalam satu pengalaman yang tetap rapi.",
+  "Setiap role masuk lewat halaman yang sama lalu diarahkan otomatis ke dashboard yang sesuai.",
+  "Kelas, jadwal, progres, dan pengelolaan belajar bisa diakses lebih cepat oleh seluruh pengguna.",
+] as const;
+
+function SplitLearningIllustration() {
+  return (
+    <div className="relative mx-auto w-full max-w-[500px]">
+      <div className="absolute left-5 top-4 h-20 w-20 rounded-full bg-white/12 blur-2xl" />
+      <div className="absolute bottom-2 right-6 h-28 w-28 rounded-full bg-red-950/18 blur-3xl" />
+
+      <div className="relative overflow-hidden rounded-[34px] border border-white/18 bg-white/10 p-3 shadow-[0_34px_80px_-48px_rgba(67,20,7,0.72)] backdrop-blur-xl sm:p-4">
+        <svg
+          viewBox="0 0 640 430"
+          className="mx-auto w-full max-w-[430px]"
+          role="img"
+          aria-label="Ilustrasi siswa dan pengajar sedang belajar bersama"
+        >
+          <defs>
+            <linearGradient id="boardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fff7ed" />
+              <stop offset="100%" stopColor="#ffedd5" />
+            </linearGradient>
+            <linearGradient id="deskGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </linearGradient>
+            <linearGradient id="cardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.98" />
+              <stop offset="100%" stopColor="#fffbeb" stopOpacity="0.94" />
+            </linearGradient>
+          </defs>
+
+          <rect x="30" y="54" width="580" height="322" rx="42" fill="url(#cardGradient)" />
+          <rect x="78" y="92" width="176" height="112" rx="28" fill="url(#boardGradient)" />
+          <rect x="98" y="118" width="104" height="14" rx="7" fill="#fdba74" />
+          <rect x="98" y="144" width="132" height="12" rx="6" fill="#fed7aa" />
+          <rect x="98" y="166" width="82" height="12" rx="6" fill="#fde68a" />
+
+          <rect x="382" y="88" width="162" height="52" rx="20" fill="#fff7ed" />
+          <circle cx="418" cy="114" r="18" fill="#fb923c" />
+          <rect x="447" y="102" width="71" height="10" rx="5" fill="#fdba74" />
+          <rect x="447" y="119" width="52" height="8" rx="4" fill="#fed7aa" />
+
+          <rect x="136" y="246" width="368" height="28" rx="14" fill="url(#deskGradient)" />
+          <rect x="166" y="274" width="18" height="76" rx="9" fill="#7c2d12" />
+          <rect x="452" y="274" width="18" height="76" rx="9" fill="#7c2d12" />
+
+          <ellipse cx="220" cy="207" rx="44" ry="48" fill="#f8b36e" />
+          <path d="M180 208c6-38 22-62 56-62 26 0 43 16 47 40-19-7-31-24-46-24-20 0-34 15-41 46z" fill="#2f1c14" />
+          <path d="M187 255c18-24 38-34 65-34 30 0 48 8 63 30l-21 57h-85z" fill="#2563eb" />
+          <rect x="236" y="221" width="14" height="30" rx="7" fill="#f8b36e" />
+          <path d="M199 259c-28 11-45 37-51 70h40c5-22 16-41 29-57z" fill="#1d4ed8" />
+          <path d="M284 259c28 11 46 37 51 70h-39c-6-23-17-42-30-57z" fill="#1d4ed8" />
+          <rect x="197" y="328" width="24" height="17" rx="8.5" fill="#1f2937" />
+          <rect x="288" y="328" width="24" height="17" rx="8.5" fill="#1f2937" />
+
+          <ellipse cx="418" cy="197" rx="42" ry="46" fill="#f6b18a" />
+          <path d="M382 197c3-34 23-56 51-56 28 0 45 16 49 39-15-10-25-18-45-18-23 0-36 13-46 35z" fill="#3f2a24" />
+          <path d="M384 245c17-23 35-32 59-32 27 0 46 10 60 31l-19 60h-81z" fill="#ec4899" />
+          <rect x="423" y="213" width="14" height="29" rx="7" fill="#f6b18a" />
+          <path d="M392 253c-25 10-42 35-46 66h37c6-20 16-38 28-52z" fill="#db2777" />
+          <path d="M490 254c22 12 38 33 44 61h-37c-7-20-17-36-30-50z" fill="#db2777" />
+          <rect x="395" y="317" width="24" height="17" rx="8.5" fill="#1f2937" />
+          <rect x="483" y="317" width="24" height="17" rx="8.5" fill="#1f2937" />
+          <path d="M466 226l38-10 7 19-40 12z" fill="#f8b36e" />
+          <rect x="503" y="199" width="10" height="40" rx="5" transform="rotate(28 503 199)" fill="#facc15" />
+
+          <ellipse cx="320" cy="167" rx="37" ry="40" fill="#f4c29c" />
+          <path d="M290 165c2-28 18-48 42-48 25 0 41 17 44 38-14-6-23-13-38-13-19 0-31 8-48 23z" fill="#42271d" />
+          <path d="M284 205c16-19 31-28 55-28 25 0 39 6 53 21l-15 48h-79z" fill="#f59e0b" />
+          <rect x="321" y="177" width="12" height="28" rx="6" fill="#f4c29c" />
+          <path d="M276 213c-18 8-34 20-49 37l35 17c11-16 25-28 39-36z" fill="#d97706" />
+          <path d="M381 214c17 8 31 18 45 34l-32 17c-10-14-22-25-35-33z" fill="#d97706" />
+          <rect x="297" y="224" width="49" height="31" rx="12" fill="#1f2937" />
+          <rect x="303" y="230" width="37" height="21" rx="8" fill="#334155" />
+
+          <rect x="132" y="218" width="78" height="14" rx="7" fill="#ffffff" fillOpacity="0.75" />
+          <rect x="431" y="226" width="84" height="14" rx="7" fill="#ffffff" fillOpacity="0.72" />
+          <rect x="298" y="92" width="46" height="46" rx="18" fill="#fff7ed" />
+          <path d="M320 104l7 14 15 2-11 11 3 15-14-8-14 8 3-15-11-11 15-2 7-14z" fill="#fb923c" />
+
+          <rect x="92" y="302" width="72" height="22" rx="11" fill="#ffffff" fillOpacity="0.84" />
+          <circle cx="112" cy="313" r="6" fill="#fb923c" />
+          <rect x="124" y="308" width="24" height="10" rx="5" fill="#fdba74" />
+
+          <rect x="496" y="286" width="84" height="22" rx="11" fill="#ffffff" fillOpacity="0.84" />
+          <circle cx="518" cy="297" r="6" fill="#f97316" />
+          <rect x="530" y="292" width="28" height="10" rx="5" fill="#fed7aa" />
+        </svg>
+      </div>
+    </div>
+  );
+}
+
 export function AuthShell({
   eyebrow,
   title,
@@ -58,9 +163,243 @@ export function AuthShell({
   children,
   footer,
   variant = "default",
+  image,
   panelClassName,
   bodyClassName,
+  splitContentAlignment = "center",
+  hideSplitVisualOnMobile = false,
+  hideSplitTopBadge = false,
+  splitContentClassName,
+  splitInnerClassName,
+  allowDesktopScroll = false,
 }: AuthShellProps) {
+  const [activeSplitMessage, setActiveSplitMessage] = useState(0);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setActiveSplitMessage((current) => (current + 1) % splitRotatingMessages.length);
+    }, 3500);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    if (variant !== "split" || allowDesktopScroll) {
+      return;
+    }
+
+    const htmlElement = document.documentElement;
+    const bodyElement = document.body;
+    const previousHtmlOverflow = htmlElement.style.overflow;
+    const previousBodyOverflow = bodyElement.style.overflow;
+    const mediaQuery = window.matchMedia("(min-width: 1024px)");
+
+    const syncDesktopScrollLock = () => {
+      if (mediaQuery.matches) {
+        htmlElement.style.overflow = "hidden";
+        bodyElement.style.overflow = "hidden";
+      } else {
+        htmlElement.style.overflow = previousHtmlOverflow;
+        bodyElement.style.overflow = previousBodyOverflow;
+      }
+    };
+
+    syncDesktopScrollLock();
+    mediaQuery.addEventListener("change", syncDesktopScrollLock);
+
+    return () => {
+      mediaQuery.removeEventListener("change", syncDesktopScrollLock);
+      htmlElement.style.overflow = previousHtmlOverflow;
+      bodyElement.style.overflow = previousBodyOverflow;
+    };
+  }, [variant]);
+
+  if (variant === "split") {
+    const useImageShowcase = Boolean(image);
+    const enableMobileFormOnly = hideSplitVisualOnMobile;
+    const shouldShowMobileSplitBrand = !hideSplitVisualOnMobile;
+    const shouldShowSplitTopRow = shouldShowMobileSplitBrand || !hideSplitTopBadge;
+
+    return (
+      <main
+        className={cn(
+          authPoppins.className,
+          "min-h-screen bg-white w-full",
+          allowDesktopScroll
+            ? "lg:min-h-screen"
+            : "lg:fixed lg:inset-0 lg:h-dvh lg:min-h-0 lg:overflow-hidden",
+          enableMobileFormOnly && !allowDesktopScroll ? "overflow-x-hidden" : (!allowDesktopScroll && "overflow-hidden"),
+        )}
+      >
+        <section
+          className={cn(
+            "grid min-h-screen w-full bg-white lg:grid-cols-[1.02fr_0.98fr]",
+            allowDesktopScroll
+              ? "lg:min-h-screen"
+              : "lg:h-full lg:min-h-0 lg:overflow-hidden",
+            enableMobileFormOnly && !allowDesktopScroll ? "overflow-visible" : (!allowDesktopScroll && "overflow-hidden"),
+            panelClassName,
+          )}
+        >
+          <div
+            className={cn(
+              "order-2 relative min-h-[320px] overflow-hidden",
+              allowDesktopScroll
+                ? "lg:sticky lg:top-0 lg:h-screen"
+                : "lg:order-1 lg:h-full lg:min-h-0",
+              hideSplitVisualOnMobile && "hidden lg:block",
+            )}
+          >
+            {useImageShowcase ? (
+              <>
+                <Image
+                  src={image!}
+                  alt=""
+                  fill
+                  sizes="(min-width: 1024px) 52vw, 100vw"
+                  fetchPriority="high"
+                  className="scale-[1.02] object-cover object-center"
+                />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02)_0%,rgba(124,45,18,0.08)_24%,rgba(67,20,7,0.52)_100%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(251,146,60,0.22),transparent_34%)]" />
+              </>
+            ) : (
+              <>
+                <div className="absolute inset-0 bg-[linear-gradient(160deg,#7c2d12_0%,#c2410c_28%,#ea580c_58%,#fb923c_100%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.24),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(127,29,29,0.24),transparent_28%)]" />
+                <div className="absolute inset-0 opacity-[0.12] [background-image:linear-gradient(rgba(255,255,255,0.9)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.9)_1px,transparent_1px)] [background-size:28px_28px]" />
+                <div className="absolute left-10 top-16 size-32 rounded-full bg-white/10 blur-3xl" />
+                <div className="absolute bottom-10 right-12 size-40 rounded-full bg-red-900/20 blur-3xl" />
+              </>
+            )}
+
+            <div className="relative flex h-full flex-col p-5 sm:p-7 lg:p-9 xl:p-10">
+              <div className="max-w-xl text-white">
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-white/78 sm:text-base">
+                  Bina Cendekia
+                </p>
+              </div>
+
+              {!useImageShowcase ? (
+                <div className="mt-5 flex justify-center py-2 lg:mt-7">
+                  <SplitLearningIllustration />
+                </div>
+              ) : null}
+
+              <div className="mt-5 max-w-xl text-white lg:mt-6">
+                <p className="min-h-[84px] max-w-lg text-sm leading-7 text-white/82 transition-all duration-300 sm:min-h-[96px] sm:text-base">
+                  {splitRotatingMessages[activeSplitMessage]}
+                </p>
+                <div className="mt-4 flex items-center gap-3">
+                  {splitRotatingMessages.map((message, index) => (
+                    <button
+                      key={message}
+                      type="button"
+                      onClick={() => setActiveSplitMessage(index)}
+                      className={cn(
+                        "rounded-full transition-all duration-300",
+                        index === activeSplitMessage
+                          ? "h-1.5 w-11 bg-white"
+                          : "size-1.5 bg-white/45 hover:bg-white/70",
+                      )}
+                      aria-label={`Tampilkan pesan ${index + 1}`}
+                      aria-pressed={index === activeSplitMessage}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            className={cn(
+              "order-1 flex min-h-full flex-col bg-[linear-gradient(180deg,#fffaf6_0%,#fff7ef_100%)] lg:order-2 lg:grid",
+              allowDesktopScroll
+                ? "lg:min-h-screen lg:grid-rows-[auto,minmax(0,1fr)]"
+                : "lg:h-full lg:min-h-0 lg:grid-rows-[auto,minmax(0,1fr)] lg:overflow-hidden",
+              enableMobileFormOnly && "min-h-screen",
+            )}
+          >
+            {shouldShowSplitTopRow ? (
+              <div
+                className={cn(
+                  "flex shrink-0 items-center px-5 pt-5 sm:px-7 sm:pt-7 lg:justify-end lg:px-10 lg:pt-8",
+                  shouldShowMobileSplitBrand ? "justify-between" : "justify-end",
+                )}
+              >
+                {shouldShowMobileSplitBrand ? (
+                <div className="inline-flex w-fit items-center gap-3 rounded-full bg-white px-4 py-3 text-slate-900 shadow-[0_20px_34px_-28px_rgba(124,45,18,0.18)] lg:hidden">
+                  <div className="flex size-10 items-center justify-center rounded-full bg-[linear-gradient(135deg,#ea580c_0%,#dc2626_100%)] text-white">
+                    <FaGraduationCap className="size-[18px]" />
+                  </div>
+                  <div className="leading-none">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-400">
+                      Portal Belajar
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-slate-900">Bina Cendekia</p>
+                  </div>
+                </div>
+              ) : null}
+
+                {!hideSplitTopBadge ? (
+                  <div className="inline-flex items-center rounded-full bg-[linear-gradient(135deg,#ea580c_0%,#dc2626_100%)] px-5 py-2 text-xs font-semibold text-white shadow-[0_18px_32px_-24px_rgba(220,38,38,0.42)]">
+                    Sign in
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
+            <div
+              className={cn(
+                "min-h-0 px-5 pb-8 sm:px-7 lg:px-12 lg:pb-10",
+                allowDesktopScroll
+                  ? "lg:overflow-visible lg:h-auto"
+                  : "lg:h-full lg:overflow-y-auto lg:overscroll-contain",
+                enableMobileFormOnly && !allowDesktopScroll ? "overflow-visible" : (!allowDesktopScroll && "h-full overflow-y-auto overscroll-contain"),
+                splitContentAlignment === "start"
+                  ? cn("pt-4", shouldShowSplitTopRow ? "lg:pt-2" : "lg:pt-6")
+                  : cn(
+                      "pt-6",
+                      enableMobileFormOnly
+                        ? "lg:flex lg:min-h-full lg:items-center lg:pt-4"
+                        : "flex min-h-full items-center lg:pt-4",
+                    ),
+                splitContentClassName,
+              )}
+            >
+              <div
+                className={cn(
+                  "mx-auto w-full",
+                  splitContentAlignment === "start" ? "max-w-[520px]" : "max-w-[430px]",
+                  splitInnerClassName,
+                )}
+              >
+                <div
+                  className={cn(
+                    splitContentAlignment === "start"
+                      ? "mb-5 sm:mb-6 lg:mb-7"
+                      : "mb-7 sm:mb-8 lg:mb-9",
+                  )}
+                >
+                  <h1 className="text-[1.78rem] leading-[1.08] font-semibold tracking-[-0.045em] text-slate-950 sm:text-[2.1rem] lg:text-[2.35rem]">
+                    {title}
+                  </h1>
+                  <p className="mt-2.5 max-w-md text-[14px] leading-6 text-slate-500 sm:mt-3 sm:text-[15px] sm:leading-7">
+                    {description}
+                  </p>
+                </div>
+
+                <div className={cn(bodyClassName)}>{children}</div>
+
+                {footer ? <div className="mt-8">{footer}</div> : null}
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
   if (variant === "immersive") {
     return (
       <main className="relative min-h-screen overflow-hidden bg-slate-950">

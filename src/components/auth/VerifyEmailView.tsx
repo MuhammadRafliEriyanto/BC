@@ -8,6 +8,7 @@ import { CheckCircle2, LoaderCircle, MailWarning } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/button";
 import { AuthRequestError, authService } from "@/lib/auth";
+import { cn } from "@/lib/utils";
 
 type VerifyState = "loading" | "success" | "expired" | "invalid" | "error";
 
@@ -16,8 +17,8 @@ export function VerifyEmailView({ token }: { token: string | null }) {
   const [status, setStatus] = useState<VerifyState>(token ? "loading" : "error");
   const [message, setMessage] = useState(
     token
-      ? "Memverifikasi email Anda..."
-      : "Token verifikasi tidak ditemukan. Silakan cek kembali link pada email Anda.",
+      ? "Verifying your email address..."
+      : "Verification token not found. Please check the link in your email.",
   );
 
   useEffect(() => {
@@ -47,7 +48,7 @@ export function VerifyEmailView({ token }: { token: string | null }) {
         }
 
         setStatus("error");
-        setMessage("Verifikasi email gagal diproses. Silakan coba lagi.");
+        setMessage("Email verification failed to process. Please try again.");
       }
     }
 
@@ -59,75 +60,79 @@ export function VerifyEmailView({ token }: { token: string | null }) {
   const isRecoverable = status === "expired" || status === "invalid" || status === "error";
 
   const title = isLoading
-    ? "Memverifikasi Email"
+    ? "Verifying Email"
     : isSuccess
-      ? "Verifikasi Berhasil"
-      : status === "expired"
-        ? "Link Verifikasi Kedaluwarsa"
-        : status === "invalid"
-          ? "Link Verifikasi Tidak Valid"
-          : "Verifikasi Gagal";
+      ? "Account Verified"
+      : "Verification Failed";
 
   const description = isSuccess
-    ? "Email Anda sudah aktif. Silakan lanjut login untuk masuk ke sistem."
+    ? "Your email has been successfully verified. You can now access all features."
     : message;
-
-  const iconClassName = isSuccess
-    ? "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100"
-    : isRecoverable
-      ? "bg-rose-50 text-rose-600 ring-1 ring-rose-100"
-      : "bg-orange-50 text-orange-600 ring-1 ring-orange-100";
-
-  const footer = isSuccess ? (
-    <Link href="/login">
-      <Button
-        size="lg"
-        className="h-11 rounded-2xl bg-[linear-gradient(135deg,#ea580c_0%,#f59e0b_100%)] px-6 text-sm font-semibold text-white shadow-[0_18px_32px_-24px_rgba(249,115,22,0.55)] transition hover:brightness-[1.03]"
-      >
-        Silakan Login
-      </Button>
-    </Link>
-  ) : (
-    <div className="flex flex-wrap justify-center gap-3">
-      <Link href="/login">
-        <Button variant="secondary">Kembali ke login</Button>
-      </Link>
-      {isRecoverable ? (
-        <Link href="/register">
-          <Button variant="outline">Daftar ulang</Button>
-        </Link>
-      ) : null}
-    </div>
-  );
 
   return (
     <AuthShell
-      eyebrow="Verifikasi Email"
+      variant="split"
       title={title}
       description={description}
-      footer={footer}
-      variant="compact"
+      footer={
+        <div className="flex flex-col gap-4">
+          <Link href="/login" className="w-full">
+            <Button
+              className={cn(
+                "h-11 w-full rounded-lg font-semibold transition active:scale-[0.98]",
+                isSuccess
+                  ? "bg-orange-600 text-white hover:bg-orange-700 shadow-sm"
+                  : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50",
+              )}
+            >
+              {isSuccess ? "Go to Login" : "Back to Login"}
+            </Button>
+          </Link>
+          {isRecoverable ? (
+            <Link href="/register" className="w-full">
+              <Button
+                variant="ghost"
+                className="h-11 w-full rounded-lg text-slate-500 hover:text-slate-900"
+              >
+                Register again
+              </Button>
+            </Link>
+          ) : null}
+        </div>
+      }
     >
-      <div className="flex justify-center">
+      <div className="flex flex-col items-center justify-center space-y-8 py-4">
         <div
-          className={`flex size-[88px] items-center justify-center rounded-full ${iconClassName}`}
+          className={cn(
+            "relative flex size-24 items-center justify-center rounded-full transition-all duration-500",
+            isLoading
+              ? "bg-slate-50"
+              : isSuccess
+                ? "bg-emerald-50 text-emerald-600 scale-110"
+                : "bg-rose-50 text-rose-600",
+          )}
         >
           {isLoading ? (
-            <LoaderCircle className="size-10 animate-spin" />
+            <>
+              <div className="absolute inset-0 rounded-full border-2 border-slate-200 border-t-orange-500 animate-spin" />
+              <LoaderCircle className="size-10 text-slate-300 animate-pulse" />
+            </>
           ) : isSuccess ? (
-            <CheckCircle2 className="size-10" />
+            <CheckCircle2 className="size-12 animate-in zoom-in duration-300" />
           ) : (
-            <MailWarning className="size-10" />
+            <MailWarning className="size-12 animate-in zoom-in duration-300" />
           )}
         </div>
-      </div>
 
-      {isRecoverable ? (
-        <p className="mx-auto mt-5 max-w-md text-sm leading-7 text-slate-400">
-          Jika token sudah kedaluwarsa, Anda bisa registrasi ulang dengan email yang sama untuk
-          mendapatkan link verifikasi baru.
-        </p>
-      ) : null}
+        {isRecoverable && status === "expired" ? (
+          <div className="w-full rounded-lg bg-amber-50 border border-amber-100 p-4 text-sm leading-6 text-amber-800">
+            <p className="font-medium">Link expired?</p>
+            <p className="mt-1 opacity-90">
+              Verification links are only valid for a limited time. You can register again with the same email to get a new one.
+            </p>
+          </div>
+        ) : null}
+      </div>
     </AuthShell>
   );
 }

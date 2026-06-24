@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   CheckCircle2,
@@ -11,11 +13,40 @@ import {
 import { useStudentLearningData } from "../data/useStudentLearningData";
 import StudentLearningShell from "../learning/StudentLearningShell";
 
+function formatSubmissionTime(value: string | null | undefined) {
+  if (!value) {
+    return "waktu belum tersedia";
+  }
+
+  const submittedDate = new Date(value);
+
+  if (Number.isNaN(submittedDate.getTime())) {
+    return "waktu belum tersedia";
+  }
+
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Jakarta",
+  }).format(submittedDate);
+}
+
 function getTaskStatusClass(
-  status: "Belum Dikerjakan" | "Menunggu Dikirim" | "Sudah Dinilai",
+  status:
+    | "Belum Dikerjakan"
+    | "Menunggu Dikirim"
+    | "Sudah Dikirim"
+    | "Sudah Dinilai",
 ) {
   if (status === "Sudah Dinilai") {
     return "bg-emerald-50 text-emerald-700";
+  }
+
+  if (status === "Sudah Dikirim") {
+    return "bg-sky-50 text-sky-700";
   }
 
   if (status === "Menunggu Dikirim") {
@@ -149,6 +180,36 @@ export default function TugasSiswaPageView() {
                     <p className="mt-2 text-xs text-slate-400">
                       Deadline {task.deadline} | Estimasi {task.estimasi} | {task.poin}
                     </p>
+                    {task.mySubmission?.submittedAt ? (
+                      <p className="mt-1 text-xs text-sky-600">
+                        Sudah dikumpulkan pada{" "}
+                        {formatSubmissionTime(task.mySubmission.submittedAt)}
+                      </p>
+                    ) : null}
+                    {task.myGrade?.graded ? (
+                      <div className="mt-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-3">
+                        <div className="flex flex-wrap items-center gap-2 text-xs">
+                          <span className="rounded-full bg-white px-2.5 py-1 font-semibold text-emerald-700">
+                            Nilai {task.myGrade.score ?? "-"}
+                          </span>
+                          <span className="text-emerald-700">
+                            Dinilai{" "}
+                            {formatSubmissionTime(task.myGrade.gradedAt)}
+                          </span>
+                        </div>
+                        <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-700">
+                          Catatan Guru
+                        </p>
+                        <p className="mt-1 text-sm leading-6 text-slate-600">
+                          {task.myGrade.note ||
+                            "Guru belum menambahkan catatan untuk tugas ini."}
+                        </p>
+                      </div>
+                    ) : task.mySubmission?.submitted ? (
+                      <p className="mt-2 text-xs text-amber-700">
+                        Jawaban kamu sudah terkirim dan sedang menunggu penilaian guru.
+                      </p>
+                    ) : null}
                   </div>
 
                   <div className="flex flex-wrap gap-2">
@@ -170,7 +231,7 @@ export default function TugasSiswaPageView() {
                     </Link>
                     <Link
                       href={task.submitHref}
-                      className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-red-800 via-orange-600 to-amber-500 px-4 text-xs font-semibold text-white shadow-sm transition hover:-translate-y-px"
+                      className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-orange-600 px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-orange-700"
                     >
                       <Send className="h-3.5 w-3.5" />
                       Kirim Tugas
