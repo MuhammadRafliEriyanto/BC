@@ -482,7 +482,7 @@ export function SiswaUserProfileDialog({
         onOpenChange(nextOpen);
       }}
     >
-      <DialogContent className="max-h-[88vh] overflow-y-auto sm:max-w-2xl">
+      <DialogContent className="max-h-[88vh] overflow-y-auto sm:max-w-2xl [&::-webkit-scrollbar]:hidden">
         <DialogHeader>
           <DialogTitle>Profil Siswa</DialogTitle>
           <DialogDescription>
@@ -495,65 +495,33 @@ export function SiswaUserProfileDialog({
           <TabsList className="w-full justify-start">
             <TabsTrigger value="profile">Profil</TabsTrigger>
             <TabsTrigger value="password">Ubah Password</TabsTrigger>
-            <TabsTrigger value="forgot-password">Lupa Password</TabsTrigger>
+            
           </TabsList>
 
           <TabsContent value="profile" className="space-y-6">
-            <div className="rounded-[24px] border border-orange-100/80 bg-gradient-to-r from-orange-50/90 via-white to-amber-50/70 p-5 shadow-[0_20px_36px_-28px_rgba(249,115,22,0.18)]">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-4">
-                  <Avatar className="size-16 rounded-[24px]">
-                    {profileAvatarSrc ? (
-                      <AvatarImage
-                        src={profileAvatarSrc}
-                        alt={`Foto profil ${profileDisplayName}`}
-                      />
-                    ) : null}
-                    <AvatarFallback className="text-lg">
-                      {profileInitials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="text-lg font-semibold text-slate-950">
-                      {user?.nama ?? "Memuat profil siswa..."}
-                    </p>
-                    <p className="text-sm text-slate-500">
-                      {user?.email ?? "Sinkronisasi data user aktif"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="info">
-                    <ShieldCheck className="size-3.5" />
-                    {formatRoleLabel(user?.role ?? "siswa")}
-                  </Badge>
-                  {profileLabel ? (
-                    <Badge variant="warning">{profileLabel}</Badge>
+            <div className="rounded-[24px] border border-orange-100/80 bg-gradient-to-r from-orange-50/90 via-white to-amber-50/70 p-4 shadow-[0_20px_36px_-28px_rgba(249,115,22,0.18)]">
+              <div className="flex items-center gap-4">
+                <Avatar className="size-14 rounded-[24px]">
+                  {profileAvatarSrc ? (
+                    <AvatarImage
+                      src={profileAvatarSrc}
+                      alt={`Foto profil ${profileDisplayName}`}
+                    />
                   ) : null}
-                  <Badge
-                    variant={user?.isEmailVerified ? "success" : "warning"}
-                  >
-                    {user?.isEmailVerified
-                      ? "Email terverifikasi"
-                      : "Email belum terverifikasi"}
-                  </Badge>
+                  <AvatarFallback className="text-lg">
+                    {profileInitials}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-base font-semibold text-slate-950">
+                    {user?.nama ?? "Memuat profil siswa..."}
+                  </p>
                 </div>
               </div>
-
-              {updatedLabel ? (
-                <p className="mt-4 text-xs text-slate-500">
-                  Terakhir diperbarui {updatedLabel}
-                </p>
-              ) : null}
             </div>
 
             <NoticeBox variant="success" message={profileSuccess} />
             <NoticeBox variant="error" message={profileError} />
-            <NoticeBox
-              variant="info"
-              message="Field profil yang aktif saat ini mengikuti tabel users: nama, email, dan foto profil. Informasi kelas atau label siswa ditampilkan sebagai ringkasan akun."
-            />
 
             <form className="space-y-5" onSubmit={handleProfileSubmit}>
               <div className="rounded-[24px] border border-slate-200/80 bg-slate-50/70 p-4">
@@ -607,7 +575,7 @@ export function SiswaUserProfileDialog({
                 </div>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-1">
                 <div>
                   <label
                     htmlFor="siswa-profile-name"
@@ -631,63 +599,9 @@ export function SiswaUserProfileDialog({
                   <InputError message={profileFieldErrors.nama} />
                 </div>
 
-                <div>
-                  <label
-                    htmlFor="siswa-profile-email"
-                    className="text-sm font-medium text-slate-700"
-                  >
-                    Email
-                  </label>
-                  <Input
-                    id="siswa-profile-email"
-                    type="email"
-                    value={profileValues.email}
-                    onChange={(event) =>
-                      setProfileValues((current) => ({
-                        ...current,
-                        email: event.target.value,
-                      }))
-                    }
-                    placeholder="nama@email.com"
-                    className={`mt-2 ${warmFieldClassName}`}
-                    disabled={isUserLoading || isSubmittingProfile}
-                  />
-                  <InputError message={profileFieldErrors.email} />
-                </div>
+                
 
-                <div>
-                  <label
-                    htmlFor="siswa-profile-role"
-                    className="text-sm font-medium text-slate-700"
-                  >
-                    Role
-                  </label>
-                  <Input
-                    id="siswa-profile-role"
-                    value={formatRoleLabel(user?.role ?? "siswa")}
-                    className={`mt-2 ${warmFieldClassName}`}
-                    disabled
-                  />
-                </div>
 
-                <div>
-                  <label
-                    htmlFor="siswa-profile-status"
-                    className="text-sm font-medium text-slate-700"
-                  >
-                    Status verifikasi
-                  </label>
-                  <Input
-                    id="siswa-profile-status"
-                    value={
-                      user?.isEmailVerified
-                        ? "Email terverifikasi"
-                        : "Email belum terverifikasi"
-                    }
-                    className={`mt-2 ${warmFieldClassName}`}
-                    disabled
-                  />
-                </div>
               </div>
 
               <DialogFooter>
@@ -764,7 +678,7 @@ export function SiswaUserProfileDialog({
                 }
               />
 
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-1">
                 <PasswordField
                   id="siswa-new-password"
                   label="Password baru"
@@ -850,83 +764,7 @@ export function SiswaUserProfileDialog({
             </form>
           </TabsContent>
 
-          <TabsContent value="forgot-password" className="space-y-6">
-            <div className="rounded-[24px] border border-orange-100/80 bg-gradient-to-r from-orange-50/80 to-white p-5 shadow-[0_18px_30px_-24px_rgba(249,115,22,0.16)]">
-              <div className="flex items-start gap-3">
-                <div className="flex size-11 items-center justify-center rounded-2xl border border-orange-100 bg-white text-orange-600">
-                  <Mail className="size-5" />
-                </div>
-                <div>
-                  <p className="text-base font-semibold text-slate-950">
-                    Kirim instruksi reset password
-                  </p>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Masukkan email akun siswa. Jika email terdaftar, sistem akan
-                    mengirim instruksi reset password secara aman.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <NoticeBox variant="success" message={forgotSuccess} />
-            <NoticeBox variant="error" message={forgotError} />
-
-            <form className="space-y-5" onSubmit={handleForgotPasswordSubmit}>
-              <div>
-                <label
-                  htmlFor="siswa-forgot-password-email"
-                  className="text-sm font-medium text-slate-700"
-                >
-                  Email akun
-                </label>
-                <Input
-                  id="siswa-forgot-password-email"
-                  type="email"
-                  value={forgotEmail}
-                  onChange={(event) => setForgotEmail(event.target.value)}
-                  placeholder="nama@email.com"
-                  className={`mt-2 ${warmFieldClassName}`}
-                  disabled={isSubmittingForgotPassword}
-                />
-                <InputError message={forgotFieldErrors.email} />
-              </div>
-
-              <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 px-4 py-3 text-sm text-slate-500">
-                Gunakan flow ini saat siswa lupa password dan tidak bisa masuk
-                menggunakan password lama. Respons sukses akan tetap generik
-                untuk menjaga keamanan akun.
-              </div>
-
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className={warmOutlineButtonClassName}
-                  onClick={() => setActiveTab("password")}
-                >
-                  Kembali ke Password
-                </Button>
-                <Button
-                  type="submit"
-                  variant="secondary"
-                  className={warmPrimaryButtonClassName}
-                  disabled={isSubmittingForgotPassword}
-                >
-                  {isSubmittingForgotPassword ? (
-                    <>
-                      <LoaderCircle className="size-4 animate-spin" />
-                      Mengirim...
-                    </>
-                  ) : (
-                    <>
-                      <Mail className="size-4" />
-                      Kirim Instruksi
-                    </>
-                  )}
-                </Button>
-              </DialogFooter>
-            </form>
-          </TabsContent>
+          
         </Tabs>
       </DialogContent>
     </Dialog>

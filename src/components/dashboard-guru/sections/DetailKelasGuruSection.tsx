@@ -25,6 +25,7 @@ import {
   type ClassStatus,
   type ClassStudent,
   type PresenceStatus,
+  type ClassAttendanceSession,
   DEFAULT_SEMESTER_MEETING_TARGET,
 } from "@/components/dashboard-guru/data/guruClassData";
 import AbsensiPertemuanTable from "@/components/dashboard-guru/detail-kelas/AbsensiPertemuanTable";
@@ -1867,21 +1868,23 @@ export default function DetailKelasGuruSection({
       if (
         !detailResponse.ok ||
         !detailPayload?.success ||
-        !detailPayload.data?.class ||
-        !gradesResponse.ok ||
-        !gradesPayload?.success
+        !detailPayload.data?.class
       ) {
         console.error("[detail-kelas-guru] class_detail_request_failed", {
           detailStatus: detailResponse.status,
-          gradesStatus: gradesResponse.status,
-          message:
-            detailPayload?.message ??
-            gradesPayload?.message ??
-            "unknown_error",
           kelasId: normalizedClassId,
+          message: detailPayload?.message ?? "unknown_error",
         });
         setLoadError(DETAIL_CLASS_ERROR_MESSAGE);
         return;
+      }
+
+      if (!gradesResponse.ok || !gradesPayload?.success) {
+        console.warn("[detail-kelas-guru] grades_request_failed", {
+          gradesStatus: gradesResponse.status,
+          kelasId: normalizedClassId,
+          message: gradesPayload?.message ?? "unknown_error",
+        });
       }
 
       const nextClassDetail = mapTeacherDetailToClassData(
@@ -1897,16 +1900,16 @@ export default function DetailKelasGuruSection({
         nextClassDetail.kelasId,
       );
       const nextGradeEntries = mapTeacherGradesToEntries(
-        gradesPayload.data ?? {},
+        gradesPayload?.data ?? {},
         nextClassDetail.kelasId,
       );
       const nextAcademicScheme =
-        gradesPayload.data?.scheme ??
+        gradesPayload?.data?.scheme ??
         getAcademicGradeScheme(
           `${nextClassDetail.namaKelas} ${nextClassDetail.tingkat}`,
         );
       const nextAcademicGradeEntries = mapTeacherAcademicGradesToEntries(
-        gradesPayload.data ?? {},
+        gradesPayload?.data ?? {},
         nextClassDetail.kelasId,
         nextAcademicScheme,
       );
@@ -2715,26 +2718,24 @@ export default function DetailKelasGuruSection({
           </Link>
         </div>
 
-        <section className="overflow-hidden border border-orange-100 bg-white shadow-[0_28px_70px_-42px_rgba(15,23,42,0.35),0_18px_40px_-34px_rgba(249,115,22,0.28)]">
-          <div className="relative overflow-hidden bg-gradient-to-r from-orange-400 via-orange-500 to-amber-400 px-5 py-6 text-white md:px-7 md:py-7">
-            <div className="absolute -right-8 top-0 h-40 w-40 bg-white/10 blur-3xl" />
-            <div className="absolute bottom-0 left-1/3 h-28 w-28 bg-white/10 blur-2xl" />
+        <section className="overflow-hidden rounded-[24px] border border-slate-200/80 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-shadow hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
+          <div className="relative overflow-hidden bg-gradient-to-br from-orange-50/80 via-white to-amber-50/40 px-5 py-6 text-slate-900 md:px-7 md:py-7">
 
             <div className="relative flex flex-col gap-5">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="max-w-4xl">
                   <div className="flex flex-wrap items-center gap-2">
-                    <div className="inline-flex items-center gap-2 border border-white/25 bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/90">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-slate-200/60 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-600 shadow-sm">
                       <School className="h-3.5 w-3.5" />
                       Detail Kelas Guru
                     </div>
-                    <SectionBadge className="border-white/25 bg-white/15 text-white/90">
+                    <SectionBadge className="rounded-full bg-orange-50 text-orange-700 border border-orange-100/60">
                       {activeClass.jenjang}
                     </SectionBadge>
-                    <SectionBadge className="border-white/25 bg-white/15 text-white/90">
+                    <SectionBadge className="rounded-full bg-orange-50 text-orange-700 border border-orange-100/60">
                       {activeClass.tingkat}
                     </SectionBadge>
-                    <SectionBadge className="border-white/25 bg-white/15 text-white/90">
+                    <SectionBadge className="rounded-full bg-orange-50 text-orange-700 border border-orange-100/60">
                       <Building2 className="mr-1 h-3.5 w-3.5" />
                       Cabang {activeClass.program}
                     </SectionBadge>
@@ -2744,25 +2745,66 @@ export default function DetailKelasGuruSection({
                     {activeClass.namaKelas}
                   </h1>
 
-                  <p className="mt-2 max-w-2xl text-sm text-white/90 md:text-base">
+                  <p className="mt-2 max-w-2xl text-sm text-slate-500 md:text-base">
                     Peserta, absensi, materi, tugas, dan penilaian tugas siswa
                     sudah terhubung dengan backend kelas guru yang sedang login.
                   </p>
 
                   <div className="mt-4 grid grid-cols-2 gap-2 text-sm sm:flex sm:flex-wrap sm:gap-2.5">
-                    <div className="flex min-h-10 items-center gap-2 border border-white/25 bg-white/12 px-3 py-2 text-white/90 backdrop-blur-sm">
+                    <div className="flex min-h-10 items-center gap-2 rounded-xl border border-orange-100/60 bg-white px-3 py-2 text-slate-700 shadow-sm">
                       <Users className="h-4 w-4" />
                       {activeClass.totalSiswa} siswa
                     </div>
-                    <div className="flex min-h-10 items-center gap-2 border border-white/25 bg-white/12 px-3 py-2 text-white/90 backdrop-blur-sm">
+                    <div className="flex min-h-10 flex-wrap items-center gap-2 rounded-xl border border-orange-100/60 bg-white px-3 py-2 text-slate-700 shadow-sm">
                       <Clock3 className="h-4 w-4" />
-                      Target {activeClass.totalPertemuan} sesi
+                      {isMeetingTargetEditing ? (
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            inputMode="numeric"
+                            min={1}
+                            step={1}
+                            type="number"
+                            value={meetingTargetDraft}
+                            onChange={(event) =>
+                              setMeetingTargetDraft(event.target.value)
+                            }
+                            className="w-16 rounded-md border border-slate-300 px-2 py-1 text-xs outline-none transition focus:border-slate-400 focus:ring-1 focus:ring-slate-200"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => void handleSaveMeetingTarget()}
+                            disabled={isSavingMeetingTarget}
+                            className="rounded bg-orange-500 px-2 py-1 text-[10px] font-semibold text-white hover:bg-orange-600 disabled:opacity-70"
+                          >
+                            Simpan
+                          </button>
+                          <button
+                            type="button"
+                            onClick={cancelMeetingTargetEditor}
+                            disabled={isSavingMeetingTarget}
+                            className="rounded bg-slate-100 px-2 py-1 text-[10px] font-semibold text-slate-600 hover:bg-slate-200"
+                          >
+                            Batal
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          Target {activeClass.totalPertemuan} sesi
+                          <button
+                            type="button"
+                            onClick={openMeetingTargetEditor}
+                            className="ml-1 rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 transition hover:bg-slate-200"
+                          >
+                            Ubah
+                          </button>
+                        </>
+                      )}
                     </div>
-                    <div className="col-span-2 flex min-h-10 items-center gap-2 border border-white/25 bg-white/12 px-3 py-2 text-white/90 backdrop-blur-sm">
+                    <div className="col-span-2 flex min-h-10 items-center gap-2 rounded-xl border border-orange-100/60 bg-white px-3 py-2 text-slate-700 shadow-sm">
                       <CalendarDays className="h-4 w-4" />
                       {activeClass.jadwal}
                     </div>
-                    <div className="col-span-2 flex min-h-10 items-center gap-2 border border-white/25 bg-white/12 px-3 py-2 text-white/90 backdrop-blur-sm">
+                    <div className="col-span-2 flex min-h-10 items-center gap-2 rounded-xl border border-orange-100/60 bg-white px-3 py-2 text-slate-700 shadow-sm">
                       <MapPin className="h-4 w-4" />
                       {activeClass.ruangan}
                     </div>
@@ -2771,156 +2813,22 @@ export default function DetailKelasGuruSection({
 
                 <div className="flex flex-wrap items-center gap-2">
                   <SectionBadge
-                    className={`${getClassStatusClass(activeClass.status)} bg-white/95`}
+                    className={`${getClassStatusClass(activeClass.status)}`}
                   >
                     Status {activeClass.status}
                   </SectionBadge>
-                  <SectionBadge className="border-white/25 bg-white/15 text-white/90">
+                  <SectionBadge className="rounded-full bg-orange-50 text-orange-700 border border-orange-100/60">
                     Target {activeClass.totalPertemuan} sesi
                   </SectionBadge>
-                  <SectionBadge className="border-white/25 bg-white/15 text-white/90">
+                  <SectionBadge className="rounded-full bg-orange-50 text-orange-700 border border-orange-100/60">
                     Materi {materials.length}/{activeClass.totalPertemuan}
                   </SectionBadge>
                 </div>
               </div>
 
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                <div className="border border-white/20 bg-white/14 px-4 py-3 backdrop-blur-sm">
-                  <p className="text-[11px] uppercase tracking-[0.2em] text-white/70">
-                    Mapel
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-white">
-                    {activeClass.mapel}
-                  </p>
-                </div>
-                <div className="border border-white/20 bg-white/14 px-4 py-3 backdrop-blur-sm">
-                  <p className="text-[11px] uppercase tracking-[0.2em] text-white/70">
-                    Guru
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-white">
-                    {activeClass.guru}
-                  </p>
-                </div>
-                <div className="border border-white/20 bg-white/14 px-4 py-3 backdrop-blur-sm">
-                  <p className="text-[11px] uppercase tracking-[0.2em] text-white/70">
-                    Cabang
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-white">
-                    {activeClass.program}
-                  </p>
-                </div>
-                <div className="border border-white/20 bg-white/14 px-4 py-3 backdrop-blur-sm">
-                  <p className="text-[11px] uppercase tracking-[0.2em] text-white/70">
-                    Ruangan
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-white">
-                    {activeClass.ruangan}
-                  </p>
-                </div>
-                <div className="border border-white/20 bg-white/14 px-4 py-3 backdrop-blur-sm">
-                  <p className="text-[11px] uppercase tracking-[0.2em] text-white/70">
-                    Jadwal
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-white">
-                    {activeClass.jadwal}
-                  </p>
-                </div>
-                <div className="border border-white/20 bg-white/14 px-4 py-3 backdrop-blur-sm">
-                  <p className="text-[11px] uppercase tracking-[0.2em] text-white/70">
-                    Jumlah Siswa
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-white">
-                    {activeClass.totalSiswa} siswa
-                  </p>
-                </div>
-                <div className="border border-white/20 bg-white/14 px-4 py-3 backdrop-blur-sm">
-                  <p className="text-[11px] uppercase tracking-[0.2em] text-white/70">
-                    Target Semester
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-white">
-                    {activeClass.totalPertemuan} sesi
-                  </p>
-                  <div className="mt-3">
-                    {isMeetingTargetEditing ? (
-                      <div className="flex flex-wrap items-center gap-2">
-                        <input
-                          inputMode="numeric"
-                          min={1}
-                          step={1}
-                          type="number"
-                          value={meetingTargetDraft}
-                          onChange={(event) =>
-                            setMeetingTargetDraft(event.target.value)
-                          }
-                          className="w-24 border border-white/25 bg-white/90 px-3 py-1.5 text-sm font-medium text-slate-800 outline-none transition focus:border-orange-200 focus:ring-2 focus:ring-orange-100"
-                        />
-                        <span className="text-xs font-medium text-white/80">
-                          sesi
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            void handleSaveMeetingTarget();
-                          }}
-                          disabled={isSavingMeetingTarget}
-                          className="border border-white/20 bg-orange-400 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-orange-300 disabled:cursor-not-allowed disabled:opacity-70"
-                        >
-                          {isSavingMeetingTarget
-                            ? "Menyimpan..."
-                            : "Simpan Target"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={cancelMeetingTargetEditor}
-                          disabled={isSavingMeetingTarget}
-                          className="border border-white/25 bg-white/12 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-70"
-                        >
-                          Batal
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={openMeetingTargetEditor}
-                        className="border border-white/25 bg-white/12 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/20"
-                      >
-                        Ubah target
-                      </button>
-                    )}
-                  </div>
-                  <p className="mt-2 text-[11px] leading-5 text-white/70">
-                    Target default {DEFAULT_SEMESTER_MEETING_TARGET} pertemuan.
-                  </p>
-                </div>
-                <div className="border border-white/20 bg-white/14 px-4 py-3 backdrop-blur-sm">
-                  <p className="text-[11px] uppercase tracking-[0.2em] text-white/70">
-                    Pertemuan selesai
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-white">
-                    {activeClass.pertemuanSelesai} sesi
-                  </p>
-                </div>
-                <div className="border border-white/20 bg-white/14 px-4 py-3 backdrop-blur-sm">
-                  <p className="text-[11px] uppercase tracking-[0.2em] text-white/70">
-                    Sisa pertemuan
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-white">
-                    {Math.max(0, activeClass.totalPertemuan - activeClass.pertemuanSelesai)} sesi
-                  </p>
-                </div>
-                <div className="border border-white/20 bg-white/14 px-4 py-3 backdrop-blur-sm">
-                  <p className="text-[11px] uppercase tracking-[0.2em] text-white/70">
-                    Progress
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-white">
-                    {activeClass.pertemuanSelesai}/{activeClass.totalPertemuan}
-                  </p>
-                </div>
-              </div>
             </div>
           </div>
-
-          <div className="grid gap-4 border-t border-orange-100 bg-gradient-to-b from-orange-50/70 to-white px-5 py-5 md:grid-cols-4 md:px-7">
+          <div className="grid gap-4 border-t border-slate-100 bg-slate-50/50 px-5 py-5 md:grid-cols-4 md:px-7">
             <SummaryMetric
               label="Peserta Aktif"
               value={activeClass.totalSiswa}

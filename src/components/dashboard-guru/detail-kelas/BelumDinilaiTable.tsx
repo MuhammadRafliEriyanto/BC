@@ -13,8 +13,8 @@ export default function BelumDinilaiTable({
   );
 
   return (
-    <div className="border border-orange-100 bg-white shadow-[0_22px_48px_-38px_rgba(15,23,42,0.24)] transition-all duration-200">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-orange-100 bg-gradient-to-r from-orange-50/80 via-white to-amber-50/70 px-5 py-4 md:px-6">
+    <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 bg-gradient-to-r from-orange-50/60 via-white to-amber-50/30 px-5 py-4 md:px-6">
         <div>
           <h2 className="text-lg font-semibold text-slate-800 md:text-xl">
             Peringatan Belum Dinilai
@@ -27,7 +27,7 @@ export default function BelumDinilaiTable({
         <span
           className={`inline-flex items-center border px-2.5 py-1 text-xs font-semibold ${
             pendingTasks.length > 0
-              ? "border-orange-200 bg-orange-50 text-orange-700"
+              ? "border-slate-200 bg-slate-50 text-slate-700"
               : "border-emerald-200 bg-emerald-50 text-emerald-700"
           }`}
         >
@@ -43,18 +43,18 @@ export default function BelumDinilaiTable({
             {pendingTasks.map((task) => (
               <article
                 key={task.id}
-                className="border border-orange-100 bg-gradient-to-r from-orange-50/80 via-white to-amber-50/60 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-[0_22px_38px_-30px_rgba(249,115,22,0.28)]"
+                className="border border-slate-200 bg-gradient-to-r from-orange-50/60 via-white to-amber-50/30 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-200 hover:shadow-[0_22px_38px_-30px_rgba(249,115,22,0.28)]"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-500">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                       Pertemuan {task.pertemuanKe}
                     </p>
                     <h3 className="mt-1 text-lg font-semibold text-slate-800">
                       {task.judulTugas}
                     </h3>
                   </div>
-                  <span className="inline-flex items-center border border-orange-200 bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-700">
+                  <span className="inline-flex items-center border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700">
                     Belum Dinilai
                   </span>
                 </div>
@@ -80,7 +80,7 @@ export default function BelumDinilaiTable({
                 <button
                   type="button"
                   onClick={() => onGradeNow(task)}
-                  className="mt-5 inline-flex items-center gap-1.5 border border-orange-400 bg-gradient-to-r from-orange-400 via-orange-500 to-amber-400 px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-[1.02] hover:shadow-[0_18px_30px_-22px_rgba(249,115,22,0.55)]"
+                  className="mt-5 inline-flex items-center gap-1.5 border border-orange-400 bg-white via-orange-500 to-amber-400 px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-[1.02] hover:shadow-[0_18px_30px_-22px_rgba(249,115,22,0.55)]"
                 >
                   <ClipboardCheck className="h-4 w-4" />
                   Nilai Sekarang

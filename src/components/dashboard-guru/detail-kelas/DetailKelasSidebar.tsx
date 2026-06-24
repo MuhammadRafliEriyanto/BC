@@ -23,23 +23,23 @@ function SidebarButton({
     <button
       type="button"
       onClick={onClick}
-      className={`group relative border text-left transition-all duration-200 ${
+      className={`group relative border text-left transition-all duration-200 rounded-xl ${
         isMobile
           ? "inline-flex min-w-max items-center gap-2 px-4 py-2.5 text-sm font-semibold"
           : "flex w-full items-start gap-3 px-4 py-3.5"
       } ${
         active
-          ? "border-orange-300 bg-orange-50 text-orange-700 shadow-[0_18px_32px_-28px_rgba(249,115,22,0.45)]"
-          : "border-slate-200 bg-white text-slate-600 hover:-translate-y-px hover:border-orange-200 hover:bg-orange-50/70 hover:text-orange-700"
+          ? "border-orange-200 bg-orange-50/80 text-orange-700 shadow-sm"
+          : "border-slate-200 bg-white text-slate-600 hover:-translate-y-px hover:border-slate-300 hover:bg-orange-50/40 hover:text-slate-700"
       }`}
     >
       <span
-        className={`flex shrink-0 items-center justify-center border transition-colors ${
+        className={`flex shrink-0 items-center justify-center rounded-lg border transition-colors ${
           isMobile ? "h-8 w-8" : "h-9 w-9"
         } ${
           active
             ? "border-orange-200 bg-white text-orange-600"
-            : "border-orange-100 bg-orange-50 text-orange-500 group-hover:border-orange-200"
+            : "border-slate-200 bg-slate-50 text-slate-500 group-hover:border-slate-300"
         }`}
       >
         <Icon className={isMobile ? "h-4 w-4" : "h-4 w-4"} />
@@ -57,7 +57,7 @@ function SidebarButton({
       </span>
 
       {active ? (
-        <span className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-orange-400 via-orange-500 to-amber-400" />
+        <span className="absolute inset-y-0 left-0 w-1 rounded-l-xl bg-orange-400" />
       ) : null}
     </button>
   );
@@ -70,7 +70,7 @@ export default function DetailKelasSidebar({
 }: DetailKelasSidebarProps) {
   return (
     <>
-      <div className="flex gap-2 overflow-x-auto border border-orange-100 bg-white px-4 py-3 lg:hidden">
+      <div className="flex gap-2 overflow-x-auto border border-slate-200 bg-white px-4 py-3 lg:hidden [&::-webkit-scrollbar]:hidden">
         {sectionItems.map((item) => (
           <SidebarButton
             key={item.key}
@@ -86,9 +86,9 @@ export default function DetailKelasSidebar({
       </div>
 
       <aside className="hidden lg:block">
-        <div className="sticky top-24 border border-orange-100 bg-white shadow-[0_18px_42px_-36px_rgba(15,23,42,0.28)]">
-          <div className="border-b border-orange-100 bg-gradient-to-r from-orange-50/80 to-white px-5 py-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-500">
+        <div className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto overflow-x-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm [&::-webkit-scrollbar]:hidden">
+          <div className="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white px-5 py-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
               Table of Contents
             </p>
             <h2 className="mt-2 text-lg font-semibold text-slate-800">

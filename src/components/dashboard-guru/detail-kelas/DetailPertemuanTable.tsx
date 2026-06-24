@@ -8,7 +8,7 @@ function getMateriStatusClass(status: DetailPertemuanTableProps["materials"][num
     return "border-emerald-200 bg-emerald-50 text-emerald-700";
   }
 
-  return "border-orange-200 bg-orange-50 text-orange-700";
+  return "border-slate-200 bg-slate-50 text-slate-700";
 }
 
 export default function DetailPertemuanTable({
@@ -24,16 +24,16 @@ export default function DetailPertemuanTable({
   );
 
   return (
-    <div className="border border-orange-100 bg-white shadow-[0_22px_48px_-38px_rgba(15,23,42,0.24)] transition-all duration-200">
+    <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
       <div className="px-5 py-5 md:px-6">
-        <div className="mb-5 flex flex-col gap-3 border-b border-orange-100 pb-4 md:flex-row md:items-center md:justify-between">
+        <div className="mb-5 flex flex-col gap-3 border-b border-slate-200 pb-4 md:flex-row md:items-center md:justify-between">
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-lg font-semibold text-slate-800">
                 Detail Pertemuan & Materi
               </h2>
 
-              <span className="inline-flex items-center border border-orange-200 bg-orange-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-orange-700">
+              <span className="inline-flex items-center border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-700">
                 <CalendarDays className="h-3.5 w-3.5" />
                 {sortedMaterials.length}/{totalMeetings} materi
               </span>
@@ -47,7 +47,7 @@ export default function DetailPertemuanTable({
           <button
             type="button"
             onClick={onAdd}
-            className="inline-flex w-full items-center justify-center gap-2 border border-orange-500 bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600 sm:w-auto"
+            className="inline-flex w-full items-center justify-center gap-2 border border-orange-500 bg-slate-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600 sm:w-auto"
           >
             <Plus className="h-4 w-4" />
             Tambah Materi
@@ -55,9 +55,9 @@ export default function DetailPertemuanTable({
         </div>
 
         {sortedMaterials.length > 0 ? (
-          <div className="overflow-x-auto border border-orange-100/80 bg-white">
+          <div className="overflow-x-auto border border-slate-200 bg-white">
             <table className="min-w-[1100px] w-full">
-              <thead className="bg-orange-50/70 text-left">
+              <thead className="bg-orange-50/50 text-left backdrop-blur-sm">
                 <tr className="text-xs uppercase tracking-[0.16em] text-slate-500">
                   <th className="px-4 py-3 font-semibold">Pertemuan</th>
                   <th className="px-4 py-3 font-semibold">Tanggal</th>
@@ -72,7 +72,7 @@ export default function DetailPertemuanTable({
                 {sortedMaterials.map((material) => (
                   <tr
                     key={material.id}
-                    className="border-t border-orange-100/70 text-sm transition hover:bg-orange-50/50"
+                    className="border-t border-slate-200/70 text-sm transition hover:bg-orange-50/40/50"
                   >
                     <td className="px-4 py-4 align-top font-medium text-slate-700">
                       Pertemuan {material.pertemuanKe}
@@ -97,7 +97,7 @@ export default function DetailPertemuanTable({
                             href={material.linkMateri}
                             target="_blank"
                             rel="noreferrer"
-                            className="break-all font-semibold text-orange-600 underline-offset-2 hover:underline"
+                            className="break-all font-semibold text-slate-600 underline-offset-2 hover:underline"
                           >
                             Buka Link Materi
                           </a>
@@ -107,7 +107,7 @@ export default function DetailPertemuanTable({
                             href={material.attachmentUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-start gap-1 break-all font-semibold text-slate-700 underline-offset-2 hover:text-orange-600 hover:underline"
+                            className="inline-flex items-start gap-1 break-all font-semibold text-slate-700 underline-offset-2 hover:text-slate-600 hover:underline"
                           >
                             <Download className="h-3.5 w-3.5" />
                             <span>{material.attachmentFileName}</span>
@@ -130,7 +130,7 @@ export default function DetailPertemuanTable({
                           title="Edit"
                           aria-label="Edit"
                           onClick={() => onEdit(material)}
-                          className="inline-flex h-9 w-9 items-center justify-center border border-orange-200 bg-orange-50 text-orange-700 transition hover:border-orange-300 hover:bg-orange-100"
+                          className="inline-flex h-9 w-9 items-center justify-center border border-slate-200 bg-slate-50 text-slate-700 transition hover:border-orange-300 hover:bg-orange-100"
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
@@ -159,8 +159,8 @@ export default function DetailPertemuanTable({
             </table>
           </div>
         ) : (
-          <div className="border border-dashed border-orange-200 bg-orange-50/30 px-6 py-12 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center border border-orange-100 bg-white text-orange-500">
+          <div className="border border-dashed border-slate-200 bg-orange-50/20 px-6 py-12 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center border border-orange-100 bg-white text-orange-400 shadow-sm">
               <CalendarDays className="h-5 w-5" />
             </div>
             <p className="mt-4 text-base font-semibold text-slate-700">

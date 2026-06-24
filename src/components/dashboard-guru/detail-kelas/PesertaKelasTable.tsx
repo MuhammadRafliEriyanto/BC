@@ -25,7 +25,7 @@ function getStudentStatusClass(status: StudentStatus) {
   }
 
   if (status === "Perlu Pendampingan") {
-    return "border-orange-200 bg-orange-50 text-orange-700";
+    return "border-slate-200 bg-slate-50 text-slate-700";
   }
 
   return "border-slate-200 bg-slate-50 text-slate-600";
@@ -72,8 +72,8 @@ export default function PesertaKelasTable({
 
   if (activeClass.participants.length === 0) {
     return (
-      <div className="border border-dashed border-orange-200 bg-white px-5 py-12 text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center border border-orange-100 bg-orange-50 text-orange-500">
+      <div className="border border-dashed border-slate-200 bg-white px-5 py-12 text-center">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center border border-slate-200 bg-slate-50 text-slate-500">
           <Users className="h-5 w-5" />
         </div>
         <p className="mt-4 text-base font-semibold text-slate-700">
@@ -90,8 +90,8 @@ export default function PesertaKelasTable({
 
   return (
     <>
-      <div className="border border-orange-100 bg-white shadow-[0_22px_48px_-38px_rgba(15,23,42,0.24)] transition-all duration-200">
-        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-orange-100 bg-gradient-to-r from-orange-50/80 via-white to-amber-50/70 px-5 py-4 md:px-6">
+      <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
+        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 bg-gradient-to-r from-orange-50/60 via-white to-amber-50/30 px-5 py-4 md:px-6">
           <div>
             <h2 className="text-lg font-semibold text-slate-800 md:text-xl">
               Peserta Kelas
@@ -106,15 +106,15 @@ export default function PesertaKelasTable({
               </p>
             ) : null}
           </div>
-          <span className="inline-flex items-center border border-orange-200 bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-700">
+          <span className="inline-flex items-center border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700">
             {displayedParticipantCount} siswa
           </span>
         </div>
 
         <div className="px-5 py-5 md:px-6">
-          <div className="overflow-x-auto border border-orange-100">
+          <div className="overflow-x-auto border border-slate-200 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-slate-50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300">
             <table className="min-w-[760px] w-full">
-              <thead className="bg-orange-50/80 text-left">
+              <thead className="bg-orange-50/50 text-left backdrop-blur-sm">
                 <tr className="text-xs uppercase tracking-[0.16em] text-slate-500">
                   <th className="px-4 py-4 font-semibold">No</th>
                   <th className="px-4 py-4 font-semibold">Nama Siswa</th>
@@ -128,7 +128,7 @@ export default function PesertaKelasTable({
                 {activeClass.participants.map((student, index) => (
                   <tr
                     key={student.id}
-                    className="border-t border-orange-100/80 text-sm transition hover:bg-orange-50/40"
+                    className="border-t border-slate-200 text-sm transition hover:bg-orange-50/40"
                   >
                     <td className="px-4 py-4 font-medium text-slate-500">
                       {index + 1}
@@ -140,7 +140,7 @@ export default function PesertaKelasTable({
                       {student.classLevel}
                     </td>
                     <td className="px-4 py-4">
-                      <span className="inline-flex border border-orange-100 bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-700">
+                      <span className="inline-flex border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700">
                         {student.branch}
                       </span>
                     </td>
@@ -158,7 +158,7 @@ export default function PesertaKelasTable({
                           title="Lihat Detail"
                           aria-label="Lihat Detail"
                           onClick={() => openStudentDetail(student.id)}
-                          className="inline-flex h-8 w-8 items-center justify-center border border-slate-200 bg-white text-slate-600 transition hover:border-orange-200 hover:bg-orange-50 hover:text-orange-700"
+                          className="inline-flex h-8 w-8 items-center justify-center border border-slate-200 bg-white text-slate-600 transition hover:border-slate-200 hover:bg-orange-50/40 hover:text-slate-700"
                         >
                           <Eye className="h-4 w-4" />
                         </button>
@@ -173,8 +173,8 @@ export default function PesertaKelasTable({
       </div>
 
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="max-w-4xl rounded-none border border-orange-100 bg-white p-0 shadow-[0_28px_72px_-42px_rgba(15,23,42,0.4)]">
-          <DialogHeader className="border-b border-orange-100 bg-gradient-to-r from-orange-50/90 via-white to-amber-50/70 px-5 py-4 text-left">
+        <DialogContent className="max-w-4xl rounded-[24px] border border-slate-200 bg-white p-0 shadow-lg">
+          <DialogHeader className="border-b border-slate-200 bg-gradient-to-r from-orange-50/60 via-white to-amber-50/30 px-5 py-4 text-left">
             <DialogTitle className="text-lg font-semibold text-slate-800">
               Detail Peserta
             </DialogTitle>
@@ -184,9 +184,9 @@ export default function PesertaKelasTable({
           </DialogHeader>
 
           <div className="grid gap-4 px-5 py-5">
-            <div className="flex flex-wrap items-start justify-between gap-3 border border-orange-100 bg-gradient-to-r from-orange-50/70 via-white to-amber-50/60 p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3 border border-slate-200 bg-gradient-to-r from-orange-50/60 via-white to-amber-50/30 p-4">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-500">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                   Peserta Terpilih
                 </p>
                 <h3 className="mt-1 text-lg font-semibold text-slate-800">
@@ -205,9 +205,9 @@ export default function PesertaKelasTable({
               </span>
             </div>
 
-            <div className="overflow-x-auto border border-orange-100 bg-white">
+            <div className="overflow-x-auto border border-slate-200 bg-white">
               <table className="min-w-[760px] w-full">
-                <thead className="bg-orange-50/80 text-left">
+                <thead className="bg-orange-50/50 text-left backdrop-blur-sm">
                   <tr className="text-xs uppercase tracking-[0.16em] text-slate-500">
                     <th className="px-4 py-4 font-semibold">Pertemuan</th>
                     <th className="px-4 py-4 font-semibold">Tanggal</th>
@@ -221,7 +221,7 @@ export default function PesertaKelasTable({
                     selectedStudent.history.map((entry) => (
                       <tr
                         key={`${selectedStudent.id}-${entry.meeting}`}
-                        className="border-t border-orange-100/80 text-sm"
+                        className="border-t border-slate-200 text-sm"
                       >
                         <td className="px-4 py-4 font-medium text-slate-700">
                           {entry.meeting}
@@ -241,7 +241,7 @@ export default function PesertaKelasTable({
                       </tr>
                     ))
                   ) : (
-                    <tr className="border-t border-orange-100/80 text-sm">
+                    <tr className="border-t border-slate-200 text-sm">
                       <td
                         colSpan={5}
                         className="px-4 py-6 text-center text-slate-500"
@@ -258,7 +258,7 @@ export default function PesertaKelasTable({
               <DialogClose asChild>
                 <button
                   type="button"
-                  className="border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                  className="border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-orange-50/40"
                 >
                   Tutup
                 </button>

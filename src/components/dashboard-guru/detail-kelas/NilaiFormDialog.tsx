@@ -38,8 +38,8 @@ export default function NilaiFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="top-2 flex max-h-[calc(100dvh-1rem)] max-w-2xl translate-y-0 flex-col gap-0 rounded-none border border-orange-100 bg-white p-0 shadow-[0_28px_72px_-42px_rgba(15,23,42,0.4)] sm:top-[50%] sm:max-h-[calc(100dvh-3rem)] sm:translate-y-[-50%]">
-        <DialogHeader className="shrink-0 border-b border-orange-100 bg-gradient-to-r from-orange-50/90 via-white to-amber-50/70 px-5 py-4 pr-14 text-left">
+      <DialogContent className="top-2 flex max-h-[calc(100dvh-1rem)] max-w-2xl translate-y-0 flex-col gap-0 rounded-[24px] border border-slate-200 bg-white p-0 shadow-lg sm:top-[50%] sm:max-h-[calc(100dvh-3rem)] sm:translate-y-[-50%]">
+        <DialogHeader className="shrink-0 border-b border-slate-200 bg-gradient-to-r from-orange-50/60 via-white to-amber-50/30 px-5 py-4 pr-14 text-left">
           <DialogTitle className="text-lg font-semibold text-slate-800">
             {mode === "add" ? "Input Nilai Siswa" : "Edit Nilai Siswa"}
           </DialogTitle>
@@ -58,7 +58,7 @@ export default function NilaiFormDialog({
               <select
                 value={selectedTask?.id ?? ""}
                 onChange={(event) => onTaskChange(event.target.value)}
-                className="border border-orange-100 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                className="border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
               >
                 {tasks.map((task) => (
                   <option key={task.id} value={task.id}>
@@ -70,8 +70,8 @@ export default function NilaiFormDialog({
           ) : null}
 
           {selectedTask ? (
-            <div className="border border-orange-100 bg-orange-50/60 p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-500">
+            <div className="border border-slate-200 bg-slate-50/60 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                 Tugas Aktif
               </p>
               <h3 className="mt-1 text-base font-semibold text-slate-800">
@@ -89,7 +89,7 @@ export default function NilaiFormDialog({
             <select
               value={selectedStudentId}
               onChange={(event) => onStudentChange(event.target.value)}
-              className="border border-orange-100 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+              className="border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
             >
               {participants.map((student) => (
                 <option key={student.id} value={student.id}>
@@ -99,7 +99,7 @@ export default function NilaiFormDialog({
             </select>
           </label>
 
-          <div className="border border-orange-100 bg-white p-4">
+          <div className="border border-slate-200 bg-white p-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
               Siswa Aktif
             </p>
@@ -121,7 +121,7 @@ export default function NilaiFormDialog({
                 value={draft?.tugas ?? ""}
                 onChange={(event) => onChange("tugas", event.target.value)}
                 placeholder="Belum dinilai"
-                className="border border-orange-100 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                className="border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
               />
             </label>
 
@@ -140,7 +140,7 @@ export default function NilaiFormDialog({
                     onAcademicScoreChange(scoreKey, event.target.value)
                   }
                   placeholder="Belum dinilai"
-                  className="border border-orange-100 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                  className="border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
                 />
               </label>
             ))}
@@ -158,17 +158,17 @@ export default function NilaiFormDialog({
               value={draft?.note ?? ""}
               onChange={(event) => onChange("note", event.target.value)}
               placeholder="Tambahkan catatan singkat untuk penilaian tugas ini jika diperlukan..."
-              className="border border-orange-100 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+              className="border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
             />
           </label>
           </div>
         </div>
 
-        <DialogFooter className="shrink-0 border-t border-orange-100 bg-white px-5 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+        <DialogFooter className="shrink-0 border-t border-slate-200 bg-white px-5 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <DialogClose asChild>
             <button
               type="button"
-              className="border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+              className="border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-orange-50/40"
             >
               Tutup
             </button>
@@ -176,7 +176,7 @@ export default function NilaiFormDialog({
           <button
             type="button"
             onClick={onSubmit}
-            className="border border-orange-400 bg-gradient-to-r from-orange-400 via-orange-500 to-amber-400 px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-[1.02]"
+            className="border border-orange-400 bg-white via-orange-500 to-amber-400 px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-[1.02]"
           >
             {mode === "add" ? "Simpan Nilai" : "Update Nilai"}
           </button>

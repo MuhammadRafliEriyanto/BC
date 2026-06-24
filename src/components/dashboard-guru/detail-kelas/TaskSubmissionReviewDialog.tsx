@@ -56,7 +56,7 @@ function formatSubmissionDateTime(value: string | null) {
 function getGradeStatusClass(status: "Belum Dinilai" | "Sudah Dinilai") {
   return status === "Sudah Dinilai"
     ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-    : "border-orange-200 bg-orange-50 text-orange-700";
+    : "border-slate-200 bg-slate-50 text-slate-700";
 }
 
 export default function TaskSubmissionReviewDialog({
@@ -73,8 +73,8 @@ export default function TaskSubmissionReviewDialog({
 }: TaskSubmissionReviewDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] max-w-6xl grid-rows-[auto_minmax(0,1fr)_auto] gap-0 rounded-none border border-orange-100 bg-white p-0 shadow-[0_28px_72px_-42px_rgba(15,23,42,0.4)]">
-        <DialogHeader className="border-b border-orange-100 bg-gradient-to-r from-orange-50/90 via-white to-amber-50/70 px-4 py-4 pr-14 text-left md:px-5">
+      <DialogContent className="max-h-[92vh] max-w-6xl grid-rows-[auto_minmax(0,1fr)_auto] gap-0 rounded-[24px] border border-slate-200 bg-white p-0 shadow-lg">
+        <DialogHeader className="border-b border-slate-200 bg-gradient-to-r from-orange-50/60 via-white to-amber-50/30 px-4 py-4 pr-14 text-left md:px-5">
           <DialogTitle className="text-lg font-semibold text-slate-800">
             Review Submission Tugas
           </DialogTitle>
@@ -86,9 +86,9 @@ export default function TaskSubmissionReviewDialog({
         </DialogHeader>
 
         <div className="grid min-h-0 gap-0 lg:grid-cols-[340px_minmax(0,1fr)]">
-          <div className="flex min-h-0 flex-col border-b border-orange-100 lg:border-b-0 lg:border-r">
-            <div className="border-b border-orange-100 bg-orange-50/50 px-4 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-500">
+          <div className="flex min-h-0 flex-col border-b border-slate-200 lg:border-b-0 lg:border-r">
+            <div className="border-b border-slate-200 bg-slate-50/50 px-4 py-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                 Tugas Aktif
               </p>
               <h3 className="mt-1 text-base font-semibold text-slate-800">
@@ -118,8 +118,8 @@ export default function TaskSubmissionReviewDialog({
                         onClick={() => onSelectSubmission(submission.submissionId)}
                         className={`grid gap-2 border p-4 text-left transition ${
                           isActive
-                            ? "border-orange-300 bg-orange-50/70 shadow-[0_18px_30px_-24px_rgba(249,115,22,0.35)]"
-                            : "border-orange-100 bg-white hover:border-orange-200 hover:bg-orange-50/30"
+                            ? "border-orange-300 bg-slate-50 shadow-[0_18px_30px_-24px_rgba(249,115,22,0.35)]"
+                            : "border-slate-200 bg-white hover:border-slate-200 hover:bg-orange-50/40/30"
                         }`}
                       >
                         <div className="flex flex-wrap items-start justify-between gap-2">
@@ -169,8 +169,8 @@ export default function TaskSubmissionReviewDialog({
                   })}
                 </div>
               ) : (
-                <div className="flex min-h-48 flex-col items-center justify-center border border-dashed border-orange-200 bg-orange-50/30 px-5 py-8 text-center">
-                  <div className="flex h-11 w-11 items-center justify-center border border-orange-100 bg-white text-orange-500">
+                <div className="flex min-h-48 flex-col items-center justify-center border border-dashed border-slate-200 bg-slate-50/30 px-5 py-8 text-center">
+                  <div className="flex h-11 w-11 items-center justify-center border border-orange-100 bg-white text-orange-400 shadow-sm">
                     <Inbox className="h-5 w-5" />
                   </div>
                   <p className="mt-4 text-base font-semibold text-slate-700">
@@ -193,13 +193,13 @@ export default function TaskSubmissionReviewDialog({
               </div>
             ) : submissionDetail ? (
               <div className="grid gap-4">
-                <div className="grid gap-3 border border-orange-100 bg-gradient-to-r from-orange-50/70 via-white to-amber-50/60 p-4 md:grid-cols-2">
+                <div className="grid gap-3 border border-slate-200 bg-gradient-to-r from-orange-50/60 via-white to-amber-50/30 p-4 md:grid-cols-2">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-500">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                       Siswa
                     </p>
                     <div className="mt-1 flex items-center gap-2">
-                      <UserRound className="h-4 w-4 text-orange-500" />
+                      <UserRound className="h-4 w-4 text-slate-500" />
                       <p className="text-base font-semibold text-slate-800">
                         {submissionDetail.studentName}
                       </p>
@@ -210,7 +210,7 @@ export default function TaskSubmissionReviewDialog({
                   </div>
 
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-500">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                       Ringkasan
                     </p>
                     <div className="mt-1 grid gap-2 text-sm text-slate-600">
@@ -240,9 +240,9 @@ export default function TaskSubmissionReviewDialog({
                 </div>
 
                 {submissionDetail.answerText ? (
-                  <section className="border border-orange-100 bg-white p-4">
+                  <section className="border border-slate-200 bg-white p-4">
                     <div className="flex items-center gap-2">
-                      <MessageSquareText className="h-4 w-4 text-orange-500" />
+                      <MessageSquareText className="h-4 w-4 text-slate-500" />
                       <h4 className="text-sm font-semibold text-slate-800">
                         Jawaban Teks
                       </h4>
@@ -254,9 +254,9 @@ export default function TaskSubmissionReviewDialog({
                 ) : null}
 
                 {submissionDetail.driveUrl ? (
-                  <section className="border border-orange-100 bg-white p-4">
+                  <section className="border border-slate-200 bg-white p-4">
                     <div className="flex items-center gap-2">
-                      <Link2 className="h-4 w-4 text-orange-500" />
+                      <Link2 className="h-4 w-4 text-slate-500" />
                       <h4 className="text-sm font-semibold text-slate-800">
                         Link Drive
                       </h4>
@@ -265,7 +265,7 @@ export default function TaskSubmissionReviewDialog({
                       href={submissionDetail.driveUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-orange-700 underline-offset-2 hover:text-orange-600 hover:underline"
+                      className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-slate-700 underline-offset-2 hover:text-slate-600 hover:underline"
                     >
                       <ExternalLink className="h-4 w-4" />
                       Buka Link Drive
@@ -274,14 +274,14 @@ export default function TaskSubmissionReviewDialog({
                 ) : null}
 
                 {submissionDetail.attachmentFileName && submissionDetail.attachmentUrl ? (
-                  <section className="border border-orange-100 bg-white p-4">
+                  <section className="border border-slate-200 bg-white p-4">
                     <div className="flex items-center gap-2">
-                      <Paperclip className="h-4 w-4 text-orange-500" />
+                      <Paperclip className="h-4 w-4 text-slate-500" />
                       <h4 className="text-sm font-semibold text-slate-800">
                         Lampiran File
                       </h4>
                     </div>
-                    <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border border-orange-100 bg-orange-50/40 p-3">
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border border-slate-200 bg-slate-50 p-3">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold text-slate-800">
                           {submissionDetail.attachmentOriginalName ??
@@ -295,7 +295,7 @@ export default function TaskSubmissionReviewDialog({
                         href={submissionDetail.attachmentUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex shrink-0 items-center gap-2 border border-orange-400 bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600"
+                        className="inline-flex shrink-0 items-center gap-2 border border-orange-400 bg-slate-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600"
                       >
                         <Download className="h-4 w-4" />
                         Download
@@ -305,7 +305,7 @@ export default function TaskSubmissionReviewDialog({
                 ) : null}
 
                 {submissionDetail.note ? (
-                  <section className="border border-orange-100 bg-white p-4">
+                  <section className="border border-slate-200 bg-white p-4">
                     <h4 className="text-sm font-semibold text-slate-800">
                       Catatan Siswa
                     </h4>
@@ -319,7 +319,7 @@ export default function TaskSubmissionReviewDialog({
                 !submissionDetail.driveUrl &&
                 !submissionDetail.attachmentFileName &&
                 !submissionDetail.note ? (
-                  <div className="border border-dashed border-orange-200 bg-orange-50/30 px-5 py-10 text-center">
+                  <div className="border border-dashed border-slate-200 bg-slate-50/30 px-5 py-10 text-center">
                     <p className="text-sm font-medium text-slate-600">
                       Detail submission ini belum memiliki isi tambahan yang bisa ditampilkan.
                     </p>
@@ -327,8 +327,8 @@ export default function TaskSubmissionReviewDialog({
                 ) : null}
               </div>
             ) : (
-              <div className="flex min-h-64 flex-col items-center justify-center border border-dashed border-orange-200 bg-orange-50/30 px-5 py-8 text-center">
-                <div className="flex h-11 w-11 items-center justify-center border border-orange-100 bg-white text-orange-500">
+              <div className="flex min-h-64 flex-col items-center justify-center border border-dashed border-slate-200 bg-slate-50/30 px-5 py-8 text-center">
+                <div className="flex h-11 w-11 items-center justify-center border border-orange-100 bg-white text-orange-400 shadow-sm">
                   <FileText className="h-5 w-5" />
                 </div>
                 <p className="mt-4 text-base font-semibold text-slate-700">
@@ -343,11 +343,11 @@ export default function TaskSubmissionReviewDialog({
           </div>
         </div>
 
-        <DialogFooter className="border-t border-orange-100 px-4 py-4 md:px-5">
+        <DialogFooter className="border-t border-slate-200 px-4 py-4 md:px-5">
           <DialogClose asChild>
             <button
               type="button"
-              className="border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+              className="border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-orange-50/40"
             >
               Tutup
             </button>

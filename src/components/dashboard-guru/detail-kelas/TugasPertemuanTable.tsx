@@ -24,7 +24,7 @@ function getTaskStatusClass(status: TugasPertemuanTableProps["tasks"][number]["s
     return "border-slate-200 bg-slate-50 text-slate-600";
   }
 
-  return "border-orange-200 bg-orange-50 text-orange-700";
+  return "border-slate-200 bg-slate-50 text-slate-700";
 }
 
 export default function TugasPertemuanTable({
@@ -41,16 +41,16 @@ export default function TugasPertemuanTable({
   );
 
   return (
-    <div className="border border-orange-100 bg-white shadow-[0_22px_48px_-38px_rgba(15,23,42,0.24)] transition-all duration-200">
+    <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
       <div className="px-5 py-5 md:px-6">
-        <div className="mb-5 flex flex-col gap-3 border-b border-orange-100 pb-4 md:flex-row md:items-center md:justify-between">
+        <div className="mb-5 flex flex-col gap-3 border-b border-slate-200 pb-4 md:flex-row md:items-center md:justify-between">
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-lg font-semibold text-slate-800">
                 Tugas Pertemuan
               </h2>
 
-              <span className="inline-flex items-center border border-orange-200 bg-orange-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-orange-700">
+              <span className="inline-flex items-center border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-700">
                 <FileText className="h-3.5 w-3.5" />
                 {sortedTasks.length} tugas
               </span>
@@ -64,7 +64,7 @@ export default function TugasPertemuanTable({
           <button
             type="button"
             onClick={onAdd}
-            className="inline-flex items-center justify-center gap-2 border border-orange-500 bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600"
+            className="inline-flex items-center justify-center gap-2 border border-orange-500 bg-slate-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600"
           >
             <Plus className="h-4 w-4" />
             Tambah Tugas
@@ -72,9 +72,9 @@ export default function TugasPertemuanTable({
         </div>
 
         {sortedTasks.length > 0 ? (
-          <div className="overflow-x-auto border border-orange-100/80 bg-white">
+          <div className="overflow-x-auto border border-slate-200 bg-white">
             <table className="min-w-[1120px] w-full">
-              <thead className="bg-orange-50/70 text-left">
+              <thead className="bg-orange-50/50 text-left backdrop-blur-sm">
                 <tr className="text-xs uppercase tracking-[0.16em] text-slate-500">
                   <th className="px-4 py-3 font-semibold">Pertemuan</th>
                   <th className="px-4 py-3 font-semibold">Judul Tugas</th>
@@ -90,7 +90,7 @@ export default function TugasPertemuanTable({
                 {sortedTasks.map((task) => (
                   <tr
                     key={task.id}
-                    className="border-t border-orange-100/70 text-sm transition hover:bg-orange-50/50"
+                    className="border-t border-slate-200/70 text-sm transition hover:bg-orange-50/40/50"
                   >
                     <td className="px-4 py-4 font-medium text-slate-700">
                       Pertemuan {task.pertemuanKe}
@@ -111,7 +111,7 @@ export default function TugasPertemuanTable({
                           href={task.attachmentUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex min-w-[160px] items-center gap-1 font-semibold text-slate-700 underline-offset-2 hover:text-orange-600 hover:underline"
+                          className="inline-flex min-w-[160px] items-center gap-1 font-semibold text-slate-700 underline-offset-2 hover:text-slate-600 hover:underline"
                         >
                           <Download className="h-3.5 w-3.5" />
                           {task.attachmentFileName}
@@ -152,7 +152,7 @@ export default function TugasPertemuanTable({
                           title="Edit"
                           aria-label="Edit"
                           onClick={() => onEdit(task)}
-                          className={`${ACTION_BUTTON_CLASS} border-orange-200 bg-orange-50 text-orange-700 hover:border-orange-300 hover:bg-orange-100`}
+                          className={`${ACTION_BUTTON_CLASS} border-slate-200 bg-slate-50 text-slate-700 hover:border-orange-300 hover:bg-orange-100`}
                         >
                           <Pencil className={ACTION_ICON_CLASS} />
                         </button>
@@ -181,8 +181,8 @@ export default function TugasPertemuanTable({
             </table>
           </div>
         ) : (
-          <div className="border border-dashed border-orange-200 bg-orange-50/30 px-6 py-12 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center border border-orange-100 bg-white text-orange-500">
+          <div className="border border-dashed border-slate-200 bg-orange-50/20 px-6 py-12 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center border border-orange-100 bg-white text-orange-400 shadow-sm">
               <FileText className="h-5 w-5" />
             </div>
             <p className="mt-4 text-base font-semibold text-slate-700">

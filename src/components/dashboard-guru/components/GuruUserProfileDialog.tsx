@@ -436,7 +436,7 @@ export function GuruUserProfileDialog({
         onOpenChange(nextOpen);
       }}
     >
-      <DialogContent className="max-h-[88vh] overflow-y-auto sm:max-w-2xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <DialogHeader>
           <DialogTitle>Profil Guru</DialogTitle>
           <DialogDescription>
@@ -451,67 +451,35 @@ export function GuruUserProfileDialog({
             <TabsTrigger value="password">Ubah Password</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="profile" className="space-y-6">
-            <div className="rounded-[24px] border border-orange-100/80 bg-gradient-to-r from-orange-50/90 via-white to-amber-50/70 p-5 shadow-[0_20px_36px_-28px_rgba(249,115,22,0.18)]">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-4">
-                  <Avatar className="size-16 rounded-[24px]">
-                    {profileAvatarSrc ? (
-                      <AvatarImage
-                        src={profileAvatarSrc}
-                        alt={`Foto profil ${profileDisplayName}`}
-                      />
-                    ) : null}
-                    <AvatarFallback className="text-lg">
-                      {profileInitials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="text-lg font-semibold text-slate-950">
-                      {user?.nama ?? "Memuat profil guru..."}
-                    </p>
-                    <p className="text-sm text-slate-500">
-                      {user?.email ?? "Sinkronisasi akun login aktif"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="info">
-                    <ShieldCheck className="size-3.5" />
-                    {resolvedRoleLabel}
-                  </Badge>
-                  <Badge variant={getTeacherStatusBadgeVariant(status)}>
-                    {status ?? "Status belum diatur"}
-                  </Badge>
-                  <Badge
-                    variant={user?.isEmailVerified ? "success" : "warning"}
-                  >
-                    {user?.isEmailVerified
-                      ? "Email terverifikasi"
-                      : "Email belum terverifikasi"}
-                  </Badge>
+          <TabsContent value="profile" className="space-y-4">
+            <div className="rounded-[24px] border border-orange-100/80 bg-gradient-to-r from-orange-50/90 via-white to-amber-50/70 p-4 shadow-[0_20px_36px_-28px_rgba(249,115,22,0.18)]">
+              <div className="flex items-center gap-4">
+                <Avatar className="size-14 rounded-[24px]">
+                  {profileAvatarSrc ? (
+                    <AvatarImage
+                      src={profileAvatarSrc}
+                      alt={`Foto profil ${profileDisplayName}`}
+                    />
+                  ) : null}
+                  <AvatarFallback className="text-lg">
+                    {profileInitials}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-base font-semibold text-slate-950">
+                    {user?.nama ?? "Memuat profil guru..."}
+                  </p>
                 </div>
               </div>
-
-              {updatedLabel ? (
-                <p className="mt-4 text-xs text-slate-500">
-                  Terakhir diperbarui {updatedLabel}
-                </p>
-              ) : null}
             </div>
 
             <NoticeBox variant="success" message={profileSuccess} />
             <NoticeBox variant="error" message={profileError} />
-            <NoticeBox
-              variant="info"
-              message="Perubahan nama, email, dan foto profil akan disimpan ke backend auth dan langsung dipakai kembali di topbar guru."
-            />
 
-            <form className="space-y-5" onSubmit={handleProfileSubmit}>
-              <div className="rounded-[24px] border border-slate-200/80 bg-slate-50/70 p-4">
+            <form className="space-y-4" onSubmit={handleProfileSubmit}>
+              <div className="rounded-[20px] border border-slate-200/80 bg-slate-50/70 p-4">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                  <Avatar className="size-20 rounded-[26px]">
+                  <Avatar className="size-16 rounded-[22px]">
                     {profileAvatarSrc ? (
                       <AvatarImage
                         src={profileAvatarSrc}
@@ -523,14 +491,13 @@ export function GuruUserProfileDialog({
                     </AvatarFallback>
                   </Avatar>
 
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <div>
                       <p className="text-sm font-semibold text-slate-900">
                         Foto profil guru
                       </p>
-                      <p className="text-xs text-slate-500">
-                        Upload JPG, PNG, WebP, atau format gambar lain dengan
-                        ukuran maksimal 2MB.
+                      <p className="text-[11px] text-slate-500">
+                        Upload JPG, PNG, WebP, ukuran maksimal 2MB.
                       </p>
                     </div>
 
@@ -546,6 +513,7 @@ export function GuruUserProfileDialog({
                       <Button
                         type="button"
                         variant="outline"
+                        size="sm"
                         className={warmOutlineButtonClassName}
                         onClick={() => avatarInputRef.current?.click()}
                         disabled={isUserLoading || isSubmittingProfile}
@@ -560,13 +528,13 @@ export function GuruUserProfileDialog({
                 </div>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-4">
                 <div>
                   <label
                     htmlFor="guru-profile-name"
                     className="text-sm font-medium text-slate-700"
                   >
-                    Nama
+                    Nama Lengkap
                   </label>
                   <Input
                     id="guru-profile-name"
@@ -578,98 +546,14 @@ export function GuruUserProfileDialog({
                       }))
                     }
                     placeholder="Nama guru"
-                    className={`mt-2 ${warmFieldClassName}`}
+                    className={`mt-1.5 ${warmFieldClassName}`}
                     disabled={isUserLoading || isSubmittingProfile}
                   />
                   <InputError message={profileFieldErrors.nama} />
                 </div>
-
-                <div>
-                  <label
-                    htmlFor="guru-profile-email"
-                    className="text-sm font-medium text-slate-700"
-                  >
-                    Email
-                  </label>
-                  <Input
-                    id="guru-profile-email"
-                    type="email"
-                    value={profileValues.email}
-                    onChange={(event) =>
-                      setProfileValues((current) => ({
-                        ...current,
-                        email: event.target.value,
-                      }))
-                    }
-                    placeholder="guru@email.com"
-                    className={`mt-2 ${warmFieldClassName}`}
-                    disabled={isUserLoading || isSubmittingProfile}
-                  />
-                  <InputError message={profileFieldErrors.email} />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="guru-profile-role"
-                    className="text-sm font-medium text-slate-700"
-                  >
-                    Role
-                  </label>
-                  <Input
-                    id="guru-profile-role"
-                    value={resolvedRoleLabel}
-                    className={`mt-2 ${warmFieldClassName}`}
-                    disabled
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="guru-profile-status"
-                    className="text-sm font-medium text-slate-700"
-                  >
-                    Status guru
-                  </label>
-                  <Input
-                    id="guru-profile-status"
-                    value={status ?? "Status belum diatur"}
-                    className={`mt-2 ${warmFieldClassName}`}
-                    disabled
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="guru-profile-subject"
-                    className="text-sm font-medium text-slate-700"
-                  >
-                    Mata pelajaran
-                  </label>
-                  <Input
-                    id="guru-profile-subject"
-                    value={subject ?? "Mata pelajaran belum diatur"}
-                    className={`mt-2 ${warmFieldClassName}`}
-                    disabled
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="guru-profile-branch"
-                    className="text-sm font-medium text-slate-700"
-                  >
-                    Cabang
-                  </label>
-                  <Input
-                    id="guru-profile-branch"
-                    value={branch ?? "Cabang belum diatur"}
-                    className={`mt-2 ${warmFieldClassName}`}
-                    disabled
-                  />
-                </div>
               </div>
 
-              <DialogFooter>
+              <DialogFooter className="pt-2">
                 <Button
                   type="button"
                   variant="outline"
@@ -700,19 +584,18 @@ export function GuruUserProfileDialog({
             </form>
           </TabsContent>
 
-          <TabsContent value="password" className="space-y-6">
-            <div className="rounded-[24px] border border-slate-200/80 bg-white/96 p-5 shadow-[0_18px_30px_-24px_rgba(15,23,42,0.16)]">
+          <TabsContent value="password" className="space-y-4">
+            <div className="rounded-[24px] border border-slate-200/80 bg-white/96 p-4 shadow-[0_18px_30px_-24px_rgba(15,23,42,0.16)]">
               <div className="flex items-start gap-3">
-                <div className="flex size-11 items-center justify-center rounded-2xl border border-orange-100 bg-orange-50 text-orange-600">
-                  <KeyRound className="size-5" />
+                <div className="flex size-10 items-center justify-center rounded-xl border border-orange-100 bg-orange-50 text-orange-600">
+                  <KeyRound className="size-4" />
                 </div>
                 <div>
-                  <p className="text-base font-semibold text-slate-950">
+                  <p className="text-sm font-semibold text-slate-950">
                     Ubah password akun guru
                   </p>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Gunakan minimal 8 karakter dan pastikan password baru
-                    berbeda dari password lama.
+                  <p className="mt-1 text-xs text-slate-500">
+                    Gunakan minimal 8 karakter dan pastikan password baru berbeda.
                   </p>
                 </div>
               </div>
@@ -721,7 +604,7 @@ export function GuruUserProfileDialog({
             <NoticeBox variant="success" message={passwordSuccess} />
             <NoticeBox variant="error" message={passwordError} />
 
-            <form className="space-y-5" onSubmit={handlePasswordSubmit}>
+            <form className="space-y-4" onSubmit={handlePasswordSubmit}>
               <PasswordField
                 id="guru-current-password"
                 label="Password lama"
@@ -743,7 +626,7 @@ export function GuruUserProfileDialog({
                 }
               />
 
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <PasswordField
                   id="guru-new-password"
                   label="Password baru"
@@ -787,7 +670,7 @@ export function GuruUserProfileDialog({
                 />
               </div>
 
-              <DialogFooter>
+              <DialogFooter className="pt-2">
                 <Button
                   type="button"
                   variant="outline"
@@ -800,12 +683,12 @@ export function GuruUserProfileDialog({
                   type="submit"
                   variant="secondary"
                   className={warmPrimaryButtonClassName}
-                  disabled={isSubmittingPassword || !user}
+                  disabled={isUserLoading || isSubmittingPassword || !user}
                 >
                   {isSubmittingPassword ? (
                     <>
                       <LoaderCircle className="size-4 animate-spin" />
-                      Menyimpan...
+                      Memproses...
                     </>
                   ) : (
                     <>

@@ -28,8 +28,8 @@ export default function TugasFormDialog({
 }: TugasFormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="top-2 flex max-h-[calc(100dvh-1rem)] max-w-3xl translate-y-0 flex-col gap-0 rounded-none border border-orange-100 bg-white p-0 shadow-[0_28px_72px_-42px_rgba(15,23,42,0.4)] sm:top-[50%] sm:max-h-[calc(100dvh-3rem)] sm:translate-y-[-50%]">
-        <DialogHeader className="shrink-0 border-b border-orange-100 bg-gradient-to-r from-orange-50/90 via-white to-amber-50/70 px-4 py-4 pr-14 text-left md:px-5">
+      <DialogContent className="top-2 flex max-h-[calc(100dvh-1rem)] max-w-3xl translate-y-0 flex-col gap-0 rounded-[24px] border border-slate-200 bg-white p-0 shadow-lg sm:top-[50%] sm:max-h-[calc(100dvh-3rem)] sm:translate-y-[-50%]">
+        <DialogHeader className="shrink-0 border-b border-slate-200 bg-gradient-to-r from-orange-50/60 via-white to-amber-50/30 px-4 py-4 pr-14 text-left md:px-5">
           <DialogTitle className="text-lg font-semibold text-slate-800">
             {mode === "add" ? "Tambah Tugas Pertemuan" : "Edit Tugas Pertemuan"}
           </DialogTitle>
@@ -50,7 +50,7 @@ export default function TugasFormDialog({
                   onChange={(event) =>
                     onChange("pertemuanKe", Number(event.target.value))
                   }
-                  className="border border-orange-100 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                  className="border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
                 />
               </label>
 
@@ -60,7 +60,7 @@ export default function TugasFormDialog({
                   type="date"
                   value={draft?.deadline ?? ""}
                   onChange={(event) => onChange("deadline", event.target.value)}
-                  className="border border-orange-100 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                  className="border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
                 />
               </label>
             </div>
@@ -72,7 +72,7 @@ export default function TugasFormDialog({
                 value={draft?.judulTugas ?? ""}
                 onChange={(event) => onChange("judulTugas", event.target.value)}
                 placeholder="Contoh: Latihan Persamaan Linear"
-                className="border border-orange-100 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                className="border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
               />
             </label>
 
@@ -83,11 +83,11 @@ export default function TugasFormDialog({
                 value={draft?.deskripsi ?? ""}
                 onChange={(event) => onChange("deskripsi", event.target.value)}
                 placeholder="Tuliskan instruksi tugas, penjelasan singkat, atau catatan penilaian..."
-                className="resize-none border border-orange-100 bg-white px-3 py-3 text-sm leading-6 text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                className="resize-none border border-slate-200 bg-white px-3 py-3 text-sm leading-6 text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
               />
             </label>
 
-            <div className="grid gap-3 border border-orange-100 bg-orange-50/40 p-4">
+            <div className="grid gap-3 border border-slate-200 bg-slate-50 p-4">
               <p className="text-sm font-semibold text-slate-700">
                 Status Pengumpulan dan Penilaian Otomatis
               </p>
@@ -118,7 +118,7 @@ export default function TugasFormDialog({
               </div>
             </div>
 
-            <div className="grid gap-3 border border-orange-100 bg-orange-50/30 p-4 text-sm font-medium text-slate-700">
+            <div className="grid gap-3 border border-slate-200 bg-slate-50/30 p-4 text-sm font-medium text-slate-700">
               <span>Lampiran Tugas Opsional</span>
               <input
                 type="file"
@@ -126,7 +126,7 @@ export default function TugasFormDialog({
                 onChange={(event) =>
                   onAttachmentChange(event.target.files?.[0] ?? null)
                 }
-                className="border border-orange-100 bg-white px-3 py-3 text-sm text-slate-700 file:mr-3 file:border-0 file:bg-orange-50 file:px-3 file:py-2 file:font-semibold file:text-orange-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                className="border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 file:mr-3 file:border-0 file:bg-slate-50 file:px-3 file:py-2 file:font-semibold file:text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
               />
               {selectedAttachmentName ? (
                 <div className="flex flex-col gap-2 text-xs text-slate-500 sm:flex-row sm:flex-wrap sm:items-center">
@@ -134,7 +134,7 @@ export default function TugasFormDialog({
                   <button
                     type="button"
                     onClick={onClearSelectedAttachment}
-                    className="w-fit font-semibold text-orange-600 hover:underline"
+                    className="w-fit font-semibold text-slate-600 hover:underline"
                   >
                     Batalkan file baru
                   </button>
@@ -163,11 +163,11 @@ export default function TugasFormDialog({
           </div>
         </div>
 
-        <DialogFooter className="shrink-0 border-t border-orange-100 bg-white px-4 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:px-5">
+        <DialogFooter className="shrink-0 border-t border-slate-200 bg-white px-4 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:px-5">
           <DialogClose asChild>
             <button
               type="button"
-              className="w-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 sm:w-auto"
+              className="w-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-orange-50/40 sm:w-auto"
             >
               Batal
             </button>
@@ -175,7 +175,7 @@ export default function TugasFormDialog({
           <button
             type="button"
             onClick={onSubmit}
-            className="w-full border border-orange-400 bg-gradient-to-r from-orange-400 via-orange-500 to-amber-400 px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-[1.02] sm:w-auto"
+            className="w-full border border-orange-400 bg-white via-orange-500 to-amber-400 px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-[1.02] sm:w-auto"
           >
             {mode === "add" ? "Simpan Tugas" : "Update Tugas"}
           </button>

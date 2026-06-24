@@ -36,7 +36,7 @@ function getGradeStatusClass(status: GradeStatus) {
     return "border-sky-200 bg-sky-50 text-sky-700";
   }
 
-  return "border-orange-200 bg-orange-50 text-orange-700";
+  return "border-slate-200 bg-slate-50 text-slate-700";
 }
 
 function formatScore(score: number | null) {
@@ -80,8 +80,8 @@ export default function TabelNilaiTable({
 
   if (rows.length === 0) {
     return (
-      <div className="border border-dashed border-orange-200 bg-white px-5 py-12 text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center border border-orange-100 bg-orange-50 text-orange-500">
+      <div className="border border-dashed border-slate-200 bg-white px-5 py-12 text-center">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center border border-slate-200 bg-slate-50 text-slate-500">
           <Trophy className="h-5 w-5" />
         </div>
         <p className="mt-4 text-base font-semibold text-slate-700">
@@ -95,8 +95,8 @@ export default function TabelNilaiTable({
   }
 
   return (
-    <div className="border border-orange-100 bg-white shadow-[0_22px_48px_-38px_rgba(15,23,42,0.24)] transition-all duration-200">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-orange-100 bg-gradient-to-r from-orange-50/80 via-white to-amber-50/70 px-5 py-4 md:px-6">
+    <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 bg-gradient-to-r from-orange-50/60 via-white to-amber-50/30 px-5 py-4 md:px-6">
         <div>
           <h2 className="text-lg font-semibold text-slate-800 md:text-xl">
             Tabel Nilai
@@ -113,9 +113,9 @@ export default function TabelNilaiTable({
       </div>
 
       <div className="px-5 py-5 md:px-6">
-        <div className="overflow-x-auto border border-orange-100">
+        <div className="overflow-x-auto border border-slate-200 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-slate-50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300">
           <table className="min-w-[900px] w-full">
-            <thead className="bg-orange-50/80 text-left">
+            <thead className="bg-orange-50/50 text-left backdrop-blur-sm">
               <tr className="text-xs uppercase tracking-[0.16em] text-slate-500">
                 <th className="px-4 py-4 font-semibold">No</th>
                 <th className="px-4 py-4 font-semibold">Nama Siswa</th>
@@ -134,7 +134,7 @@ export default function TabelNilaiTable({
               {rows.map((row, index) => (
                 <tr
                   key={row.studentId}
-                  className="border-t border-orange-100/80 text-sm transition hover:bg-orange-50/40"
+                  className="border-t border-slate-200 text-sm transition hover:bg-orange-50/40"
                 >
                   <td className="px-4 py-4 font-medium text-slate-500">
                     {index + 1}
@@ -167,7 +167,7 @@ export default function TabelNilaiTable({
                         title="Edit Nilai"
                         aria-label="Edit Nilai"
                         onClick={() => onEditNilai(row.studentId)}
-                        className="inline-flex h-8 w-8 items-center justify-center border border-orange-200 bg-orange-50 text-orange-700 transition hover:border-orange-300 hover:bg-orange-100"
+                        className="inline-flex h-8 w-8 items-center justify-center border border-slate-200 bg-slate-50 text-slate-700 transition hover:border-orange-300 hover:bg-orange-100"
                       >
                         <FilePenLine className="h-4 w-4" />
                       </button>

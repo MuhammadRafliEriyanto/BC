@@ -655,12 +655,6 @@ export default function GuruTopbar() {
                   <p className="text-sm font-semibold text-slate-950">
                     {displayName}
                   </p>
-                  <p className="text-xs font-normal text-slate-500">
-                    {displayRole}
-                  </p>
-                  <p className="text-xs font-normal text-slate-500">
-                    {displayEmail ?? "Email belum tersedia"}
-                  </p>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={() => setIsProfileOpen(true)}>

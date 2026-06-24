@@ -1,6 +1,7 @@
 "use client";
 
-import { Download, Eye, FilterX, Search, ShieldCheck } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Download, Eye, FilterX, Search, ShieldCheck, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -89,6 +90,24 @@ export function OwnerStudentActivationsTable({
   onResetFilters,
   onSearchQueryChange,
 }: OwnerStudentActivationsTableProps) {
+  const ITEMS_PER_PAGE = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    activationBranchFilter,
+    activationStatusFilter,
+    classFilter,
+    levelFilter,
+    searchQuery,
+  ]);
+
+  const totalPages = Math.ceil(students.length / ITEMS_PER_PAGE);
+  const paginatedStudents = students.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
+  );
   return (
     <OwnerActivitySectionPanel
       tone="emerald"
@@ -247,14 +266,14 @@ export function OwnerStudentActivationsTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {students.length > 0 ? (
-            students.map((student, index) => (
+          {paginatedStudents.length > 0 ? (
+            paginatedStudents.map((student, index) => (
               <TableRow
                 key={student.id}
                 className="border-slate-200/70 transition-colors hover:bg-slate-50"
               >
                 <TableCell className="px-6 text-sm font-semibold text-slate-500">
-                  {index + 1}
+                  {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
                 </TableCell>
                 <TableCell>
                   <div className="space-y-1">
@@ -358,6 +377,42 @@ export function OwnerStudentActivationsTable({
           )}
         </TableBody>
       </Table>
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between border-t border-slate-200/70 bg-slate-50/50 px-6 py-4">
+          <div className="text-sm text-slate-500">
+            Menampilkan <span className="font-medium text-slate-900">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> hingga{" "}
+            <span className="font-medium text-slate-900">{Math.min(currentPage * ITEMS_PER_PAGE, students.length)}</span> dari{" "}
+            <span className="font-medium text-slate-900">{students.length}</span> data
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="h-8 rounded-lg"
+            >
+              <ChevronLeft className="mr-1 size-4" />
+              Previous
+            </Button>
+            <div className="px-2 text-sm font-medium text-slate-700">
+              Halaman {currentPage} dari {totalPages}
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="h-8 rounded-lg"
+            >
+              Next
+              <ChevronRight className="ml-1 size-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </OwnerActivitySectionPanel>
   );
 }

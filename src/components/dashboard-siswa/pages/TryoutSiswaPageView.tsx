@@ -827,7 +827,10 @@ export default function TryoutSiswaPageView({
       const nextAttemptId = normalizeText(payload?.data?.attemptId);
 
       if (!response.ok || !payload?.success || !nextAttemptId) {
-        throw new Error(payload?.message || "Sesi ujian belum bisa dimulai.");
+        throw new Error(
+          payload?.message ||
+            `Sesi ujian belum bisa dimulai. (Status: ${response.status})`,
+        );
       }
 
       router.push(`/dashboard-siswa/ujian/${encodeURIComponent(nextAttemptId)}`);
