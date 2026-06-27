@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CheckCircle2, ScanLine } from "lucide-react";
-import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode";
+import { Camera, CheckCircle2, ScanLine } from "lucide-react";
+import { Html5Qrcode } from "html5-qrcode";
 
 export default function ScanAbsenClient() {
   const router = useRouter();
@@ -11,104 +11,159 @@ export default function ScanAbsenClient() {
   const scheduleId = searchParams.get("scheduleId");
 
   const [isSuccess, setIsSuccess] = useState(false);
-  const [error] = useState<string | null>(null);
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [isStarting, setIsStarting] = useState(true);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
 
   useEffect(() => {
-    // Only initialize if not already success
     if (isSuccess) return;
 
-    // Create the scanner instance if not exists
-    if (!scannerRef.current) {
-      scannerRef.current = new Html5QrcodeScanner(
-        "qr-reader",
+    let isMounted = true;
+
+    // Create the pure scanner instance
+    const html5QrCode = new Html5Qrcode("qr-reader");
+    scannerRef.current = html5QrCode;
+
+    // Calculate dynamic qrbox size based on screen width
+    const getQrBoxSize = () => {
+      const width = window.innerWidth;
+      if (width < 400) return 200;
+      if (width < 600) return 250;
+      return 300;
+    };
+
+    html5QrCode
+      .start(
+        { facingMode: "environment" },
         {
           fps: 10,
-          qrbox: { width: 250, height: 250 },
+          qrbox: { width: getQrBoxSize(), height: getQrBoxSize() },
           aspectRatio: 1.0,
-          supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
         },
-        false, // non-verbose
-      );
+        (decodedText) => {
+          if (!isMounted) return;
+          setIsSuccess(true);
+          
+          // Stop scanning immediately after success
+          if (html5QrCode.isScanning) {
+            html5QrCode.stop().catch(console.warn);
+          }
+          
+          console.log("Scanned:", decodedText);
 
-      const onScanSuccess = (decodedText: string) => {
-        // Stop scanning after success
-        if (scannerRef.current) {
-          scannerRef.current.clear().catch(console.error);
+          // Mock API call delay, then redirect back
+          setTimeout(() => {
+            router.push("/dashboard-siswa#jadwal-mata-pelajaran");
+          }, 2500);
+        },
+        () => {
+          // Ignore normal scan failures (happens every frame)
         }
-        setIsSuccess(true);
-        console.log("Scanned:", decodedText);
-
-        // Mock API call delay, then redirect back
-        setTimeout(() => {
-          router.push("/dashboard-siswa#jadwal-mata-pelajaran");
-        }, 2500);
-      };
-
-      const onScanFailure = () => {
-        // Ignore normal scan failures (happens every frame)
-      };
-
-      scannerRef.current.render(onScanSuccess, onScanFailure);
-    }
+      )
+      .then(() => {
+        if (isMounted) setIsStarting(false);
+      })
+      .catch((err) => {
+        console.warn("Camera start warning:", err);
+        if (isMounted) {
+          setIsStarting(false);
+          
+          // Provide more specific error messages based on common camera errors
+          let errorMsg = "Gagal mengakses kamera. Pastikan izin kamera diberikan pada browser Anda.";
+          const errorStr = String(err).toLowerCase();
+          
+          if (errorStr.includes("notallowederror") || errorStr.includes("permission denied")) {
+            errorMsg = "Akses kamera ditolak. Silakan izinkan akses kamera di pengaturan browser Anda, lalu muat ulang halaman.";
+          } else if (errorStr.includes("notfounderror")) {
+            errorMsg = "Kamera tidak ditemukan pada perangkat ini.";
+          } else if (errorStr.includes("notreadableerror")) {
+            errorMsg = "Kamera sedang digunakan oleh aplikasi lain.";
+          }
+          
+          setCameraError(errorMsg);
+        }
+      });
 
     // Cleanup on unmount
     return () => {
-      if (scannerRef.current) {
-        scannerRef.current.clear().catch(console.error);
-        scannerRef.current = null;
+      isMounted = false;
+      if (html5QrCode.isScanning) {
+        html5QrCode.stop().catch(console.warn);
       }
+      scannerRef.current = null;
     };
   }, [isSuccess, router]);
 
   return (
-    <section className="mx-auto flex w-full max-w-lg flex-col gap-6 px-4 py-8 md:px-6 md:py-10">
-      <header className="flex flex-col gap-5 text-center">
+    <section className="mx-auto flex w-full max-w-[500px] flex-col gap-6 px-4 py-8 md:px-6 md:py-10">
+      <header className="flex flex-col items-center gap-3 text-center">
+        <div className="flex size-14 items-center justify-center rounded-2xl bg-orange-50 text-orange-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] ring-1 ring-orange-100/50">
+          <ScanLine className="size-7" strokeWidth={1.5} />
+        </div>
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">
+          <h1 className="text-[1.35rem] font-semibold tracking-tight text-slate-900 md:text-2xl">
             Scan Barcode Kehadiran
           </h1>
-          <p className="mt-2 text-sm leading-6 text-slate-500">
-            Arahkan kamera ke QR Code absen yang ada di ruang kelas untuk mencatat kehadiran.
+          <p className="mx-auto mt-2 max-w-[280px] text-sm leading-6 text-slate-500 md:max-w-xs">
+            Arahkan kamera ke QR Code absen di kelas untuk mencatat kehadiran.
           </p>
           {scheduleId && (
-            <p className="mt-1 text-xs font-semibold text-orange-600">
-              Sesi Referensi: {scheduleId}
-            </p>
+            <div className="mt-4 inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium tracking-wide text-slate-600">
+              ID Jadwal: <span className="ml-1 font-semibold text-slate-900">{scheduleId}</span>
+            </div>
           )}
         </div>
       </header>
 
-      <div className="relative mx-auto w-full overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-xl">
+      <div className="relative mx-auto w-full overflow-hidden rounded-[32px] border border-slate-200/80 bg-white/70 shadow-[0_24px_54px_-32px_rgba(15,23,42,0.12)] backdrop-blur-xl">
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-orange-400 via-rose-400 to-orange-400" />
+        
         {isSuccess ? (
-          <div className="flex flex-col items-center justify-center p-12 text-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 text-emerald-500">
-              <CheckCircle2 className="h-10 w-10" />
+          <div className="flex flex-col items-center justify-center p-12 text-center animate-in fade-in zoom-in duration-500">
+            <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-emerald-50 text-emerald-500">
+              <div className="absolute inset-0 animate-ping rounded-full bg-emerald-100/60 duration-1000" />
+              <CheckCircle2 className="relative z-10 h-12 w-12 drop-shadow-sm" />
             </div>
-            <h2 className="mt-6 text-xl font-bold text-slate-800">
+            <h2 className="mt-6 text-[1.4rem] font-bold tracking-tight text-slate-800">
               Absen Berhasil!
             </h2>
-            <p className="mt-2 text-sm text-slate-500">
+            <p className="mt-2 text-sm leading-6 text-slate-500">
               Kehadiran Anda telah dicatat oleh sistem.
             </p>
-            <p className="mt-4 text-[11px] font-medium text-slate-400">
-              Mengalihkan kembali ke jadwal...
-            </p>
+            <div className="mt-6 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+              <span className="flex size-1.5 animate-pulse rounded-full bg-emerald-500" />
+              Mengalihkan otomatis...
+            </div>
           </div>
         ) : (
           <div className="flex flex-col">
-            {error && (
-              <div className="bg-red-50 px-4 py-3 text-center text-xs font-medium text-red-600">
-                {error}
+            {cameraError && (
+              <div className="border-b border-red-100 bg-red-50/80 px-4 py-3 text-center text-xs font-medium text-red-600">
+                {cameraError}
               </div>
             )}
             
-            {/* Scanner Container */}
-            <div id="qr-reader" className="w-full border-none [&_#qr-reader__dashboard_section_csr_span]:text-slate-700 [&_button]:rounded-full [&_button]:bg-orange-500 [&_button]:px-4 [&_button]:py-2 [&_button]:text-sm [&_button]:font-semibold [&_button]:text-white [&_button]:transition-colors hover:[&_button]:bg-orange-600" />
+            {/* Pure Scanner Container */}
+            <div className="relative p-4 sm:p-5">
+              <div 
+                id="qr-reader" 
+                className="w-full overflow-hidden rounded-2xl border-0 bg-slate-900 shadow-inner"
+              />
+              
+              {/* Overlay Loading State */}
+              {isStarting && !cameraError && (
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-2xl bg-slate-900/90 text-white backdrop-blur-sm m-4 sm:m-5">
+                  <div className="flex size-12 animate-pulse items-center justify-center rounded-full bg-white/10">
+                    <Camera className="size-6 text-white/80" />
+                  </div>
+                  <p className="mt-3 text-sm font-medium tracking-wide">Membuka Kamera...</p>
+                </div>
+              )}
+            </div>
             
-            <div className="flex items-center justify-center gap-2 border-t border-slate-100 bg-slate-50 p-4 text-xs font-medium text-slate-500">
-              <ScanLine className="h-4 w-4" />
-              Pastikan QR Code berada di dalam kotak
+            <div className="flex items-center justify-center gap-2 border-t border-slate-100 bg-slate-50/50 p-4 text-[13px] font-medium text-slate-500 backdrop-blur">
+              <ScanLine className="h-4 w-4 text-orange-500" />
+              Posisikan QR Code di area kotak
             </div>
           </div>
         )}

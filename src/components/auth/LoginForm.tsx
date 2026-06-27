@@ -97,11 +97,13 @@ export function LoginForm() {
       redirectPath: string;
     };
   }) {
+    console.log("completeAuth called", response);
     if (!response.data) {
       throw new Error("Respons login tidak lengkap.");
     }
 
     persistAuthUser(response.data.user);
+    console.log("routing to", resolveRedirectPath(response.data.redirectPath));
     router.replace(resolveRedirectPath(response.data.redirectPath));
     router.refresh();
   }
@@ -117,7 +119,7 @@ export function LoginForm() {
       return;
     }
 
-    setErrorMessage(fallbackMessage);
+    setErrorMessage(fallbackMessage + (error instanceof Error ? ` (${error.message})` : ""));
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -181,14 +183,17 @@ export function LoginForm() {
 
     const targetWidth = Math.max(280, Math.min(googleButtonRef.current.clientWidth || 360, 390));
 
-    googleApi.initialize({
-      client_id: googleClientId,
-      callback: (response) => {
-        void handleGoogleCredential(response.credential);
-      },
-      cancel_on_tap_outside: true,
-      context: "signin",
-    });
+    if (!(window as any)._gsiInitialized) {
+      googleApi.initialize({
+        client_id: googleClientId,
+        callback: (response) => {
+          void handleGoogleCredential(response.credential);
+        },
+        cancel_on_tap_outside: true,
+        context: "signin",
+      });
+      (window as any)._gsiInitialized = true;
+    }
 
     googleButtonRef.current.innerHTML = "";
     googleApi.renderButton(googleButtonRef.current, {
@@ -313,7 +318,7 @@ export function LoginForm() {
               Remember Me
             </label>
             <Link
-              href="/reset-password"
+              href="/forgot-password"
               className="text-sm font-medium text-slate-400 transition hover:text-orange-600"
             >
               Forgot Password?

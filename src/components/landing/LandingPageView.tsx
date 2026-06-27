@@ -12,6 +12,7 @@ import LandingRegistrationSection from "@/components/landing/sections/LandingReg
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+  preload: false,
 });
 
 export default function LandingPageView() {

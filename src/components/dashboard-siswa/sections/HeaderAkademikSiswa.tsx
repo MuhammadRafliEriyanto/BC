@@ -104,7 +104,7 @@ export default function HeaderAkademikSiswa({
             stats: `${academicSummary.taskCount} Tugas`,
             primaryLabel: "Lihat Tugas",
             primaryHref: "/dashboard-siswa/tugas",
-            secondaryLabel: "Kirim Tugas",
+            secondaryLabel: "Kirim Jawaban",
             secondaryHref: "/dashboard-siswa/kirim-tugas",
           },
         },

@@ -808,7 +808,7 @@ function StudentsWithoutMembershipPanel({
       ) : null}
 
       {!isLoading && !error && students.length > 0 ? (
-        <div className="mt-4 max-h-[28rem] space-y-3 overflow-y-auto pr-1">
+        <div className="mt-4 max-h-[28rem] space-y-3 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pr-1">
           {students.map((student) => (
             <div
               key={student.id}
@@ -944,7 +944,7 @@ function CreateMembershipBillingDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="overflow-y-auto px-5 py-4 sm:px-6">
+          <div className="overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-5 py-4 sm:px-6">
             <Tabs
               value={createMode}
               onValueChange={(value) => onCreateModeChange(value as CreateBillingMode)}
@@ -1199,7 +1199,7 @@ function CreateMembershipBillingDialog({
                       <p className="text-sm font-semibold text-slate-800">
                         Detail siswa
                       </p>
-                      <div className="max-h-[38vh] space-y-3 overflow-y-auto pr-1">
+                      <div className="max-h-[38vh] space-y-3 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pr-1">
                         {batchResult.items.map((item) => (
                           <div
                             key={`${item.studentId}-${item.paymentId ?? item.reasonCode ?? item.status}`}
@@ -1525,7 +1525,7 @@ function IncomingPaymentEditDialog({
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4 overflow-y-auto px-5 py-4 sm:px-6">
+            <div className="space-y-4 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-5 py-4 sm:px-6">
               <div className="grid gap-4 md:grid-cols-2">
                 <InfoField label="Nama siswa" value={record.student.name} />
                 <InfoField label="Tagihan lama" value={record.paymentId} />
@@ -1639,7 +1639,7 @@ function IncomingPaymentStatusEditDialog({
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4 overflow-y-auto px-5 py-4 sm:px-6">
+            <div className="space-y-4 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-5 py-4 sm:px-6">
               <div className="grid gap-3 md:grid-cols-2">
                 <InfoField label="Nama siswa" value={record.student.name} />
                 <InfoField
@@ -1730,7 +1730,7 @@ function IncomingPaymentDetailDialog({
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4 overflow-y-auto px-5 py-4 sm:px-6">
+            <div className="space-y-4 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-5 py-4 sm:px-6">
               {anomalyReasons.length ? (
                 <div className="rounded-[22px] border border-rose-100/80 bg-rose-50 px-4 py-3 text-sm leading-6 text-rose-700">
                   {anomalyReasons.join(" ")}
@@ -1890,7 +1890,7 @@ function ActivationDetailDialog({
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4 overflow-y-auto px-5 py-4 sm:px-6">
+            <div className="space-y-4 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-5 py-4 sm:px-6">
               {anomalyReasons.length ? (
                 <div className="rounded-[22px] border border-rose-100/80 bg-rose-50 px-4 py-3 text-sm leading-6 text-rose-700">
                   {anomalyReasons.join(" ")}
@@ -3962,7 +3962,7 @@ export function AdminPaymentVerification({
                     </div>
                   </div>
 
-                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <div className="mt-3 grid grid-cols-2 gap-3">
                     <Select
                       value={incomingStatusFilter}
                       onValueChange={(value) =>

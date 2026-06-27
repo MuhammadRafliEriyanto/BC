@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useEffectEvent, useMemo, useState } from "react";
 import {
   AlertCircle,
@@ -16,8 +17,9 @@ import {
   Search,
   User,
 } from "lucide-react";
-
 import { clearAuthClientState } from "@/lib/auth";
+import { buildGuruApiUrl, buildGuruUrl, getSelectedAcademicPeriod } from "@/lib/guru-helpers";
+
 import { DEFAULT_SEMESTER_MEETING_TARGET } from "@/components/dashboard-guru/data/guruClassData";
 
 type GuruDay =
@@ -549,9 +551,9 @@ function buildFollowUpItems(kelasItems: GuruClassCardItem[]) {
         item.conflictCount > 0
           ? `${item.conflictCount} bentrok perlu dicek`
           : item.pendingTaskCount > 0
-            ? `${item.pendingTaskCount} tugas belum dinilai`
+            ? `${item.pendingTaskCount} latihan belum dinilai`
             : item.overdueTaskCount > 0
-              ? `${item.overdueTaskCount} tugas lewat deadline tanpa pengumpulan`
+              ? `${item.overdueTaskCount} latihan lewat deadline tanpa pengumpulan`
               : item.status === "Review"
                 ? "Perlu ditinjau ulang"
                 : "Jadwal perlu dikonfirmasi",
@@ -744,7 +746,20 @@ function PerluDinilaiCard({ item }: { item: ReviewItem }) {
   );
 }
 
-function KelasCard({ kelas }: { kelas: GuruClassCardItem }) {
+function GuruClassCard({
+  kelas,
+  index,
+  academicYear,
+}: {
+  kelas: GuruClassCardItem;
+  index: number;
+  academicYear: string;
+}) {
+  const gradClass =
+    kelas.status === "Berjalan"
+      ? "bg-gradient-to-r from-emerald-400 via-emerald-500 to-teal-400"
+      : "bg-gradient-to-r from-orange-400 via-orange-500 to-amber-400 border-orange-400";
+
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-gray-100 bg-white p-4 transition-all duration-300 ease-out hover:-translate-y-1 hover:scale-[1.01] hover:border-orange-200 hover:shadow-xl hover:shadow-orange-100/60 hover:ring-2 hover:ring-orange-100 active:scale-[0.99]">
       <div className="flex items-start justify-between gap-2">
@@ -802,7 +817,7 @@ function KelasCard({ kelas }: { kelas: GuruClassCardItem }) {
 
       <div className="mt-2 flex gap-2">
         <Link
-          href={`/dashboard-guru/detail-kelas?kelasId=${kelas.kelasId}`}
+          href={buildGuruUrl("/dashboard-guru/detail-kelas", new URLSearchParams({ academicYear }), { kelasId: kelas.kelasId })}
           className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-gray-200 py-2 text-xs font-medium text-gray-700 transition-all hover:border-orange-200 hover:bg-orange-50 hover:text-orange-700"
         >
           <ExternalLink size={12} />
@@ -810,7 +825,7 @@ function KelasCard({ kelas }: { kelas: GuruClassCardItem }) {
         </Link>
 
         <Link
-          href={`/dashboard-guru/absensi-kelas?kelasId=${kelas.kelasId}`}
+          href={buildGuruUrl("/dashboard-guru/absensi-kelas", new URLSearchParams({ academicYear }), { kelasId: kelas.kelasId })}
           className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-medium text-white shadow-sm shadow-orange-200/80 transition-all hover:brightness-[1.03] hover:shadow-md hover:shadow-orange-200/80 ${gradClass}`}
         >
           <ClipboardCheck size={12} />
@@ -822,6 +837,9 @@ function KelasCard({ kelas }: { kelas: GuruClassCardItem }) {
 }
 
 export default function JadwalGuruSection() {
+  const searchParams = useSearchParams();
+  const { academicYear } = getSelectedAcademicPeriod(searchParams);
+  
   const [selectedDay, setSelectedDay] = useState<GuruDay>(
     getCurrentIndonesianDay(),
   );
@@ -839,9 +857,12 @@ export default function JadwalGuruSection() {
     setLoadError(null);
 
     try {
+      const scheduleUrl = buildGuruApiUrl("/api/teacher/me/schedules", searchParams);
+      const classesUrl = buildGuruApiUrl("/api/teacher/me/classes", searchParams);
+
       const [scheduleResult, classesResult] = await Promise.allSettled([
-        fetchTeacherJson<TeacherScheduleResponse>("/api/teacher/me/schedules"),
-        fetchTeacherJson<TeacherClassesResponse>("/api/teacher/me/classes"),
+        fetchTeacherJson<TeacherScheduleResponse>(scheduleUrl),
+        fetchTeacherJson<TeacherClassesResponse>(classesUrl),
       ]);
 
       let shouldClearSession = false;
@@ -944,7 +965,7 @@ export default function JadwalGuruSection() {
     queueMicrotask(() => {
       void loadTeacherScheduleData();
     });
-  }, []);
+  }, [academicYear]);
 
   const sortedJadwal = useMemo(
     () =>
@@ -1207,9 +1228,9 @@ export default function JadwalGuruSection() {
             {isLoading ? (
               <LoadingStack count={3} />
             ) : filteredKelas.length > 0 ? (
-              filteredKelas.map((kelas) => (
-                <KelasCard key={kelas.kelasId} kelas={kelas} />
-              ))
+                filteredKelas.map((kelas, index) => (
+                  <GuruClassCard key={kelas.kelasId} kelas={kelas} index={index} academicYear={academicYear} />
+                ))
             ) : (
               <div className="flex flex-col items-center justify-center py-10 text-center text-gray-400">
                 <BookOpen size={28} className="opacity-40" />

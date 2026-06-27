@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useEffectEvent, useMemo, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import {
@@ -18,6 +19,7 @@ import {
 } from "lucide-react";
 
 import { clearAuthClientState } from "@/lib/auth";
+import { buildGuruApiUrl, buildGuruUrl, getSelectedAcademicPeriod } from "@/lib/guru-helpers";
 import { DEFAULT_SEMESTER_MEETING_TARGET } from "@/components/dashboard-guru/data/guruClassData";
 import {
   Dialog,
@@ -671,6 +673,8 @@ function LoadingSection() {
 export default function AbsensiKelasSection({
   kelasId,
 }: AbsensiKelasSectionProps) {
+  const searchParams = useSearchParams();
+  const { academicYear } = getSelectedAcademicPeriod(searchParams);
   const [activeClass, setActiveClass] = useState<AttendanceClassData | null>(null);
   const [attendanceSession, setAttendanceSession] =
     useState<TeacherAttendanceSession | null>(null);
@@ -721,7 +725,7 @@ export default function AbsensiKelasSection({
     classId: string,
   ): Promise<AttendanceSessionFetchResult> {
     const response = await fetch(
-      `/api/teacher/me/classes/${encodeURIComponent(classId)}/attendance/session`,
+      buildGuruApiUrl(`/api/teacher/me/classes/${encodeURIComponent(classId)}/attendance/session`, searchParams),
       {
         method: "GET",
         credentials: "include",
@@ -788,7 +792,7 @@ export default function AbsensiKelasSection({
 
     try {
       const classResponse = await fetch(
-        `/api/teacher/me/classes/${encodeURIComponent(normalizedClassId)}`,
+        buildGuruApiUrl(`/api/teacher/me/classes/${encodeURIComponent(normalizedClassId)}`, searchParams),
         {
           method: "GET",
           credentials: "include",
@@ -876,7 +880,7 @@ export default function AbsensiKelasSection({
 
     try {
       const response = await fetch(
-        `/api/teacher/me/classes/${encodeURIComponent(activeClass.kelasId)}/attendance/session`,
+        buildGuruApiUrl(`/api/teacher/me/classes/${encodeURIComponent(activeClass.kelasId)}/attendance/session`, searchParams),
         {
           method: "POST",
           headers: {
@@ -1049,7 +1053,7 @@ export default function AbsensiKelasSection({
 
     try {
       const response = await fetch(
-        `/api/teacher/me/attendance/session/${encodeURIComponent(attendanceSession.sessionId)}/close`,
+        buildGuruApiUrl(`/api/teacher/me/attendance/session/${encodeURIComponent(attendanceSession.sessionId)}/close`, searchParams),
         {
           method: "PATCH",
           headers: {

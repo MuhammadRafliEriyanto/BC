@@ -46,7 +46,7 @@ export default function NilaiFormDialog({
           <DialogDescription className="text-sm text-slate-500">
             {scheme === "tryout"
               ? "Simpan nilai tugas dan hasil Tryout 1 sampai Tryout 3."
-              : "Simpan nilai tugas, UTS, dan UAS siswa."}
+              : "Simpan nilai tugas dan tiga tahap UTS siswa."}
           </DialogDescription>
         </DialogHeader>
 
@@ -72,7 +72,7 @@ export default function NilaiFormDialog({
           {selectedTask ? (
             <div className="border border-slate-200 bg-slate-50/60 p-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Tugas Aktif
+                Latihan Aktif
               </p>
               <h3 className="mt-1 text-base font-semibold text-slate-800">
                 {selectedTask.judulTugas}
@@ -113,7 +113,7 @@ export default function NilaiFormDialog({
 
           <div className="grid gap-4 md:grid-cols-2">
             <label className="grid gap-2 text-sm font-medium text-slate-700">
-              Nilai Tugas
+              Nilai Latihan
               <input
                 type="number"
                 min={0}
@@ -157,7 +157,7 @@ export default function NilaiFormDialog({
               rows={4}
               value={draft?.note ?? ""}
               onChange={(event) => onChange("note", event.target.value)}
-              placeholder="Tambahkan catatan singkat untuk penilaian tugas ini jika diperlukan..."
+              placeholder="Tambahkan catatan singkat untuk penilaian latihan ini jika diperlukan..."
               className="border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
             />
           </label>
@@ -176,7 +176,7 @@ export default function NilaiFormDialog({
           <button
             type="button"
             onClick={onSubmit}
-            className="border border-orange-400 bg-white via-orange-500 to-amber-400 px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-[1.02]"
+            className="border border-orange-500 bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-700 hover:brightness-[1.02]"
           >
             {mode === "add" ? "Simpan Nilai" : "Update Nilai"}
           </button>

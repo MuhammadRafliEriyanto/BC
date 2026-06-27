@@ -87,6 +87,7 @@ type StudentFormValues = {
   program: string;
   className: string;
   birthDate: string;
+  academicYear: string;
   status: AdminStudent["status"];
 };
 
@@ -168,6 +169,7 @@ function createEmptyStudentForm(defaultClassName: string): StudentFormValues {
     program: "",
     className: defaultClassName,
     birthDate: "",
+    academicYear: "2025/2026",
     status: "Aktif",
   };
 }
@@ -287,6 +289,7 @@ function toStudentFormValues(student: AdminStudent): StudentFormValues {
     program: student.program,
     className: student.className,
     birthDate: student.birthDate,
+    academicYear: student.academicYear || "2025/2026",
     status: student.status,
   };
 }
@@ -497,6 +500,7 @@ export function AdminStudents({
   const [classFilter, setClassFilter] = useState<string | undefined>(undefined);
   const [statusFilter, setStatusFilter] =
     useState<StudentStatusFilterOption>("Semua");
+  const [academicYearFilter, setAcademicYearFilter] = useState<string>("2025/2026");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
@@ -547,6 +551,7 @@ export function AdminStudents({
     levelFilter,
     classFilter ?? "",
     statusFilter,
+    academicYearFilter,
     pageLimit,
   ].join("|");
 
@@ -602,6 +607,7 @@ export function AdminStudents({
           status: statusFilter === "Semua" ? undefined : statusFilter,
           className: classFilter,
           level: levelFilter === "Semua" ? undefined : levelFilter,
+          academicYear: academicYearFilter,
           sort: "createdAt_desc",
         });
 
@@ -632,7 +638,7 @@ export function AdminStudents({
         setIsLoading(false);
       }
     },
-    [classFilter, combinedSearchQuery, levelFilter, page, pageLimit, statusFilter],
+    [classFilter, combinedSearchQuery, levelFilter, page, pageLimit, statusFilter, academicYearFilter],
   );
 
   const loadMembershipCoverage = useCallback(async () => {
@@ -826,6 +832,7 @@ export function AdminStudents({
     setLevelFilter("Semua");
     setClassFilter(undefined);
     setStatusFilter("Semua");
+    setAcademicYearFilter("2025/2026");
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -903,6 +910,7 @@ export function AdminStudents({
             program: normalizedProgram,
             className: normalizedClassName,
             birthDate: normalizedBirthDate,
+            academicYear: formValues.academicYear,
             status: formValues.status,
           }),
         },
@@ -1187,14 +1195,15 @@ export function AdminStudents({
         description="Kelola data siswa, filter jenjang dan kelas, serta impor atau ekspor data CSV."
         square
         action={
-          <div className="flex flex-wrap justify-start gap-2 sm:justify-end">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <Button
               variant="secondary"
               className={warmPrimaryButtonClassName}
               onClick={openCreateDialog}
             >
               <Plus className="size-4" />
-              Tambah Data
+              <span className="hidden sm:inline">Tambah Data</span>
+              <span className="inline sm:hidden">Tambah</span>
             </Button>
             <Button
               variant="outline"
@@ -1203,7 +1212,7 @@ export function AdminStudents({
               disabled={!filteredStudents.length}
             >
               <Download className="size-4" />
-              Export
+              <span className="hidden sm:inline">Export</span>
             </Button>
             <Button
               variant="outline"
@@ -1211,7 +1220,7 @@ export function AdminStudents({
               onClick={() => setIsImportOpen(true)}
             >
               <Upload className="size-4" />
-              Import
+              <span className="hidden sm:inline">Import</span>
             </Button>
           </div>
         }
@@ -1301,8 +1310,8 @@ export function AdminStudents({
           </div>
         ) : null}
 
-        <div className="mb-6 grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1.7fr)_180px_180px_160px_auto]">
-          <div className="md:col-span-2 xl:col-span-1">
+        <div className="mb-6 flex flex-col gap-3 md:flex-row md:flex-wrap">
+          <div className="w-full md:flex-1">
             <Input
               className={warmFieldClassName}
               value={search}
@@ -1311,77 +1320,104 @@ export function AdminStudents({
             />
           </div>
 
-          <Select
-            value={levelFilter}
-            onValueChange={handleLevelFilterChange}
-          >
-            <SelectTrigger className={warmSelectTriggerClassName}>
-              <SelectValue placeholder="Program / Jenjang" />
-            </SelectTrigger>
-            <SelectContent className={warmSelectContentClassName}>
-              {studentLevelOptions.map((option) => (
-                <SelectItem
-                  key={option}
-                  value={option}
-                  className={warmSelectItemClassName}
-                >
-                  {option === "Semua" ? "Semua Program" : option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="grid w-full grid-cols-2 gap-3 sm:flex sm:w-auto sm:flex-wrap">
+            <div className="w-full sm:w-[180px]">
+              <Select
+                value={levelFilter}
+                onValueChange={handleLevelFilterChange}
+              >
+                <SelectTrigger className={warmSelectTriggerClassName}>
+                  <SelectValue placeholder="Program / Jenjang" />
+                </SelectTrigger>
+                <SelectContent className={warmSelectContentClassName}>
+                  {studentLevelOptions.map((option) => (
+                    <SelectItem
+                      key={option}
+                      value={option}
+                      className={warmSelectItemClassName}
+                    >
+                      {option === "Semua" ? "Semua Program" : option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <Select
-            value={classFilter}
-            onValueChange={setClassFilter}
-            disabled={levelFilter === "Semua"}
-          >
-            <SelectTrigger className={warmSelectTriggerClassName}>
-              <SelectValue
-                placeholder={
-                  levelFilter === "Semua" ? "Pilih jenjang dulu" : "Kelas"
+            <div className="w-full sm:w-[180px]">
+              <Select
+                value={classFilter}
+                onValueChange={setClassFilter}
+                disabled={levelFilter === "Semua"}
+              >
+                <SelectTrigger className={warmSelectTriggerClassName}>
+                  <SelectValue
+                    placeholder={
+                      levelFilter === "Semua" ? "Pilih jenjang dulu" : "Kelas"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent className={warmSelectContentClassName}>
+                  {availableClassOptions.map((option) => (
+                    <SelectItem
+                      key={option}
+                      value={option}
+                      className={warmSelectItemClassName}
+                    >
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="w-full sm:w-[160px]">
+              <Select
+                value={academicYearFilter}
+                onValueChange={setAcademicYearFilter}
+              >
+                <SelectTrigger className={warmSelectTriggerClassName}>
+                  <SelectValue placeholder="Tahun Ajaran" />
+                </SelectTrigger>
+                <SelectContent className={warmSelectContentClassName}>
+                  <SelectItem value="2025/2026" className={warmSelectItemClassName}>
+                    2025/2026
+                  </SelectItem>
+                  <SelectItem value="2026/2027" className={warmSelectItemClassName}>
+                    2026/2027
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="w-full sm:w-[160px]">
+              <Select
+                value={statusFilter}
+                onValueChange={(value) =>
+                  setStatusFilter(value as StudentStatusFilterOption)
                 }
-              />
-            </SelectTrigger>
-            <SelectContent className={warmSelectContentClassName}>
-              {availableClassOptions.map((option) => (
-                <SelectItem
-                  key={option}
-                  value={option}
-                  className={warmSelectItemClassName}
-                >
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={statusFilter}
-            onValueChange={(value) =>
-              setStatusFilter(value as StudentStatusFilterOption)
-            }
-          >
-            <SelectTrigger className={warmSelectTriggerClassName}>
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent className={warmSelectContentClassName}>
-              {studentStatusOptions.map((option) => (
-                <SelectItem
-                  key={option}
-                  value={option}
-                  className={warmSelectItemClassName}
-                >
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              >
+                <SelectTrigger className={warmSelectTriggerClassName}>
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent className={warmSelectContentClassName}>
+                  {studentStatusOptions.map((option) => (
+                    <SelectItem
+                      key={option}
+                      value={option}
+                      className={warmSelectItemClassName}
+                    >
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
           <Button
             type="button"
             variant="outline"
-            className={`w-full xl:w-auto ${warmOutlineButtonClassName}`}
+            className={`w-full sm:w-auto ${warmOutlineButtonClassName}`}
             onClick={handleResetFilters}
           >
             <RotateCcw className="size-4" />
@@ -1432,7 +1468,7 @@ export function AdminStudents({
         }}
       >
         <DialogContent
-          className={`sm:max-w-5xl ${warmOverlayPanelClassName}`}
+          className={`max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] sm:max-w-5xl ${warmOverlayPanelClassName}`}
         >
           <DialogHeader>
             <DialogTitle>
@@ -1570,6 +1606,27 @@ export function AdminStudents({
                 />
               </StudentField>
 
+              <StudentField label="Tahun Ajaran">
+                <Select
+                  value={formValues.academicYear}
+                  onValueChange={(value) =>
+                    updateFormValue("academicYear", value)
+                  }
+                >
+                  <SelectTrigger className={warmSelectTriggerClassName}>
+                    <SelectValue placeholder="Tahun Ajaran" />
+                  </SelectTrigger>
+                  <SelectContent className={warmSelectContentClassName}>
+                    <SelectItem value="2025/2026" className={warmSelectItemClassName}>
+                      2025/2026
+                    </SelectItem>
+                    <SelectItem value="2026/2027" className={warmSelectItemClassName}>
+                      2026/2027
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </StudentField>
+
               <StudentField label="Status">
                 <Select
                   value={formValues.status}
@@ -1637,7 +1694,7 @@ export function AdminStudents({
           }
         }}
       >
-        <DialogContent className={`sm:max-w-xl ${warmOverlayPanelClassName}`}>
+        <DialogContent className={`max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] sm:max-w-xl ${warmOverlayPanelClassName}`}>
           <DialogHeader>
             <DialogTitle>Import data siswa</DialogTitle>
             <DialogDescription>

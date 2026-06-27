@@ -358,7 +358,7 @@ export function OwnerDashboardBranchAdminsSection({
             ) : null}
           </div>
 
-          <div className="-mx-6 overflow-hidden border-t border-slate-200/80">
+          <div className="-mx-6 overflow-x-auto overflow-y-hidden border-t border-slate-200/80">
             <Table className="min-w-[1120px]">
               <TableHeader>
                 <TableRow>

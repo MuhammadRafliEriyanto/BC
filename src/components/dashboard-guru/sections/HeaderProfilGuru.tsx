@@ -14,6 +14,8 @@ import {
   readPersistedAuthUser,
   type AuthUser,
 } from "@/lib/auth";
+import { useSearchParams } from "next/navigation";
+import { buildGuruApiUrl } from "@/lib/guru-helpers";
 
 const headerBackgrounds = [
   "https://images.unsplash.com/photo-1501785888041-af3ef285b470",
@@ -31,6 +33,7 @@ type HeaderProfilGuruState = {
   totalStudentsLabel: string;
   status: string;
   activeClassesLabel: string;
+  totalClasses: number;
 };
 
 type TodayScheduleItem = {
@@ -81,6 +84,7 @@ const fallbackProfile: HeaderProfilGuruState = {
   totalStudentsLabel: "-",
   status: "-",
   activeClassesLabel: "-",
+  totalClasses: 0,
 };
 
 function getInitials(name: string) {
@@ -121,6 +125,7 @@ function buildProfileFromAuthUser(user: AuthUser): HeaderProfilGuruState {
     totalStudentsLabel: "-",
     status: "-",
     activeClassesLabel: "-",
+    totalClasses: 0,
   };
 }
 
@@ -210,10 +215,12 @@ function buildProfileFromTeacherPayload(
     status: teacher?.status?.trim() || "-",
     activeClassesLabel:
       totalClasses > 0 ? `${totalClasses} kelas` : "Belum ada kelas",
+    totalClasses,
   };
 }
 
 export default function HeaderProfilGuru() {
+  const searchParams = useSearchParams();
   const [bgImage, setBgImage] = useState(headerBackgrounds[0]);
   const [profile, setProfile] =
     useState<HeaderProfilGuruState>(fallbackProfile);
@@ -243,7 +250,7 @@ export default function HeaderProfilGuru() {
 
   const loadTeacherProfile = useEffectEvent(async () => {
     try {
-      const response = await fetch("/api/teacher/me/dashboard", {
+      const response = await fetch(buildGuruApiUrl("/api/teacher/me/dashboard", searchParams), {
         method: "GET",
         credentials: "include",
         cache: "no-store",
@@ -296,7 +303,7 @@ export default function HeaderProfilGuru() {
 
       void loadTeacherProfile();
     });
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     function handleAuthUserUpdated() {
@@ -385,24 +392,17 @@ export default function HeaderProfilGuru() {
         <div className="h-1 bg-gradient-to-r from-red-600 via-orange-500 to-orange-400" />
 
         <div className="flex h-full flex-col p-4 md:p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-xs font-semibold text-slate-700 md:text-sm">
-                Jadwal Guru Hari Ini
-              </h3>
-              <p className="mt-1 text-[11px] text-slate-500">
-                {todaySchedules.length > 0
-                  ? `${todaySchedules.length} sesi terjadwal untuk hari ini.`
-                  : "Belum ada jadwal mengajar untuk hari ini."}
-              </p>
-            </div>
-
-            <Link
-              href="/dashboard-guru/jadwal"
-              className="text-[10px] font-medium text-orange-600 transition hover:text-orange-700 md:text-xs"
-            >
-              Lihat Semua Jadwal
-            </Link>
+          <div className="mb-4">
+            <h3 className="text-xs font-semibold text-slate-700 md:text-sm">
+              Jadwal Guru Hari Ini
+            </h3>
+            <p className="mt-1 text-[11px] text-slate-500">
+              {todaySchedules.length > 0
+                ? `${todaySchedules.length} sesi terjadwal untuk hari ini.`
+                : profile.totalClasses === 0
+                ? "Belum ada jadwal mengajar di tahun ajaran ini."
+                : "Belum ada jadwal mengajar untuk hari ini."}
+            </p>
           </div>
 
           {todaySchedules.length > 0 ? (
@@ -437,21 +437,27 @@ export default function HeaderProfilGuru() {
             <div className="rounded-2xl border border-dashed border-orange-200 bg-orange-50/50 p-5 text-center">
               <CalendarDays className="mx-auto h-5 w-5 text-orange-400" />
               <p className="mt-2 text-xs font-semibold text-orange-600">
-                Belum ada jadwal mengajar untuk hari ini.
+                {profile.totalClasses === 0
+                  ? "Belum ada jadwal mengajar di tahun ajaran ini."
+                  : "Belum ada jadwal mengajar untuk hari ini."}
               </p>
               <p className="mt-1 text-[11px] text-slate-500">
-                Cek halaman jadwal untuk melihat sesi di hari lain.
+                {profile.totalClasses === 0
+                  ? "Silakan pilih periode akademik yang aktif."
+                  : "Cek halaman jadwal untuk melihat sesi di hari lain."}
               </p>
             </div>
           )}
 
-          <Link
-            href="/dashboard-guru/jadwal"
-            className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-dashed border-orange-200 bg-orange-50/60 px-4 py-3 text-xs font-semibold text-orange-700 transition hover:bg-orange-100/70"
-          >
-            <CalendarDays className="h-4 w-4" />
-            Buka halaman jadwal lengkap
-          </Link>
+          {profile.totalClasses > 0 && (
+            <Link
+              href="/dashboard-guru/jadwal"
+              className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-dashed border-orange-200 bg-orange-50/60 px-4 py-3 text-xs font-semibold text-orange-700 transition hover:bg-orange-100/70"
+            >
+              <CalendarDays className="h-4 w-4" />
+              Buka halaman jadwal lengkap
+            </Link>
+          )}
         </div>
       </section>
     </div>

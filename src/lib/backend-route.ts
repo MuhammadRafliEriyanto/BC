@@ -113,7 +113,14 @@ export async function proxyProtectedBackend(
   try {
     const { baseUrl, apiKey } = getBackendConfig();
     const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-    const targetUrl = `${baseUrl}${normalizedPath}`;
+    
+    const url = new URL(normalizedPath, baseUrl);
+    request.nextUrl.searchParams.forEach((value, key) => {
+      if (!url.searchParams.has(key)) {
+        url.searchParams.append(key, value);
+      }
+    });
+    const targetUrl = url.toString();
     const headers = new Headers(init.headers);
 
     headers.set("x-api-key", apiKey);
@@ -168,7 +175,14 @@ export async function proxyProtectedBackendRaw(
   try {
     const { baseUrl, apiKey } = getBackendConfig();
     const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-    const targetUrl = `${baseUrl}${normalizedPath}`;
+    
+    const url = new URL(normalizedPath, baseUrl);
+    request.nextUrl.searchParams.forEach((value, key) => {
+      if (!url.searchParams.has(key)) {
+        url.searchParams.append(key, value);
+      }
+    });
+    const targetUrl = url.toString();
     const headers = new Headers(init.headers);
 
     headers.set("x-api-key", apiKey);

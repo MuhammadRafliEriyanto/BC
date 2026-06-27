@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -1109,12 +1110,10 @@ function OverviewSearchResultsSection({
 }
 
 export function AdminDashboard() {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [activeTab, setActiveTab] = useState<AdminTab>("overview");
-  const [mountedTabs, setMountedTabs] = useState<Set<AdminTab>>(
-    () => new Set(["overview"]),
-  );
-  const [globalSearchQuery, setGlobalSearchQuery] = useState("");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const globalSearchQuery = searchParams.get("q") || "";
+  
   const [dashboardConfig, setDashboardConfig] = useState<AdminDashboardConfigData>(
     defaultAdminDashboardConfig,
   );
@@ -1160,6 +1159,9 @@ export function AdminDashboard() {
   const [studentSummaryLoading, setStudentSummaryLoading] = useState(true);
   const [teacherSummaryLoading, setTeacherSummaryLoading] = useState(true);
   const [scheduleSummaryLoading, setScheduleSummaryLoading] = useState(true);
+
+  const [activeTab, setActiveTab] = useState<AdminTab>("overview");
+  const [mountedTabs, setMountedTabs] = useState<Set<AdminTab>>(() => new Set(["overview"]));
 
   const selectAdminTab = useCallback((tab: AdminTab) => {
     setMountedTabs((currentTabs) => {
@@ -1391,7 +1393,7 @@ export function AdminDashboard() {
     let isCancelled = false;
     const trimmedQuery = globalSearchQuery.trim();
 
-    if (activeTab !== "overview" || !trimmedQuery) {
+    if (!trimmedQuery) {
       return () => {
         isCancelled = true;
       };
@@ -1490,7 +1492,7 @@ export function AdminDashboard() {
       isCancelled = true;
       window.clearTimeout(timerId);
     };
-  }, [activeTab, globalSearchQuery]);
+  }, [globalSearchQuery]);
 
   const activeStudents = studentSummary.activeCount;
   const activeTeachers = teacherSummary.activeCount;
@@ -1578,152 +1580,59 @@ export function AdminDashboard() {
   };
 
   return (
-    <div
-      className={cn(
-        adminPoppins.className,
-        "min-h-screen bg-white",
-      )}
-    >
-      <AdminSidebar
-        activeTab={activeTab}
-        onSelect={selectAdminTab}
-        badgeCounts={sidebarBadgeCounts}
-        collapsed={isSidebarCollapsed}
-        onToggle={() => setIsSidebarCollapsed((prev) => !prev)}
-        className="fixed inset-y-0 left-0 z-20"
-      />
-
-      <div
-        className={cn(
-          "flex min-h-screen flex-1 flex-col transition-[padding] duration-200",
-          isSidebarCollapsed ? "lg:pl-20" : "lg:pl-[236px]"
-        )}
-      >
-        <AdminTopbar
-          activeTab={activeTab}
-          onSelectTab={selectAdminTab}
-          sidebarBadgeCounts={sidebarBadgeCounts}
-          searchQuery={globalSearchQuery}
-          onSearchQueryChange={setGlobalSearchQuery}
-          onClearSearchQuery={() => {
-            setGlobalSearchQuery("");
+    <div className="space-y-6">
+      {globalSearchQuery.trim() ? (
+        <OverviewSearchResultsSection
+          query={globalSearchQuery.trim()}
+          results={overviewSearchResults}
+          isLoading={isOverviewSearchLoading}
+          error={overviewSearchError}
+          onOpenTab={(tab) => {
+            switch (tab) {
+              case "students": router.push("/dashboard-admin/siswa"); break;
+              case "teachers": router.push("/dashboard-admin/guru"); break;
+              case "payments": router.push("/dashboard-admin/pembayaran"); break;
+              case "schedule": router.push("/dashboard-admin/jadwal"); break;
+              case "profile": router.push("/dashboard-admin/profil"); break;
+              default: router.push("/dashboard-admin"); break;
+            }
           }}
         />
+      ) : null}
 
-        <main className="flex-1 p-5 lg:p-6">
-          <div className="space-y-6">
-            <DashboardPanel
-              active={activeTab === "overview"}
-              mounted={mountedTabs.has("overview")}
-            >
-              <div className="space-y-6">
-                {globalSearchQuery.trim() ? (
-                  <OverviewSearchResultsSection
-                    query={globalSearchQuery.trim()}
-                    results={overviewSearchResults}
-                    isLoading={isOverviewSearchLoading}
-                    error={overviewSearchError}
-                    onOpenTab={selectAdminTab}
-                  />
-                ) : null}
+      <section className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
+        {dashboardStats.map(({ key, ...stat }) => (
+          <DashboardStatCard key={key} {...stat} />
+        ))}
+      </section>
 
-                <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                  {dashboardStats.map(({ key, ...stat }) => (
-                    <DashboardStatCard key={key} {...stat} />
-                  ))}
-                </section>
+      <BranchFinanceOverviewPanel
+        summary={financeSummary}
+        isLoading={financeLoading}
+        error={financeError}
+        onViewDetails={() => {
+          router.push("/dashboard-admin/pembayaran");
+        }}
+      />
 
-                <BranchFinanceOverviewPanel
-                  summary={financeSummary}
-                  isLoading={financeLoading}
-                  error={financeError}
-                  onViewDetails={() => {
-                    selectAdminTab("payments");
-                  }}
-                />
-
-                <section className="grid gap-4 xl:grid-cols-[1fr_320px]">
-                  <PaymentDistributionCard
-                    summary={paymentSummary}
-                    trend={paymentTrend}
-                    isLoading={paymentsLoading}
-                    error={paymentsError}
-                    period={paymentOverviewPeriod}
-                    onPeriodChange={setPaymentOverviewPeriod}
-                  />
-                  <PaymentStatusDonutCard
-                    summary={paymentSummary}
-                    isLoading={paymentsLoading}
-                    error={paymentsError}
-                    onViewDetails={() => {
-                      selectAdminTab("payments");
-                    }}
-                  />
-                </section>
-              </div>
-            </DashboardPanel>
-
-            <DashboardPanel
-              active={activeTab === "students"}
-              mounted={mountedTabs.has("students")}
-            >
-              <AdminStudents
-                dashboardConfig={dashboardConfig}
-                onRefresh={refreshOverview}
-                globalSearchQuery={
-                  activeTab === "students" ? globalSearchQuery : ""
-                }
-              />
-            </DashboardPanel>
-
-            <DashboardPanel
-              active={activeTab === "teachers"}
-              mounted={mountedTabs.has("teachers")}
-            >
-              <AdminTeachers
-                dashboardConfig={dashboardConfig}
-                onRefresh={refreshOverview}
-                globalSearchQuery={
-                  activeTab === "teachers" ? globalSearchQuery : ""
-                }
-              />
-            </DashboardPanel>
-
-            <DashboardPanel
-              active={activeTab === "schedule"}
-              mounted={mountedTabs.has("schedule")}
-            >
-              <AdminSchedule
-                dashboardConfig={dashboardConfig}
-                onRefresh={refreshOverview}
-                globalSearchQuery={
-                  activeTab === "schedule" ? globalSearchQuery : ""
-                }
-              />
-            </DashboardPanel>
-
-            <DashboardPanel
-              active={activeTab === "payments"}
-              mounted={mountedTabs.has("payments")}
-            >
-              <AdminPaymentVerification
-                dashboardConfig={dashboardConfig}
-                onRefresh={refreshOverview}
-                globalSearchQuery={
-                  activeTab === "payments" ? globalSearchQuery : ""
-                }
-              />
-            </DashboardPanel>
-
-            <DashboardPanel
-              active={activeTab === "profile"}
-              mounted={mountedTabs.has("profile")}
-            >
-              <AdminProfileTab />
-            </DashboardPanel>
-          </div>
-        </main>
-      </div>
+      <section className="grid gap-4 xl:grid-cols-[1fr_320px]">
+        <PaymentDistributionCard
+          summary={paymentSummary}
+          trend={paymentTrend}
+          isLoading={paymentsLoading}
+          error={paymentsError}
+          period={paymentOverviewPeriod}
+          onPeriodChange={setPaymentOverviewPeriod}
+        />
+        <PaymentStatusDonutCard
+          summary={paymentSummary}
+          isLoading={paymentsLoading}
+          error={paymentsError}
+          onViewDetails={() => {
+            router.push("/dashboard-admin/pembayaran");
+          }}
+        />
+      </section>
     </div>
   );
 }

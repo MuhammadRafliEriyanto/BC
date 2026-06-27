@@ -163,6 +163,7 @@ async function requestJson<T extends Record<string, unknown>>(
   const payload = (await response.json().catch(() => null)) as ApiResponse<T> | null;
 
   if (!response.ok || !payload?.success) {
+    console.error('Fetch error:', { status: response.status, payload });
     throw new AuthRequestError(
       payload?.message || "Terjadi kesalahan saat memproses permintaan auth.",
       response.status,

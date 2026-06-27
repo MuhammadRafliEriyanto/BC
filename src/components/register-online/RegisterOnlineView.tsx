@@ -54,7 +54,7 @@ type RegisterOnlineViewProps = {
 const DEFAULT_PACKAGE_KEY: OnlinePackageKey = "2-semester";
 
 function resolvePackageKey(packageKey?: OnlinePackageKey): OnlinePackageKey {
-  return packageKey && packageKey !== "12-bulan" ? packageKey : "2-semester";
+  return packageKey && (packageKey as string) !== "12-bulan" ? packageKey : "2-semester";
 }
 
 function normalizeRegisterPath(path?: string | null) {

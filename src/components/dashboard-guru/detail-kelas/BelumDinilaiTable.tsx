@@ -20,7 +20,7 @@ export default function BelumDinilaiTable({
             Peringatan Belum Dinilai
           </h2>
           <p className="mt-1 text-sm text-slate-500">
-            Monitoring tugas kelas {kelasName} yang status penilaiannya masih
+            Monitoring latihan kelas {kelasName} yang status penilaiannya masih
             tertunda berdasarkan data nilai backend.
           </p>
         </div>
@@ -32,8 +32,8 @@ export default function BelumDinilaiTable({
           }`}
         >
           {pendingTasks.length > 0
-            ? `${pendingTasks.length} tugas belum dinilai`
-            : "Semua tugas aman"}
+            ? `${pendingTasks.length} latihan belum dinilai`
+            : "Semua latihan aman"}
         </span>
       </div>
 
@@ -80,7 +80,7 @@ export default function BelumDinilaiTable({
                 <button
                   type="button"
                   onClick={() => onGradeNow(task)}
-                  className="mt-5 inline-flex items-center gap-1.5 border border-orange-400 bg-white via-orange-500 to-amber-400 px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-[1.02] hover:shadow-[0_18px_30px_-22px_rgba(249,115,22,0.55)]"
+                  className="mt-5 inline-flex items-center gap-1.5 border border-orange-500 bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-700 hover:shadow-[0_18px_30px_-22px_rgba(249,115,22,0.55)]"
                 >
                   <ClipboardCheck className="h-4 w-4" />
                   Nilai Sekarang
@@ -94,10 +94,10 @@ export default function BelumDinilaiTable({
               <AlertCircle className="h-5 w-5" />
             </div>
             <p className="mt-4 text-base font-semibold text-emerald-700">
-              Tidak ada tugas yang tertinggal untuk kelas ini.
+              Tidak ada latihan yang tertinggal untuk kelas ini.
             </p>
             <p className="mt-2 text-sm text-emerald-600/80">
-              Semua tugas pada kelas {kelasName} sudah selesai dinilai.
+              Semua latihan pada kelas {kelasName} sudah selesai dinilai.
             </p>
           </div>
         )}

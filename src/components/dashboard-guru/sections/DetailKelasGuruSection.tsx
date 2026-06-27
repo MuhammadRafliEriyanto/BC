@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useEffectEvent, useMemo, useState, type ReactNode } from "react";
 import {
   AlertCircle,
@@ -206,7 +207,7 @@ type TeacherClassApiAcademicGradeItem = {
   classId?: string;
   studentId?: string;
   academicYear?: string;
-  semester?: string;
+
   scheme?: AcademicGradeScheme;
   scores?: Partial<AcademicScores>;
   note?: string;
@@ -253,7 +254,7 @@ type TeacherClassGradesResponse = {
     scheme?: AcademicGradeScheme;
     period?: {
       academicYear?: string;
-      semester?: string;
+
     };
   };
 };
@@ -274,6 +275,8 @@ type TeacherClassAcademicGradeMutationResponse = {
     scheme?: AcademicGradeScheme;
   };
 };
+
+import { buildGuruApiUrl, buildGuruUrl, getSelectedAcademicPeriod } from "@/lib/guru-helpers";
 
 type TeacherClassSettingMutationResponse = {
   success: boolean;
@@ -775,6 +778,9 @@ function mapTeacherApiAcademicGradeToEntry(
     scores: {
       uts: toNullableScore(grade.scores?.uts),
       uas: toNullableScore(grade.scores?.uas),
+      uts1: toNullableScore(grade.scores?.uts1),
+      uts2: toNullableScore(grade.scores?.uts2),
+      uts3: toNullableScore(grade.scores?.uts3),
       tryout1: toNullableScore(grade.scores?.tryout1),
       tryout2: toNullableScore(grade.scores?.tryout2),
       tryout3: toNullableScore(grade.scores?.tryout3),
@@ -1316,6 +1322,8 @@ function SectionBadge({
 export default function DetailKelasGuruSection({
   kelasId,
 }: DetailKelasGuruSectionProps) {
+  const searchParams = useSearchParams();
+  const { academicYear } = getSelectedAcademicPeriod(searchParams);
   const [teacherName, setTeacherName] = useState(
     () => readPersistedAuthUser()?.nama ?? "Guru login",
   );
@@ -1441,7 +1449,7 @@ export default function DetailKelasGuruSection({
       body.removeAttachment = true;
     }
 
-    const response = await fetch(endpoint, {
+    const response = await fetch(buildGuruApiUrl(endpoint, searchParams), {
       method: mode === "add" ? "POST" : "PATCH",
       credentials: "include",
       cache: "no-store",
@@ -1499,7 +1507,7 @@ export default function DetailKelasGuruSection({
       body.removeAttachment = true;
     }
 
-    const response = await fetch(endpoint, {
+    const response = await fetch(buildGuruApiUrl(endpoint, searchParams), {
       method: mode === "add" ? "POST" : "PATCH",
       credentials: "include",
       cache: "no-store",
@@ -1518,7 +1526,7 @@ export default function DetailKelasGuruSection({
     }
 
     if (!response.ok || !payload?.success || !payload.data?.task) {
-      throw new Error(payload?.message || "Tugas kelas belum bisa disimpan.");
+      throw new Error(payload?.message || "Latihan kelas belum bisa disimpan.");
     }
 
     return mapTeacherApiTaskToFormItem(payload.data.task, normalizedClassId);
@@ -1532,7 +1540,7 @@ export default function DetailKelasGuruSection({
     }
 
     const response = await fetch(
-      `/api/teacher/me/classes/${encodeURIComponent(normalizedClassId)}/materials/${encodeURIComponent(materialId)}`,
+      buildGuruApiUrl(`/api/teacher/me/classes/${encodeURIComponent(normalizedClassId)}/materials/${encodeURIComponent(materialId)}`, searchParams),
       {
         method: "DELETE",
         credentials: "include",
@@ -1561,7 +1569,7 @@ export default function DetailKelasGuruSection({
     }
 
     const response = await fetch(
-      `/api/teacher/me/classes/${encodeURIComponent(normalizedClassId)}/tasks/${encodeURIComponent(taskId)}`,
+      buildGuruApiUrl(`/api/teacher/me/classes/${encodeURIComponent(normalizedClassId)}/tasks/${encodeURIComponent(taskId)}`, searchParams),
       {
         method: "DELETE",
         credentials: "include",
@@ -1578,7 +1586,7 @@ export default function DetailKelasGuruSection({
     }
 
     if (!response.ok || payload?.success === false) {
-      throw new Error(payload?.message || "Tugas kelas belum bisa dihapus.");
+      throw new Error(payload?.message || "Latihan kelas belum bisa dihapus.");
     }
   }
 
@@ -1595,7 +1603,7 @@ export default function DetailKelasGuruSection({
     }
 
     if (!normalizedTaskId) {
-      throw new Error("Tugas untuk penilaian belum dipilih.");
+      throw new Error("Latihan untuk penilaian belum dipilih.");
     }
 
     if (!normalizedStudentId) {
@@ -1610,7 +1618,7 @@ export default function DetailKelasGuruSection({
     const endpoint = existingGrade
       ? `/api/teacher/me/classes/${encodeURIComponent(normalizedClassId)}/grades/${encodeURIComponent(existingGrade.id)}`
       : `/api/teacher/me/classes/${encodeURIComponent(normalizedClassId)}/grades`;
-    const response = await fetch(endpoint, {
+    const response = await fetch(buildGuruApiUrl(endpoint, searchParams), {
       method: existingGrade ? "PATCH" : "POST",
       credentials: "include",
       cache: "no-store",
@@ -1635,7 +1643,7 @@ export default function DetailKelasGuruSection({
     }
 
     if (!response.ok || !payload?.success || !payload.data?.grade) {
-      throw new Error(payload?.message || "Nilai tugas belum bisa disimpan.");
+      throw new Error(payload?.message || "Nilai latihan belum bisa disimpan.");
     }
 
     return mapTeacherApiGradeToEntry(payload.data.grade, normalizedClassId);
@@ -1650,7 +1658,7 @@ export default function DetailKelasGuruSection({
     }
 
     const response = await fetch(
-      `/api/teacher/me/classes/${encodeURIComponent(normalizedClassId)}/academic-grades/${encodeURIComponent(normalizedStudentId)}`,
+      buildGuruApiUrl(`/api/teacher/me/classes/${encodeURIComponent(normalizedClassId)}/academic-grades/${encodeURIComponent(normalizedStudentId)}`, searchParams),
       {
         method: "PUT",
         credentials: "include",
@@ -1694,7 +1702,7 @@ export default function DetailKelasGuruSection({
     }
 
     const response = await fetch(
-      `/api/teacher/me/classes/${encodeURIComponent(normalizedClassId)}/settings`,
+      buildGuruApiUrl(`/api/teacher/me/classes/${encodeURIComponent(normalizedClassId)}/settings`, searchParams),
       {
         method: "PATCH",
         credentials: "include",
@@ -1738,11 +1746,11 @@ export default function DetailKelasGuruSection({
     }
 
     if (!normalizedTaskId) {
-      throw new Error("Tugas kelas tidak ditemukan.");
+      throw new Error("Latihan kelas tidak ditemukan.");
     }
 
     const response = await fetch(
-      `/api/teacher/me/classes/${encodeURIComponent(normalizedClassId)}/tasks/${encodeURIComponent(normalizedTaskId)}/submissions`,
+      buildGuruApiUrl(`/api/teacher/me/classes/${encodeURIComponent(normalizedClassId)}/tasks/${encodeURIComponent(normalizedTaskId)}/submissions`, searchParams),
       {
         method: "GET",
         credentials: "include",
@@ -1760,7 +1768,7 @@ export default function DetailKelasGuruSection({
 
     if (!response.ok || !payload?.success) {
       throw new Error(
-        payload?.message || "Daftar submission tugas belum bisa diambil.",
+        payload?.message || "Daftar submission latihan belum bisa diambil.",
       );
     }
 
@@ -1790,11 +1798,11 @@ export default function DetailKelasGuruSection({
     }
 
     if (!normalizedTaskId || !normalizedSubmissionId) {
-      throw new Error("Submission tugas tidak ditemukan.");
+      throw new Error("Submission latihan tidak ditemukan.");
     }
 
     const response = await fetch(
-      `/api/teacher/me/classes/${encodeURIComponent(normalizedClassId)}/tasks/${encodeURIComponent(normalizedTaskId)}/submissions/${encodeURIComponent(normalizedSubmissionId)}`,
+      buildGuruApiUrl(`/api/teacher/me/classes/${encodeURIComponent(normalizedClassId)}/tasks/${encodeURIComponent(normalizedTaskId)}/submissions/${encodeURIComponent(normalizedSubmissionId)}`, searchParams),
       {
         method: "GET",
         credentials: "include",
@@ -1812,7 +1820,7 @@ export default function DetailKelasGuruSection({
 
     if (!response.ok || !payload?.success || !payload.data?.submission) {
       throw new Error(
-        payload?.message || "Detail submission tugas belum bisa diambil.",
+        payload?.message || "Detail submission latihan belum bisa diambil.",
       );
     }
 
@@ -1838,13 +1846,13 @@ export default function DetailKelasGuruSection({
 
     try {
       const [detailResponse, gradesResponse] = await Promise.all([
-        fetch(`/api/teacher/me/classes/${encodeURIComponent(normalizedClassId)}`, {
+        fetch(buildGuruApiUrl(`/api/teacher/me/classes/${encodeURIComponent(normalizedClassId)}`, searchParams), {
           method: "GET",
           credentials: "include",
           cache: "no-store",
         }),
         fetch(
-          `/api/teacher/me/classes/${encodeURIComponent(normalizedClassId)}/grades`,
+          buildGuruApiUrl(`/api/teacher/me/classes/${encodeURIComponent(normalizedClassId)}/grades`, searchParams),
           {
             method: "GET",
             credentials: "include",
@@ -1959,7 +1967,7 @@ export default function DetailKelasGuruSection({
     queueMicrotask(() => {
       void loadTeacherClassDetail();
     });
-  }, [kelasId]);
+  }, [kelasId, searchParams]);
 
   useEffect(() => {
     setSelectedStudentId(activeClass.participants[0]?.id ?? "");
@@ -2129,7 +2137,7 @@ export default function DetailKelasGuruSection({
       window.alert(
         error instanceof Error
           ? error.message
-          : "Detail submission tugas belum bisa diambil.",
+          : "Detail submission latihan belum bisa diambil.",
       );
     } finally {
       setIsTaskSubmissionDetailLoading(false);
@@ -2170,7 +2178,7 @@ export default function DetailKelasGuruSection({
       window.alert(
         error instanceof Error
           ? error.message
-          : "Daftar submission tugas belum bisa diambil.",
+          : "Daftar submission latihan belum bisa diambil.",
       );
       handleTaskSubmissionDialogOpenChange(false);
     } finally {
@@ -2331,7 +2339,7 @@ export default function DetailKelasGuruSection({
 
   function handleTugasAttachmentChange(file: File | null) {
     if (file && file.size > MAX_ATTACHMENT_SIZE_BYTES) {
-      window.alert(`Ukuran lampiran tugas maksimal ${ATTACHMENT_LIMIT_LABEL}.`);
+      window.alert(`Ukuran lampiran latihan maksimal ${ATTACHMENT_LIMIT_LABEL}.`);
       return;
     }
 
@@ -2368,7 +2376,7 @@ export default function DetailKelasGuruSection({
       !tugasDraft.judulTugas.trim() ||
       !tugasDraft.deskripsi.trim()
     ) {
-      window.alert("Lengkapi judul tugas, deskripsi, dan deadline terlebih dahulu.");
+      window.alert("Lengkapi judul latihan, deskripsi, dan deadline terlebih dahulu.");
       return;
     }
 
@@ -2390,7 +2398,7 @@ export default function DetailKelasGuruSection({
       setTugasAttachmentMarkedForRemoval(false);
     } catch (error) {
       window.alert(
-        error instanceof Error ? error.message : "Tugas kelas belum bisa disimpan.",
+        error instanceof Error ? error.message : "Latihan kelas belum bisa disimpan.",
       );
     }
   }
@@ -2418,7 +2426,7 @@ export default function DetailKelasGuruSection({
       });
     } catch (error) {
       window.alert(
-        error instanceof Error ? error.message : "Tugas kelas belum bisa dihapus.",
+        error instanceof Error ? error.message : "Latihan kelas belum bisa dihapus.",
       );
     }
   }
@@ -2633,7 +2641,7 @@ export default function DetailKelasGuruSection({
             onAdd={openAddTugasDialog}
             onDelete={handleDeleteTugas}
             onEdit={openEditTugasDialog}
-            onGradeNow={openNilaiDialogForTask}
+
             onViewSubmissions={openTaskSubmissionDialog}
           />
         );
@@ -2746,7 +2754,7 @@ export default function DetailKelasGuruSection({
                   </h1>
 
                   <p className="mt-2 max-w-2xl text-sm text-slate-500 md:text-base">
-                    Peserta, absensi, materi, tugas, dan penilaian tugas siswa
+                    Peserta, absensi, materi, latihan, dan penilaian latihan siswa
                     sudah terhubung dengan backend kelas guru yang sedang login.
                   </p>
 
@@ -2840,14 +2848,14 @@ export default function DetailKelasGuruSection({
               helper="Materi yang sudah tersusun untuk tiap pertemuan."
             />
             <SummaryMetric
-              label="Tugas Berjalan"
+              label="Latihan Berjalan"
               value={tasksWithGradeStatus.length}
-              helper="Seluruh tugas yang muncul dari pertemuan aktif."
+              helper="Seluruh latihan yang muncul dari pertemuan aktif."
             />
             <SummaryMetric
               label="Belum Dinilai"
               value={pendingTasks.length}
-              helper="Tugas yang masih perlu penilaian lanjutan."
+              helper="Latihan yang masih perlu penilaian lanjutan."
             />
           </div>
         </section>

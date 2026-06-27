@@ -250,7 +250,7 @@ export function OwnerDashboardExpensesSection({
           ) : null}
         </div>
 
-        <div className="overflow-hidden rounded-[24px] border border-slate-200/80 shadow-[0_14px_28px_-24px_rgba(15,23,42,0.1)]">
+        <div className="overflow-x-auto overflow-y-hidden rounded-[24px] border border-slate-200/80 shadow-[0_14px_28px_-24px_rgba(15,23,42,0.1)]">
           <Table className="min-w-[1160px]">
             <TableHeader className="bg-slate-50/80">
               <TableRow className="border-slate-200/70">

@@ -414,27 +414,27 @@ export function OwnerDashboardTopbar({
   return (
     <>
       <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/92 backdrop-blur-xl supports-[backdrop-filter]:bg-white/84">
-        <div className="flex min-h-[72px] flex-col gap-3 px-4 py-3 sm:px-5 lg:h-[72px] lg:flex-row lg:items-center lg:justify-between lg:gap-4 lg:px-8 lg:py-0">
-          <div className="flex min-w-0 items-center gap-2">
+        <div className="flex h-[72px] items-center justify-between px-4 lg:px-6">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
             <Button
               type="button"
               variant="outline"
               size="icon"
-              className="size-10 shrink-0 rounded-lg border-slate-200 bg-white lg:hidden"
+              className="lg:hidden"
               onClick={onOpenNavigation}
               aria-label="Buka navigasi Owner"
             >
-              <Menu className="size-[18px]" />
+              <Menu className="size-5" />
             </Button>
 
             <div
               ref={searchContainerRef}
-              className="relative min-w-0 flex-1 sm:w-[320px] lg:w-[360px]"
+              className="relative w-full max-w-[320px] lg:max-w-[380px]"
             >
             <Search className="pointer-events-none absolute left-3.5 top-1/2 size-3.5 -translate-y-1/2 text-slate-400" />
             <Input
               aria-label="Cari data dashboard owner"
-              className="h-10 rounded-full border-slate-200/80 bg-white/95 pl-10 pr-4 text-sm shadow-sm shadow-slate-950/5"
+              className="h-10 w-full rounded-full border-slate-200/80 bg-white/95 pl-10 pr-4 text-sm shadow-sm shadow-slate-950/5"
               placeholder="Cari cabang, admin, pembayaran, pengeluaran..."
               value={searchQuery}
               onChange={(event) => {
@@ -521,7 +521,7 @@ export function OwnerDashboardTopbar({
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center justify-end gap-2 md:gap-3">
+          <div className="ml-4 flex items-center justify-end gap-2">
             <DropdownMenu
               onOpenChange={(open) => {
                 if (open) {

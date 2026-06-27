@@ -1057,64 +1057,68 @@ export function AdminBranchFinance({
               </div>
             ) : null}
 
-            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,0.9fr)]">
-              <FinanceField label="Kategori">
-                <Select
-                  value={expenseCategoryFilter}
-                  onValueChange={setExpenseCategoryFilter}
-                >
-                  <SelectTrigger className={warmSelectTriggerClassName}>
-                    <SelectValue placeholder="Semua kategori pengeluaran" />
-                  </SelectTrigger>
-                  <SelectContent className={warmSelectContentClassName}>
-                    <SelectItem
-                      value={allExpenseCategoryValue}
-                      className={warmSelectItemClassName}
-                    >
-                      Semua kategori
-                    </SelectItem>
-                    {adminExpenseCategoryOptions.map((category) => (
+            <div className="grid grid-cols-2 gap-3 md:flex md:flex-wrap md:items-end">
+              <div className="w-full md:flex-1">
+                <FinanceField label="Kategori">
+                  <Select
+                    value={expenseCategoryFilter}
+                    onValueChange={setExpenseCategoryFilter}
+                  >
+                    <SelectTrigger className={warmSelectTriggerClassName}>
+                      <SelectValue placeholder="Semua kategori pengeluaran" />
+                    </SelectTrigger>
+                    <SelectContent className={warmSelectContentClassName}>
                       <SelectItem
-                        key={category}
-                        value={category}
+                        value={allExpenseCategoryValue}
                         className={warmSelectItemClassName}
                       >
-                        {category}
+                        Semua kategori
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FinanceField>
+                      {adminExpenseCategoryOptions.map((category) => (
+                        <SelectItem
+                          key={category}
+                          value={category}
+                          className={warmSelectItemClassName}
+                        >
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FinanceField>
+              </div>
 
-              <FinanceField label="Status">
-                <Select
-                  value={expenseStatusFilter}
-                  onValueChange={setExpenseStatusFilter}
-                >
-                  <SelectTrigger className={warmSelectTriggerClassName}>
-                    <SelectValue placeholder="Semua status" />
-                  </SelectTrigger>
-                  <SelectContent className={warmSelectContentClassName}>
-                    <SelectItem
-                      value={allExpenseStatusValue}
-                      className={warmSelectItemClassName}
-                    >
-                      Semua status
-                    </SelectItem>
-                    {adminExpenseStatusOptions.map((status) => (
+              <div className="w-full md:flex-1">
+                <FinanceField label="Status">
+                  <Select
+                    value={expenseStatusFilter}
+                    onValueChange={setExpenseStatusFilter}
+                  >
+                    <SelectTrigger className={warmSelectTriggerClassName}>
+                      <SelectValue placeholder="Semua status" />
+                    </SelectTrigger>
+                    <SelectContent className={warmSelectContentClassName}>
                       <SelectItem
-                        key={status}
-                        value={status}
+                        value={allExpenseStatusValue}
                         className={warmSelectItemClassName}
                       >
-                        {status}
+                        Semua status
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FinanceField>
+                      {adminExpenseStatusOptions.map((status) => (
+                        <SelectItem
+                          key={status}
+                          value={status}
+                          className={warmSelectItemClassName}
+                        >
+                          {status}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FinanceField>
+              </div>
 
-              <div className="flex items-end">
+              <div className="col-span-2 flex w-full items-end md:w-auto">
                 <Button
                   type="button"
                   variant="outline"
@@ -1125,7 +1129,7 @@ export function AdminBranchFinance({
                   }}
                 >
                   <RotateCcw className="size-4" />
-                  Reset filter pengeluaran
+                  Reset filter
                 </Button>
               </div>
             </div>
@@ -1179,7 +1183,7 @@ export function AdminBranchFinance({
           }
         }}
       >
-        <DialogContent className={cn("sm:max-w-2xl", warmOverlayPanelClassName)}>
+        <DialogContent className={cn("max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] sm:max-w-2xl", warmOverlayPanelClassName)}>
           <DialogHeader>
             <DialogTitle>Detail Pengeluaran Cabang</DialogTitle>
             <DialogDescription>
@@ -1188,7 +1192,7 @@ export function AdminBranchFinance({
           </DialogHeader>
 
           {selectedExpenseDetail ? (
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-2 gap-3">
               <FinanceDetailItem
                 label="ID"
                 value={selectedExpenseDetail.expenseId}
@@ -1496,7 +1500,7 @@ export function AdminBranchFinance({
           }
         }}
       >
-        <DialogContent className={cn("sm:max-w-md", warmOverlayPanelClassName)}>
+        <DialogContent className={cn("max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] sm:max-w-md", warmOverlayPanelClassName)}>
           <DialogHeader>
             <DialogTitle>Hapus Pengeluaran Cabang?</DialogTitle>
             <DialogDescription>

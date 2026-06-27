@@ -167,7 +167,7 @@ export function OwnerActivitySectionPanel({
 
         <div
           className={cn(
-            "overflow-hidden rounded-[24px] border shadow-[0_14px_28px_-24px_rgba(15,23,42,0.1)]",
+            "overflow-x-auto overflow-y-hidden rounded-[24px] border shadow-[0_14px_28px_-24px_rgba(15,23,42,0.1)]",
             styles.table,
           )}
         >

@@ -605,14 +605,14 @@ function getTeacherNote(
   pendingReviewCount: number,
 ) {
   if (reviewStatus === "Selesai") {
-    return `Seluruh penilaian untuk tugas ${material.toLowerCase()} sudah ditutup.`;
+    return `Seluruh penilaian untuk latihan ${material.toLowerCase()} sudah ditutup.`;
   }
 
   if (reviewStatus === "Sebagian Dinilai") {
-    return `${pendingReviewCount} hasil tugas ${material.toLowerCase()} masih menunggu finalisasi.`;
+    return `${pendingReviewCount} hasil latihan ${material.toLowerCase()} masih menunggu finalisasi.`;
   }
 
-  return `Review tugas ${material.toLowerCase()} belum dimulai dan perlu prioritas tindak lanjut.`;
+  return `Review latihan ${material.toLowerCase()} belum dimulai dan perlu prioritas tindak lanjut.`;
 }
 
 function createAssignments(

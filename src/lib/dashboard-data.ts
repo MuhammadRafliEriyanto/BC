@@ -128,9 +128,9 @@ export const dashboardConfigs: Record<DashboardRole, DashboardConfig> = {
     },
     navItems: [
       { label: "Dashboard", href: "/dashboard-admin", icon: LayoutGrid },
-      { label: "Siswa", href: "/dashboard-admin#siswa", icon: Users, badge: "218" },
-      { label: "Guru", href: "/dashboard-admin#guru", icon: GraduationCap },
-      { label: "Pembayaran", href: "/dashboard-admin#pembayaran", icon: WalletCards, badge: "6" },
+      { label: "Siswa", href: "/dashboard-admin/siswa", icon: Users, badge: "218" },
+      { label: "Guru", href: "/dashboard-admin/guru", icon: GraduationCap },
+      { label: "Pembayaran", href: "/dashboard-admin/pembayaran", icon: WalletCards, badge: "6" },
     ],
     insight: {
       title: "Operasional hari ini rapi",

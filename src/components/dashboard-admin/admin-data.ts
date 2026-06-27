@@ -36,6 +36,7 @@ export type AdminStudent = {
   program: string;
   className: string;
   birthDate: string;
+  academicYear: string;
   generatedPassword: string;
   status: "Aktif" | "Nonaktif";
 };

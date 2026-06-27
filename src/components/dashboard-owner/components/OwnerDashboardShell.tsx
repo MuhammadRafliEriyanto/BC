@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { Poppins } from "next/font/google";
 import { OwnerDashboardSidebar } from "@/components/dashboard-owner/components/OwnerDashboardSidebar";
 import { OwnerDashboardTopbar } from "@/components/dashboard-owner/components/OwnerDashboardTopbar";
 import {
@@ -11,6 +12,13 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
+
+const ownerPoppins = Poppins({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  preload: false,
+});
 
 type OwnerDashboardShellProps = {
   children: React.ReactNode;
@@ -21,7 +29,7 @@ export function OwnerDashboardShell({ children }: OwnerDashboardShellProps) {
   const [isMobileNavigationOpen, setIsMobileNavigationOpen] = useState(false);
 
   return (
-    <section className="min-h-screen bg-[linear-gradient(180deg,#fffaf3_0%,#fff7ed_30%,#f8fafc_100%)] dark:bg-slate-950">
+    <section className={cn("min-h-screen bg-[linear-gradient(180deg,#fffaf3_0%,#fff7ed_30%,#f8fafc_100%)] dark:bg-slate-950", ownerPoppins.className)}>
       <div className="flex min-h-screen bg-transparent">
         <OwnerDashboardSidebar
           collapsed={isSidebarCollapsed}

@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useSearchParams } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import {
   AlertTriangle,
@@ -37,6 +38,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { clearAuthClientState } from "@/lib/auth";
+import { buildGuruApiUrl, buildGuruUrl, getSelectedAcademicPeriod } from "@/lib/guru-helpers";
 
 type TryoutJenjang = "SD" | "SMP" | "SMA";
 type AssessmentType = "UTS" | "UAS" | "Tryout";
@@ -245,7 +247,11 @@ type TeacherTryoutResultListResponse = {
 };
 
 const JENJANG_OPTIONS: TryoutJenjang[] = ["SD", "SMP", "SMA"];
-const ASSESSMENT_TYPE_OPTIONS: AssessmentType[] = ["UTS", "UAS", "Tryout"];
+const ASSESSMENT_TYPE_OPTIONS: AssessmentType[] = [
+  "UTS",
+  "UAS",
+  "Tryout",
+];
 const STATUS_FILTERS: StatusFilter[] = ["Semua", "Published", "Draft"];
 const FINAL_CLASS_BY_JENJANG: Record<TryoutJenjang, string> = {
   SD: "Kelas 6",
@@ -311,11 +317,14 @@ function toTryoutJenjang(value: string | null | undefined): TryoutJenjang | null
 }
 
 function toAssessmentType(value: string | null | undefined): AssessmentType | null {
-  const normalizedValue = normalizeText(value).toLowerCase();
+  const normalizedValue = normalizeText(value);
+
+  if (normalizedValue.startsWith("UTS")) return "UTS";
+  if (normalizedValue.startsWith("UAS")) return "UAS";
 
   return (
     ASSESSMENT_TYPE_OPTIONS.find(
-      (item) => item.toLowerCase() === normalizedValue,
+      (item) => item === normalizedValue,
     ) ?? null
   );
 }
@@ -333,7 +342,9 @@ function getAssessmentModeForClass(className: string): AssessmentMode {
 }
 
 function getAssessmentTypeLabel(type: AssessmentType) {
-  return type === "Tryout" ? "Tryout" : type;
+  if (type === "UTS") return "Simulasi UTS 1";
+  if (type === "UAS") return "Simulasi UAS 1";
+  return type;
 }
 
 function getJenjangFromClassName(className: string): TryoutJenjang | null {
@@ -496,11 +507,15 @@ function formatDateTimeLocalValue(value: string | null | undefined) {
     return "";
   }
 
-  const year = parsedDate.getFullYear();
-  const month = String(parsedDate.getMonth() + 1).padStart(2, "0");
-  const day = String(parsedDate.getDate()).padStart(2, "0");
-  const hour = String(parsedDate.getHours()).padStart(2, "0");
-  const minute = String(parsedDate.getMinutes()).padStart(2, "0");
+  // Convert to WIB (+07:00) explicitly for the datetime-local input
+  const wibTime = parsedDate.getTime() + (7 * 60 * 60 * 1000);
+  const wibDate = new Date(wibTime);
+
+  const year = wibDate.getUTCFullYear();
+  const month = String(wibDate.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(wibDate.getUTCDate()).padStart(2, "0");
+  const hour = String(wibDate.getUTCHours()).padStart(2, "0");
+  const minute = String(wibDate.getUTCMinutes()).padStart(2, "0");
 
   return `${year}-${month}-${day}T${hour}:${minute}`;
 }
@@ -512,7 +527,9 @@ function toIsoDateTimeValue(value: string) {
     return "";
   }
 
-  const parsedDate = new Date(normalizedValue);
+  // Force the input to be parsed as WIB (+07:00) instead of local browser timezone
+  // This ensures the backend always receives the correct UTC time for Indonesia
+  const parsedDate = new Date(`${normalizedValue}:00+07:00`);
 
   if (Number.isNaN(parsedDate.getTime())) {
     return "";
@@ -868,7 +885,7 @@ function createEmptyTryoutDraft(
     tanggalMulai: "",
     tanggalSelesai: "",
     publishStatus: "Draft",
-    questionSource: "manual",
+    questionSource: "file",
     questionBankId: undefined,
     fileName: undefined,
   };
@@ -1211,14 +1228,13 @@ function TryoutFormDialog({
       open={open}
       onOpenChange={(isOpen) => !isOpen && !isSubmitting && onClose()}
     >
-      <DialogContent className="max-h-[85vh] max-w-3xl gap-0 overflow-y-auto rounded-[24px] border border-orange-100 bg-white p-0 [&>button]:rounded-full [&>button]:border [&>button]:border-orange-100 [&>button]:bg-white [&>button]:text-slate-400 [&>button]:hover:bg-orange-50 [&>button]:hover:text-orange-700">
+      <DialogContent className="max-h-[85vh] max-w-3xl gap-0 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-[24px] border border-orange-100 bg-white p-0 [&>button]:rounded-full [&>button]:border [&>button]:border-orange-100 [&>button]:bg-white [&>button]:text-slate-400 [&>button]:hover:bg-orange-50 [&>button]:hover:text-orange-700">
         <DialogHeader className="border-b border-orange-100 bg-gradient-to-r from-orange-50/90 via-white to-amber-50/70 px-4 py-4 md:px-5">
           <DialogTitle>
             {mode === "add" ? "Tambah Assessment Baru" : "Edit Assessment"}
           </DialogTitle>
           <DialogDescription>
-            Pilih kelas yang benar-benar diajar. Sistem otomatis menentukan
-            Tryout untuk kelas akhir dan UTS/UAS untuk kelas non-akhir.
+            Isi detail ujian di bawah ini.
           </DialogDescription>
         </DialogHeader>
 
@@ -1262,39 +1278,6 @@ function TryoutFormDialog({
             </select>
           </label>
 
-          <label className="grid gap-2">
-            <span className={LABEL_CLASS}>Kelas</span>
-            <input
-              type="text"
-              value={
-                selectedClassOption
-                  ? `${selectedClassOption.jenjang} - ${selectedClassOption.kelas}`
-                  : draft?.kelas ?? ""
-              }
-              readOnly
-              className={`${FIELD_CLASS} bg-orange-50/40 text-slate-600`}
-            />
-          </label>
-
-          <label className="grid gap-2">
-            <span className={LABEL_CLASS}>Cabang Target</span>
-            <input
-              type="text"
-              value={draft?.branch ?? ""}
-              readOnly
-              className={`${FIELD_CLASS} bg-orange-50/40 text-slate-600`}
-            />
-          </label>
-
-          <label className="grid gap-2">
-            <span className={LABEL_CLASS}>Mapel</span>
-            <input
-              type="text"
-              value={draft?.mapel || teacherSubject || "-"}
-              readOnly
-              className={`${FIELD_CLASS} bg-orange-50/40 text-slate-600`}
-            />
-          </label>
 
           <label className="grid gap-2">
             <span className={LABEL_CLASS}>Jenis Ujian</span>
@@ -1316,11 +1299,6 @@ function TryoutFormDialog({
                 </option>
               ))}
             </select>
-            <span className="text-xs leading-5 text-slate-500">
-              {selectedClassOption?.assessmentMode === "tryout"
-                ? "Kelas akhir otomatis menggunakan Tryout."
-                : "Kelas non-akhir hanya bisa menggunakan UTS atau UAS."}
-            </span>
           </label>
 
           {currentAssessmentType === "Tryout" ? (
@@ -1386,169 +1364,47 @@ function TryoutFormDialog({
           </label>
 
           <div className="grid gap-4 md:col-span-2">
-            <div className="grid gap-2">
-              <span className={LABEL_CLASS}>Sumber Soal</span>
-              <div className="grid gap-3 rounded-2xl border border-slate-100 bg-slate-50/50 p-2 md:grid-cols-3">
-                {QUESTION_SOURCE_OPTIONS.map((item) => (
-                  <button
-                    key={item.value}
-                    type="button"
-                    disabled={!item.available || questionsLocked}
-                    onClick={() =>
-                      item.available &&
-                      !questionsLocked &&
-                      onChange("questionSource", item.value)
-                    }
-                    className={`grid gap-1 rounded-[20px] border p-3 text-left transition-all ${
-                      draft?.questionSource === item.value
-                        ? "border-orange-200 bg-white text-slate-700 shadow-sm ring-1 ring-orange-100"
-                        : item.available
-                          ? "border-slate-100 bg-white text-slate-600 hover:border-orange-100 hover:bg-orange-50/60 hover:text-orange-700"
-                          : "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400 opacity-80"
-                    } disabled:cursor-not-allowed`}
-                  >
-                    <span className="flex items-center justify-between gap-2 text-sm font-semibold">
-                      <span>{item.label}</span>
-                      {!item.available ? (
-                        <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
-                          Tahap Berikutnya
-                        </span>
-                      ) : null}
-                    </span>
-                    <span className="text-xs leading-5 text-slate-500">
-                      {item.description}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {isBankSource ? (
-              <div className="grid gap-4 rounded-2xl border border-orange-100 bg-orange-50/25 p-3">
-                <div className="grid gap-3 md:grid-cols-2">
-                  <div className="rounded-2xl border border-orange-100 bg-white p-3">
-                    <p className={LABEL_CLASS}>Status Integrasi</p>
-                    <p className="mt-2 text-sm font-semibold text-slate-800">
-                      Bank soal import backend aktif
-                    </p>
-                    <p className="mt-1 text-xs leading-5 text-slate-500">
-                      Ujian bank berasal dari paket assessment yang sudah
-                      diimport dan dapat dipublish setelah guru review.
-                    </p>
-                  </div>
-                  <div className="rounded-2xl border border-orange-100 bg-white p-3">
-                    <p className={LABEL_CLASS}>Arah Penggunaan Saat Ini</p>
-                    <p className="mt-2 text-sm font-semibold text-slate-800">
-                      Review lalu publish
-                    </p>
-                    <p className="mt-1 text-xs leading-5 text-slate-500">
-                      Sumber soal tidak diedit manual di sini, tapi bisa dilihat
-                      dari dialog upload soal.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-
-            {isFileSource ? (
-              <div className="grid gap-4 rounded-2xl border border-orange-100 bg-orange-50/25 p-3">
-                <div className="grid gap-3 md:grid-cols-2">
-                  <div className="rounded-2xl border border-orange-100 bg-white p-3">
-                    <p className={LABEL_CLASS}>Status Integrasi</p>
-                    <p className="mt-2 text-sm font-semibold text-slate-800">
-                      Upload XLSX aktif
-                    </p>
-                    <p className="mt-1 text-xs leading-5 text-slate-500">
-                      Saat tambah ujian, tekan Simpan & Lanjut Upload XLSX
-                      agar dialog upload langsung terbuka setelah draft dibuat.
-                      Jika status masih Published, sistem menyimpan Draft dulu
-                      sampai file soal berhasil diupload.
-                    </p>
-                  </div>
-                  <div className="rounded-2xl border border-orange-100 bg-white p-3">
-                    <p className={LABEL_CLASS}>Arah Penggunaan Saat Ini</p>
-                    <p className="mt-2 text-sm font-semibold text-slate-800">
-                      Convert XLSX ke soal backend
-                    </p>
-                    <p className="mt-1 text-xs leading-5 text-slate-500">
-                      Setelah upload berhasil, soal tampil untuk direview dan
-                      bisa dipublish ke siswa.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-3 rounded-2xl border border-orange-100 bg-white p-3 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <p className={LABEL_CLASS}>Upload File XLSX</p>
-                    <p className="mt-1 text-sm text-slate-500">
-                      {draft?.id
-                        ? "Buka dialog upload untuk memilih file XLSX soal."
-                        : "Isi metadata ujian dulu, lalu simpan untuk mulai upload file."}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    disabled={isSubmitting || questionsLocked}
-                    onClick={onOpenFileUploader}
-                    className="border border-orange-500 bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:border-orange-200 disabled:bg-orange-200"
-                  >
-                    {draft?.id ? "Upload / Ganti File XLSX" : "Simpan Dulu untuk Upload"}
-                  </button>
-                </div>
-              </div>
-            ) : null}
-
             {isManualSource ? (
-              <div className="grid gap-4 rounded-2xl border border-orange-100 bg-orange-50/25 p-3">
-                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <p className={LABEL_CLASS}>Input Soal Manual</p>
-                    <p className="mt-1 text-sm text-slate-500">
-                      Ujian dapat dibuat dulu sebagai draft, kemudian soal manual
-                      ditambahkan setelah data ujian tersimpan.
-                    </p>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                      Mode aktif saat ini
-                    </span>
-                    <button
-                      type="button"
-                      disabled={isSubmitting || questionsLocked}
-                      onClick={onOpenManualManager}
-                      className="border border-orange-500 bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:border-orange-200 disabled:bg-orange-200"
-                    >
-                      Kelola Soal Manual
-                    </button>
-                  </div>
+              <div className="flex flex-col gap-3 rounded-2xl border border-orange-100 bg-orange-50/40 p-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className={LABEL_CLASS}>Kelola Soal</p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Ujian ini dibuat dengan metode input soal manual.
+                  </p>
                 </div>
-
-                <div className="grid gap-3 md:grid-cols-2">
-                  <div className="rounded-2xl border border-orange-100 bg-white p-3">
-                    <p className={LABEL_CLASS}>Status Soal Manual</p>
-                    <p className="mt-2 text-sm font-semibold text-slate-800">
-                      {draft?.id
-                        ? `${draft.jumlahSoal} soal manual tersimpan`
-                        : "Simpan ujian dulu untuk mulai menambah soal"}
-                    </p>
-                  </div>
-                  <div className="rounded-2xl border border-orange-100 bg-white p-3">
-                    <p className={LABEL_CLASS}>Alur Berikutnya</p>
-                    <p className="mt-2 text-sm font-semibold text-slate-800">
-                      Draft dulu, isi soal nanti
-                    </p>
-                    <p className="mt-1 text-xs leading-5 text-slate-500">
-                      Workflow ini cocok saat guru ingin membuat jadwal ujian
-                      terlebih dahulu sebelum menyusun seluruh soal.
-                    </p>
-                  </div>
-                </div>
+                <button
+                  type="button"
+                  disabled={isSubmitting || questionsLocked}
+                  onClick={onOpenManualManager}
+                  className="shrink-0 border border-orange-500 bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:border-orange-200 disabled:bg-orange-200"
+                >
+                  Kelola Soal Manual
+                </button>
               </div>
-            ) : null}
-
-              <div className="flex flex-wrap items-center gap-2">
-                <StatusBadge className={getQuestionSourceBadgeClass(draft?.questionSource ?? "manual")}>
-                  {getQuestionSourceLabel(draft?.questionSource ?? "manual")}
+            ) : (
+              <div className="flex flex-col gap-3 rounded-2xl border border-orange-100 bg-orange-50/40 p-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className={LABEL_CLASS}>File Soal XLSX</p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    {draft?.id
+                      ? "Silakan upload file XLSX untuk menambahkan soal."
+                      : "Simpan draft ujian ini terlebih dahulu untuk mengaktifkan fitur upload XLSX."}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={isSubmitting || questionsLocked}
+                  onClick={onOpenFileUploader}
+                  className="shrink-0 border border-orange-500 bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:border-orange-200 disabled:bg-orange-200"
+                >
+                  {draft?.id ? "Upload File XLSX" : "Simpan Dulu untuk Upload"}
+                </button>
+              </div>
+            )}
+          </div>
+              <div className="flex flex-wrap items-center gap-2 md:col-span-2">
+                <StatusBadge className={getQuestionSourceBadgeClass(draft?.questionSource ?? "file")}>
+                  {getQuestionSourceLabel(draft?.questionSource ?? "file")}
                 </StatusBadge>
                 <StatusBadge className={getQuestionBadgeClass(draft?.jumlahSoal ?? 0)}>
                   {draft
@@ -1556,7 +1412,6 @@ function TryoutFormDialog({
                     : "0 soal"}
                 </StatusBadge>
               </div>
-          </div>
         </div>
 
         <DialogFooter className="border-t border-orange-100 px-4 py-3 md:px-5">
@@ -1646,7 +1501,7 @@ function UploadSoalDialog({
       open={open}
       onOpenChange={(isOpen) => !isOpen && !isBusy && onClose()}
     >
-      <DialogContent className="max-h-[85vh] max-w-4xl gap-0 overflow-y-auto rounded-[24px] border border-orange-100 bg-white p-0 [&>button]:rounded-full [&>button]:border [&>button]:border-orange-100 [&>button]:bg-white [&>button]:text-slate-400 [&>button]:hover:bg-orange-50 [&>button]:hover:text-orange-700">
+      <DialogContent className="max-h-[85vh] max-w-4xl gap-0 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-[24px] border border-orange-100 bg-white p-0 [&>button]:rounded-full [&>button]:border [&>button]:border-orange-100 [&>button]:bg-white [&>button]:text-slate-400 [&>button]:hover:bg-orange-50 [&>button]:hover:text-orange-700">
         <DialogHeader className="border-b border-orange-100 bg-gradient-to-r from-orange-50/90 via-white to-amber-50/70 px-4 py-4 md:px-5">
           <DialogTitle>Upload Soal Ujian</DialogTitle>
           <DialogDescription>
@@ -1939,7 +1794,7 @@ function UploadSoalDialog({
                 </p>
               </div>
 
-              <div className="max-h-[320px] overflow-y-auto px-4 py-4">
+              <div className="max-h-[320px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] px-4 py-4">
                 {(isManualSource || isReadonlyQuestionSource) && isQuestionLoading ? (
                   <div className="rounded-2xl border border-dashed border-orange-200 bg-orange-50/30 px-4 py-8 text-center">
                     <p className="text-sm font-semibold text-slate-700">
@@ -2116,7 +1971,7 @@ function HasilTryoutDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-h-[85vh] max-w-3xl gap-0 overflow-y-auto rounded-[24px] border border-orange-100 bg-white p-0 [&>button]:rounded-full [&>button]:border [&>button]:border-orange-100 [&>button]:bg-white [&>button]:text-slate-400 [&>button]:hover:bg-orange-50 [&>button]:hover:text-orange-700">
+      <DialogContent className="max-h-[85vh] max-w-3xl gap-0 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-[24px] border border-orange-100 bg-white p-0 [&>button]:rounded-full [&>button]:border [&>button]:border-orange-100 [&>button]:bg-white [&>button]:text-slate-400 [&>button]:hover:bg-orange-50 [&>button]:hover:text-orange-700">
         <DialogHeader className="border-b border-orange-100 bg-gradient-to-r from-orange-50/90 via-white to-amber-50/70 px-4 py-4 md:px-5">
           <DialogTitle>Hasil Ujian Siswa</DialogTitle>
           <DialogDescription>
@@ -2220,6 +2075,8 @@ function HasilTryoutDialog({
 }
 
 export default function TryoutGuruSection() {
+  const searchParams = useSearchParams();
+  const { academicYear } = getSelectedAcademicPeriod(searchParams);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedJenjang, setSelectedJenjang] =
     useState<TryoutJenjang>("SMA");
@@ -2327,7 +2184,7 @@ export default function TryoutGuruSection() {
 
       const { response, payload } =
         await fetchTeacherTryoutJson<TeacherTryoutListResponse>(
-          "/api/teacher/me/tryouts",
+          buildGuruApiUrl("/api/teacher/me/tryouts", searchParams),
           {
             method: "GET",
           },
@@ -2347,6 +2204,8 @@ export default function TryoutGuruSection() {
       const loadedTryouts = apiTryouts.map((item) =>
         mapTeacherTryoutApiItem(item),
       );
+
+      console.log("[DEBUG TryoutGuruSection] fetched tryouts length:", apiTryouts.length, "for url:", buildGuruApiUrl("/api/teacher/me/tryouts", searchParams));
 
       setTryouts((current) => replaceTryoutsFromApi(apiTryouts, current));
       setSelectedJenjang((currentJenjang) => {
@@ -2379,7 +2238,7 @@ export default function TryoutGuruSection() {
 
   const loadTeacherBranches = useEffectEvent(async () => {
     try {
-      const response = await fetch("/api/teacher/me/dashboard", {
+      const response = await fetch(buildGuruApiUrl("/api/teacher/me/dashboard", searchParams), {
         method: "GET",
         credentials: "include",
         cache: "no-store",
@@ -2401,7 +2260,7 @@ export default function TryoutGuruSection() {
             .filter(Boolean),
         ),
       );
-      const classResponse = await fetch("/api/teacher/me/classes", {
+      const classResponse = await fetch(buildGuruApiUrl("/api/teacher/me/classes", searchParams), {
         method: "GET",
         credentials: "include",
         cache: "no-store",
@@ -2438,7 +2297,7 @@ export default function TryoutGuruSection() {
       void loadTeacherTryouts();
       void loadTeacherBranches();
     });
-  }, []);
+  }, [academicYear]);
 
   const loadManualQuestions = useCallback(async (tryoutId: string) => {
     try {
@@ -3872,11 +3731,16 @@ export default function TryoutGuruSection() {
                   <p className="mt-4 text-base font-semibold text-slate-700">
                     {loadError
                       ? "Data ujian guru belum berhasil dimuat."
+                      : tryouts.length === 0
+                      ? "Tidak ada ujian di tahun ajaran ini."
                       : "Belum ada ujian yang cocok dengan filter saat ini."}
                   </p>
                   <p className="mt-2 text-sm leading-6 text-slate-500">
-                    {loadError ??
-                      "Ubah jenjang, status, atau kata kunci pencarian untuk melihat daftar ujian lain yang sudah tersimpan."}
+                    {loadError
+                      ? loadError
+                      : tryouts.length === 0
+                      ? "Silakan buat ujian baru atau pilih tahun yang aktif."
+                      : "Ubah jenjang, status, atau kata kunci pencarian untuk melihat daftar ujian lain yang sudah tersimpan."}
                   </p>
                 </div>
               )}

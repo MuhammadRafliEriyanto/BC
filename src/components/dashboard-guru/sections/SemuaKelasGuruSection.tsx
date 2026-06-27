@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useEffectEvent, useMemo, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -15,8 +16,8 @@ import {
   Search,
   Users,
 } from "lucide-react";
-
 import { clearAuthClientState } from "@/lib/auth";
+import { buildGuruApiUrl, buildGuruUrl, getSelectedAcademicPeriod } from "@/lib/guru-helpers";
 import {
   CLASS_FILTERS,
   DEFAULT_SEMESTER_MEETING_TARGET,
@@ -302,6 +303,9 @@ function LoadingClassCards({ count = 3 }: { count?: number }) {
 }
 
 export default function SemuaKelasGuruSection() {
+  const searchParams = useSearchParams();
+  const { academicYear } = getSelectedAcademicPeriod(searchParams);
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
   const [selectedJenjang, setSelectedJenjang] =
@@ -317,7 +321,7 @@ export default function SemuaKelasGuruSection() {
     setLoadError(null);
 
     try {
-      const response = await fetch("/api/teacher/me/classes", {
+      const response = await fetch(buildGuruApiUrl("/api/teacher/me/classes", searchParams), {
         method: "GET",
         credentials: "include",
         cache: "no-store",
@@ -361,7 +365,7 @@ export default function SemuaKelasGuruSection() {
     queueMicrotask(() => {
       void loadTeacherClasses();
     });
-  }, []);
+  }, [academicYear]);
 
   const branchOptions = useMemo(
     () => [
@@ -487,7 +491,7 @@ export default function SemuaKelasGuruSection() {
                 icon={ClipboardCheck}
                 label="Belum Dinilai"
                 value={stats.tugasBelumDinilai}
-                helper="Tugas yang masih membutuhkan review."
+                helper="Latihan yang masih membutuhkan review."
               />
               <SummaryCard
                 icon={CalendarDays}
@@ -709,8 +713,8 @@ export default function SemuaKelasGuruSection() {
                       }`}
                     >
                       {kelas.tugasBelumDinilai > 0
-                        ? `${kelas.tugasBelumDinilai} tugas belum dinilai`
-                        : "Tugas sudah aman"}
+                        ? `${kelas.tugasBelumDinilai} latihan belum dinilai`
+                        : "Latihan sudah aman"}
                     </span>
                   </div>
 
@@ -752,14 +756,14 @@ export default function SemuaKelasGuruSection() {
 
                     <div className="mt-5 grid gap-2 sm:grid-cols-2">
                       <Link
-                        href={`/dashboard-guru/detail-kelas?kelasId=${kelas.kelasId}`}
+                        href={buildGuruUrl("/dashboard-guru/detail-kelas", searchParams, { kelasId: kelas.kelasId })}
                         className="inline-flex items-center justify-center gap-1.5 border border-orange-200 bg-orange-50 px-4 py-2.5 text-sm font-semibold text-orange-700 transition hover:-translate-y-px hover:border-orange-300 hover:bg-orange-100"
                       >
                         Detail Kelas
                         <ChevronRight className="h-4 w-4" />
                       </Link>
                       <Link
-                        href={`/dashboard-guru/absensi-kelas?kelasId=${kelas.kelasId}`}
+                        href={buildGuruUrl("/dashboard-guru/absensi-kelas", searchParams, { kelasId: kelas.kelasId })}
                         className="inline-flex items-center justify-center gap-1.5 border border-orange-400 bg-gradient-to-r from-orange-400 via-orange-500 to-amber-400 px-4 py-2.5 text-sm font-semibold text-white transition hover:-translate-y-px hover:shadow-[0_20px_34px_-22px_rgba(249,115,22,0.62)]"
                       >
                         <ClipboardCheck className="h-4 w-4" />

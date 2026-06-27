@@ -923,7 +923,7 @@ def add_student_manual(doc: Document):
             "Topbar siswa memiliki menu Beranda, Absensi, Nilai, dan Tagihan.",
             "Header profil menampilkan data siswa, kelas/program, status membership, cabang, dan tagihan.",
             "Header akademik menampilkan ringkasan materi, tugas, dan jadwal hari ini.",
-            "Panel Pelajaran menampilkan tab Daftar Materi, Daftar Tugas, dan Sesi Tryout.",
+            "Panel Pelajaran menampilkan tab Daftar Materi, Daftar Latihan, dan Sesi Tryout.",
             "Notifikasi siswa merangkum jadwal, tugas, materi, tagihan, dan nilai.",
         ],
     )
@@ -945,17 +945,17 @@ def add_student_manual(doc: Document):
         "Materi siswa berasal dari materi yang dibagikan guru pada kelas terkait. Jika kosong, tunggu guru menambahkan materi atau pastikan siswa sudah berada pada kelas dan cabang yang benar.",
     )
 
-    add_heading(doc, "5.5 Tugas dan Kirim Tugas", 2)
+    add_heading(doc, "5.5 Tugas dan Kirim Jawaban", 2)
     add_steps(
         doc,
         [
             "Buka halaman Tugas Siswa atau tab Tugas pada dashboard.",
             "Pilih tugas yang ingin dikerjakan.",
             "Baca instruksi, deadline, status, lampiran tugas, dan catatan guru.",
-            "Klik Kirim Tugas.",
+            "Klik Kirim Jawaban.",
             "Pilih metode jawaban: Upload File, Jawaban Teks, atau Link Drive.",
             "Isi jawaban sesuai metode yang dipilih.",
-            "Klik Kirim Tugas Sekarang.",
+            "Klik Kirim Jawaban Sekarang.",
             "Cek status submission. Jika sudah dinilai, lihat nilai dan catatan guru.",
         ],
     )

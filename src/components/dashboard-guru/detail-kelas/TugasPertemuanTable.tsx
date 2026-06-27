@@ -32,7 +32,6 @@ export default function TugasPertemuanTable({
   onAdd,
   onDelete,
   onEdit,
-  onGradeNow,
   onViewSubmissions,
   tasks,
 }: TugasPertemuanTableProps) {
@@ -47,17 +46,17 @@ export default function TugasPertemuanTable({
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-lg font-semibold text-slate-800">
-                Tugas Pertemuan
+                Latihan Setiap Pertemuan
               </h2>
 
               <span className="inline-flex items-center border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-700">
                 <FileText className="h-3.5 w-3.5" />
-                {sortedTasks.length} tugas
+                {sortedTasks.length} latihan
               </span>
             </div>
 
             <p className="mt-1 text-sm text-slate-500">
-              Kelola tugas dan status penilaian siswa untuk kelas {kelasName}.
+              Kelola latihan dan status penilaian siswa untuk kelas {kelasName}.
             </p>
           </div>
 
@@ -67,7 +66,7 @@ export default function TugasPertemuanTable({
             className="inline-flex items-center justify-center gap-2 border border-orange-500 bg-slate-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600"
           >
             <Plus className="h-4 w-4" />
-            Tambah Tugas
+            Tambah Latihan
           </button>
         </div>
 
@@ -77,7 +76,7 @@ export default function TugasPertemuanTable({
               <thead className="bg-orange-50/50 text-left backdrop-blur-sm">
                 <tr className="text-xs uppercase tracking-[0.16em] text-slate-500">
                   <th className="px-4 py-3 font-semibold">Pertemuan</th>
-                  <th className="px-4 py-3 font-semibold">Judul Tugas</th>
+                  <th className="px-4 py-3 font-semibold">Judul Latihan</th>
                   <th className="px-4 py-3 font-semibold">Deskripsi</th>
                   <th className="px-4 py-3 font-semibold">Deadline</th>
                   <th className="px-4 py-3 font-semibold">Mengumpulkan</th>
@@ -140,15 +139,6 @@ export default function TugasPertemuanTable({
                         </button>
                         <button
                           type="button"
-                          title="Nilai Sekarang"
-                          aria-label="Nilai Sekarang"
-                          onClick={() => onGradeNow(task)}
-                          className={`${ACTION_BUTTON_CLASS} border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-300 hover:bg-emerald-100`}
-                        >
-                          <ClipboardCheck className={ACTION_ICON_CLASS} />
-                        </button>
-                        <button
-                          type="button"
                           title="Edit"
                           aria-label="Edit"
                           onClick={() => onEdit(task)}
@@ -163,7 +153,7 @@ export default function TugasPertemuanTable({
                           onClick={() => {
                             if (
                               window.confirm(
-                                "Hapus tugas ini dari daftar pertemuan kelas?",
+                                "Hapus latihan ini dari daftar pertemuan kelas?",
                               )
                             ) {
                               onDelete(task.id);
@@ -186,10 +176,10 @@ export default function TugasPertemuanTable({
               <FileText className="h-5 w-5" />
             </div>
             <p className="mt-4 text-base font-semibold text-slate-700">
-              Belum ada tugas pada kelas ini.
+              Belum ada latihan pada kelas ini.
             </p>
             <p className="mt-2 text-sm leading-6 text-slate-500">
-              Tambahkan tugas baru untuk mulai memonitor progres penilaian tiap pertemuan.
+              Tambahkan latihan baru untuk mulai memonitor progres penilaian tiap pertemuan.
             </p>
           </div>
         )}

@@ -70,7 +70,7 @@ export default function KirimTugasSiswaPageView() {
 
   return (
     <StudentLearningShell
-      title="Kirim Tugas"
+      title="Kirim Jawaban"
       description="Gunakan halaman ini sebagai tempat submit tugas dengan alur yang jelas: pilih tugas, lalu kirim lewat file, teks langsung, atau link Drive."
       summary={
         isLoading
@@ -81,7 +81,7 @@ export default function KirimTugasSiswaPageView() {
       {isLoading ? (
         <section className="rounded-[26px] border border-orange-100/90 bg-white p-8 text-center shadow-[0_18px_40px_-34px_rgba(15,23,42,0.18)]">
           <p className="text-base font-semibold text-slate-800">
-            Daftar tugas sedang dimuat
+            Daftar Latihan sedang dimuat
           </p>
           <p className="mt-2 text-sm text-slate-500">
             Sistem sedang menyiapkan tugas yang bisa kamu kirim.
@@ -277,7 +277,7 @@ export default function KirimTugasSiswaPageView() {
                     description="Siswa bisa mengirim jawaban lewat upload file, jawaban teks langsung, atau menempel link Drive sesuai kebutuhan tugas."
                     availableModes={activeTask.submissionModes}
                     checklist={activeTask.instruksiPengumpulan}
-                    submitLabel="Kirim Tugas Sekarang"
+                    submitLabel="Kirim Jawaban Sekarang"
                     textPlaceholder="Tulis jawaban tugas atau ringkasan pengerjaan kamu di sini..."
                     drivePlaceholder="https://drive.google.com/..."
                     notePlaceholder="Tambahkan catatan singkat untuk guru jika diperlukan..."

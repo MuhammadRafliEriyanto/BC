@@ -3,6 +3,7 @@ import { FilePenLine, Trophy } from "lucide-react";
 import {
   ACADEMIC_SCORE_LABELS,
   averageAvailableScores,
+  calculateTotalScores,
   getAcademicScoreKeys,
 } from "@/lib/academic-grades";
 import type { GradeStatus, TabelNilaiTableProps } from "./types";
@@ -58,6 +59,9 @@ export default function TabelNilaiTable({
         scores: {
           uts: null,
           uas: null,
+          uts1: null,
+          uts2: null,
+          uts3: null,
           tryout1: null,
           tryout2: null,
           tryout3: null,
@@ -69,8 +73,14 @@ export default function TabelNilaiTable({
       ...scoreKeys.map((scoreKey) => currentScore.scores[scoreKey]),
     ]);
 
+    const total = calculateTotalScores([
+      currentScore.tugas,
+      ...scoreKeys.map((scoreKey) => currentScore.scores[scoreKey]),
+    ]);
+
     return {
       average,
+      total,
       name: student.name,
       scores: currentScore,
       status: getGradeStatus(average),
@@ -104,7 +114,7 @@ export default function TabelNilaiTable({
           <p className="mt-1 text-sm text-slate-500">
             {scheme === "tryout"
               ? "Rekap tugas dan tiga tahap tryout untuk kelas akhir jenjang."
-              : "Rekap tugas, UTS, dan UAS untuk kelas reguler."}
+              : "Rekap tugas dan tiga tahap UTS untuk kelas reguler."}
           </p>
         </div>
         <span className="inline-flex items-center border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700">
@@ -125,6 +135,7 @@ export default function TabelNilaiTable({
                     {ACADEMIC_SCORE_LABELS[scoreKey]}
                   </th>
                 ))}
+                <th className="px-4 py-4 font-semibold">Total</th>
                 <th className="px-4 py-4 font-semibold">Rata-rata</th>
                 <th className="px-4 py-4 font-semibold">Status</th>
                 <th className="px-4 py-4 text-center font-semibold">Aksi</th>
@@ -150,6 +161,9 @@ export default function TabelNilaiTable({
                       {formatScore(row.scores.scores[scoreKey])}
                     </td>
                   ))}
+                  <td className="px-4 py-4 font-semibold text-slate-800">
+                    {formatScore(row.total)}
+                  </td>
                   <td className="px-4 py-4 font-semibold text-slate-800">
                     {formatScore(row.average)}
                   </td>

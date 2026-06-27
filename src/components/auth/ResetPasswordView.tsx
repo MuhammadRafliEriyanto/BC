@@ -153,6 +153,11 @@ export function ResetPasswordView({
   return (
     <AuthShell
       variant="split"
+      splitContentAlignment="start"
+      splitContentClassName="pt-4 lg:pt-14 xl:pt-16"
+      splitInnerClassName="max-w-[430px]"
+      hideSplitVisualOnMobile
+      hideSplitTopBadge
       title="Reset Password"
       description="Enter the 6-digit code sent to your email and set your new password."
       footer={

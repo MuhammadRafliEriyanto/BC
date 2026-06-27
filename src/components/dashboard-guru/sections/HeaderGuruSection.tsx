@@ -2,18 +2,22 @@
 "use client";
 
 import { useEffect, useEffectEvent, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import {
   BookOpen,
+  CalendarDays,
   ChevronDown,
   FileText,
   Flame,
   Lock,
   PenSquare,
-  Target,
   Trophy,
+  Target,
 } from "lucide-react";
+
+import { buildGuruApiUrl, buildGuruUrl, getSelectedAcademicPeriod } from "@/lib/guru-helpers";
+import { getCurrentAcademicPeriod } from "@/lib/utils";
 
 import {
   AUTH_USER_UPDATED_EVENT,
@@ -77,6 +81,7 @@ const accessControl = {
   evaluasi: true,
 };
 
+
 const fallbackHeaderProfile: HeaderGuruProfileState = {
   nama: "Guru",
   subject: "",
@@ -136,9 +141,31 @@ function EmptyProgramState({ message }: { message: string }) {
 
 export default function HeaderGuruSection() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
   const [profile, setProfile] = useState<HeaderGuruProfileState>(
     fallbackHeaderProfile,
   );
+  const period = useMemo(() => getCurrentAcademicPeriod(), []);
+
+  const { academicYear: defaultAcademicYear } =
+    getSelectedAcademicPeriod(searchParams);
+  const rawAcademicYear = searchParams.get("academicYear") || "";
+
+  const handlePeriodChange = (key: "academicYear", value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set(key, value);
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const handleNavigation = (href: string) => {
+    router.push(buildGuruUrl(href, searchParams));
+  };
+
+  const academicYearOptions = ["2025/2026", "2026/2027"];
+
+  const isCurrentPeriod =
+    (rawAcademicYear || defaultAcademicYear) === period.academicYear;
 
   const guruConfig = useMemo<GuruProgram[]>(
     () => [
@@ -195,16 +222,16 @@ export default function HeaderGuruSection() {
         ],
       },
       {
-        name: "Tugas & Penilaian",
+        name: "Latihan & Penilaian",
         tabs: [
           {
-            name: "Tugas",
+            name: "Latihan",
             icon: FileText,
             href: "/dashboard-guru/kelas",
             enabled: accessControl.tugas,
             content: {
-              title: "Tugas dan Penilaian",
-              desc: "Masuk ke daftar kelas untuk mengatur tugas per pertemuan dan progres penilaian siswa.",
+              title: "Latihan dan Penilaian",
+              desc: "Masuk ke daftar kelas untuk mengatur latihan per pertemuan dan progres penilaian siswa.",
               stats:
                 profile.totalClasses > 0
                   ? `${profile.totalClasses} kelas siap dinilai`
@@ -234,7 +261,7 @@ export default function HeaderGuruSection() {
             enabled: accessControl.evaluasi,
             content: {
               title: "Evaluasi Pembelajaran",
-              desc: "Buka kelas yang diampu untuk melihat nilai tugas dan tindak lanjut evaluasi pembelajaran.",
+              desc: "Buka kelas yang diampu untuk melihat nilai latihan dan tindak lanjut evaluasi pembelajaran.",
               stats:
                 profile.totalClasses > 0
                   ? `${profile.totalClasses} kelas siap dievaluasi`
@@ -279,7 +306,7 @@ export default function HeaderGuruSection() {
 
   const loadTeacherProfile = useEffectEvent(async () => {
     try {
-      const response = await fetch("/api/teacher/me/dashboard", {
+      const response = await fetch(buildGuruApiUrl("/api/teacher/me/dashboard", searchParams), {
         method: "GET",
         credentials: "include",
         cache: "no-store",
@@ -323,7 +350,7 @@ export default function HeaderGuruSection() {
 
       void loadTeacherProfile();
     });
-  }, []);
+  }, [defaultAcademicYear]);
 
   useEffect(() => {
     function handleAuthUserUpdated() {
@@ -355,23 +382,49 @@ export default function HeaderGuruSection() {
   return (
     <div className="flex h-full w-full flex-col gap-5 lg:gap-6">
       <div className="relative overflow-hidden rounded-2xl border border-orange-100 bg-orange-50/50 shadow-sm">
-        <div className="relative flex items-center gap-4 px-4 py-4 md:px-5">
+        <div className="relative flex h-full items-center gap-4 px-4 py-4 md:px-5">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-orange-100 shadow-sm">
             <Flame className="h-6 w-6 text-orange-600" />
           </div>
-          <div className="overflow-hidden text-slate-800">
+          <div className="overflow-hidden text-slate-800 flex-1">
             <p className="text-sm font-semibold md:text-base">
               Halo, {profile.nama}
             </p>
-            <div className="overflow-hidden whitespace-nowrap">
+            <div className="overflow-hidden whitespace-nowrap mt-0.5 md:mt-1">
               <p className="animate-marquee text-xs text-slate-500 md:text-sm">
-                {profile.subject || profile.branch
-                  ? `Kelola kelas ${profile.subject || "guru"}${
-                      profile.branch ? ` di cabang ${profile.branch}` : ""
-                    } dari satu panel kerja yang ringkas.`
-                  : "Kelola kelas, materi, penilaian, dan evaluasi dari satu panel kerja yang ringkas."}
+                Kelola kelas, materi, penilaian, dan evaluasi dari satu panel kerja yang ringkas.
               </p>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm flex flex-col justify-center px-4 py-4 md:px-5">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="h-4 w-4 text-orange-500" />
+            <h2 className="text-sm font-semibold text-slate-800">Tahun Ajaran</h2>
+          </div>
+          {isCurrentPeriod && (
+            <span className="rounded bg-green-100 px-2 py-0.5 text-[10px] font-bold text-green-700 tracking-wide uppercase">
+              Aktif
+            </span>
+          )}
+        </div>
+        
+        <div className="grid grid-cols-1 gap-3">
+          <div className="relative">
+            <select
+              value={rawAcademicYear}
+              onChange={(e) => handlePeriodChange("academicYear", e.target.value)}
+              className="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 pr-8 text-xs font-medium text-gray-700 transition focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-400"
+            >
+              <option value="" disabled>--Pilih Tahun Ajaran--</option>
+              {academicYearOptions.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-gray-500" />
           </div>
         </div>
       </div>
@@ -453,22 +506,24 @@ export default function HeaderGuruSection() {
 
                     <div className="mt-4 flex flex-wrap gap-2">
                       {selectedTab.enabled ? (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => router.push(selectedTab.href)}
-                            className="rounded-xl bg-orange-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-orange-700"
-                          >
-                            Buka Sekarang
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => router.push(selectedTab.href)}
-                            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
-                          >
-                            Lihat Detail
-                          </button>
-                        </>
+                        profile.totalClasses > 0 || selectedTab.name === "Ujian" ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleNavigation(selectedTab.href)}
+                              className="rounded-xl bg-orange-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-orange-700"
+                            >
+                              Buka Sekarang
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleNavigation(selectedTab.href)}
+                              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
+                            >
+                              Lihat Detail
+                            </button>
+                          </>
+                        ) : null
                       ) : (
                         <button
                           type="button"

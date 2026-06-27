@@ -44,9 +44,9 @@ export const DETAIL_SECTION_ITEMS: DetailSectionItem[] = [
   },
   {
     key: "tugas",
-    label: "Tugas Setiap Pertemuan",
-    shortLabel: "Tugas",
-    description: "Daftar tugas kelas dan status penilaian.",
+    label: "Latihan Setiap Pertemuan",
+    shortLabel: "Latihan",
+    description: "Daftar Latihan kelas dan status penilaian.",
     icon: FileText,
   },
   {
@@ -161,6 +161,9 @@ export function createInitialNilai(activeClass: ClassDetailData): NilaiSiswa[] {
     scores: {
       uts: student.scores.uts,
       uas: student.scores.uas,
+      uts1: null,
+      uts2: null,
+      uts3: null,
       tryout1: null,
       tryout2: null,
       tryout3: null,
@@ -208,6 +211,9 @@ export function createEmptyNilai(studentId: string): NilaiSiswa {
     scores: {
       uts: null,
       uas: null,
+      uts1: null,
+      uts2: null,
+      uts3: null,
       tryout1: null,
       tryout2: null,
       tryout3: null,

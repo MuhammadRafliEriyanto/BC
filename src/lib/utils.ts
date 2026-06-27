@@ -27,3 +27,18 @@ export function formatPercent(value: number) {
     maximumFractionDigits: 1,
   }).format(value / 100);
 }
+
+export function getCurrentAcademicPeriod(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    month: "numeric",
+    year: "numeric",
+    timeZone: "Asia/Jakarta",
+  }).formatToParts(date);
+  const month = Number(parts.find((part) => part.type === "month")?.value ?? 1);
+  const year = Number(parts.find((part) => part.type === "year")?.value ?? 2026);
+  const startYear = month >= 8 ? year : year - 1;
+
+  return {
+    academicYear: `${startYear}/${startYear + 1}`,
+  };
+}

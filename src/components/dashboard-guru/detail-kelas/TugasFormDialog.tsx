@@ -31,10 +31,10 @@ export default function TugasFormDialog({
       <DialogContent className="top-2 flex max-h-[calc(100dvh-1rem)] max-w-3xl translate-y-0 flex-col gap-0 rounded-[24px] border border-slate-200 bg-white p-0 shadow-lg sm:top-[50%] sm:max-h-[calc(100dvh-3rem)] sm:translate-y-[-50%]">
         <DialogHeader className="shrink-0 border-b border-slate-200 bg-gradient-to-r from-orange-50/60 via-white to-amber-50/30 px-4 py-4 pr-14 text-left md:px-5">
           <DialogTitle className="text-lg font-semibold text-slate-800">
-            {mode === "add" ? "Tambah Tugas Pertemuan" : "Edit Tugas Pertemuan"}
+            {mode === "add" ? "Tambah Latihan Pertemuan" : "Edit Latihan Pertemuan"}
           </DialogTitle>
           <DialogDescription className="text-sm text-slate-500">
-            Atur tugas per pertemuan beserta lampiran file opsional. Jumlah pengumpulan dan status penilaian akan dihitung otomatis dari submission siswa dan nilai guru.
+            Atur latihan per pertemuan beserta lampiran file opsional. Jumlah pengumpulan dan status penilaian akan dihitung otomatis dari submission siswa dan nilai guru.
           </DialogDescription>
         </DialogHeader>
 
@@ -66,7 +66,7 @@ export default function TugasFormDialog({
             </div>
 
             <label className="grid gap-2 text-sm font-medium text-slate-700">
-              Judul Tugas
+              Judul Latihan
               <input
                 type="text"
                 value={draft?.judulTugas ?? ""}
@@ -82,7 +82,7 @@ export default function TugasFormDialog({
                 rows={5}
                 value={draft?.deskripsi ?? ""}
                 onChange={(event) => onChange("deskripsi", event.target.value)}
-                placeholder="Tuliskan instruksi tugas, penjelasan singkat, atau catatan penilaian..."
+                placeholder="Tuliskan instruksi latihan, penjelasan singkat, atau catatan penilaian..."
                 className="resize-none border border-slate-200 bg-white px-3 py-3 text-sm leading-6 text-slate-700 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
               />
             </label>
@@ -92,7 +92,7 @@ export default function TugasFormDialog({
                 Status Pengumpulan dan Penilaian Otomatis
               </p>
               <p className="text-sm leading-6 text-slate-500">
-                Setelah tugas disimpan, sistem akan menghitung jumlah siswa yang
+                Setelah latihan disimpan, sistem akan menghitung jumlah siswa yang
                 mengumpulkan dari data submission real. Status penilaian juga
                 akan berubah otomatis menjadi:
               </p>
@@ -113,13 +113,13 @@ export default function TugasFormDialog({
                   <span className="font-semibold text-slate-800">
                     Sudah Dinilai
                   </span>{" "}
-                  saat semua submission pada tugas ini sudah dinilai.
+                  saat semua submission pada latihan ini sudah dinilai.
                 </p>
               </div>
             </div>
 
             <div className="grid gap-3 border border-slate-200 bg-slate-50/30 p-4 text-sm font-medium text-slate-700">
-              <span>Lampiran Tugas Opsional</span>
+              <span>Lampiran Latihan Opsional</span>
               <input
                 type="file"
                 accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.jpg,.jpeg,.png,.webp,.txt,.csv"
@@ -152,11 +152,11 @@ export default function TugasFormDialog({
                 </div>
               ) : attachmentMarkedForRemoval ? (
                 <p className="text-xs text-rose-600">
-                  Lampiran lama akan dihapus saat tugas disimpan.
+                  Lampiran lama akan dihapus saat latihan disimpan.
                 </p>
               ) : (
                 <p className="text-xs leading-5 text-slate-400">
-                  Lampiran tugas boleh kosong jika guru hanya ingin memberi instruksi teks.
+                  Lampiran latihan boleh kosong jika guru hanya ingin memberi instruksi teks.
                 </p>
               )}
             </div>
@@ -175,9 +175,9 @@ export default function TugasFormDialog({
           <button
             type="button"
             onClick={onSubmit}
-            className="w-full border border-orange-400 bg-white via-orange-500 to-amber-400 px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-[1.02] sm:w-auto"
+            className="w-full border border-orange-500 bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-700 hover:brightness-[1.02] sm:w-auto"
           >
-            {mode === "add" ? "Simpan Tugas" : "Update Tugas"}
+            {mode === "add" ? "Simpan Latihan" : "Update Latihan"}
           </button>
         </DialogFooter>
       </DialogContent>

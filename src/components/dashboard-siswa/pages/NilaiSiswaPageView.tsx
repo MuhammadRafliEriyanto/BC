@@ -11,6 +11,7 @@ import Link from "next/link";
 import { useStudentLearningData } from "../data/useStudentLearningData";
 import {
   ACADEMIC_SCORE_LABELS,
+  calculateTotalScores,
   getAcademicScoreKeys,
 } from "@/lib/academic-grades";
 
@@ -61,12 +62,18 @@ export default function NilaiSiswaPageView() {
   const mapelSummaries = useMemo(() => {
     return academicSummaries.map((summary) => {
       const classTasks = groupedTasks[summary.classId] ?? [];
+      const totalScore = calculateTotalScores([
+        summary.taskAverage,
+        ...getAcademicScoreKeys(summary.scheme).map((key) => summary.scores[key]),
+      ]);
+
       return {
         ...summary,
         totalTasks: classTasks.length,
         hasUngraded: classTasks.some(
           (t) => t.mySubmission?.submitted && !t.myGrade?.graded,
         ),
+        totalScore,
       };
     });
   }, [academicSummaries, groupedTasks]);
@@ -161,13 +168,23 @@ export default function NilaiSiswaPageView() {
                     </div>
 
                     <div className="flex items-center justify-between border-t border-slate-50 pt-4">
-                      <div>
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                          Rata-Rata Nilai
-                        </p>
-                        <p className="mt-1 text-lg font-bold text-slate-800">
-                          {summary.finalAverage ?? "-"}
-                        </p>
+                      <div className="flex gap-6">
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                            Total Nilai
+                          </p>
+                          <p className="mt-1 text-lg font-bold text-slate-800">
+                            {summary.totalScore ?? "-"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                            Rata-Rata
+                          </p>
+                          <p className="mt-1 text-lg font-bold text-slate-800">
+                            {summary.finalAverage ?? "-"}
+                          </p>
+                        </div>
                       </div>
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 text-slate-400 transition-colors group-hover:bg-orange-50 group-hover:text-orange-600">
                         <ChevronRight className="h-4 w-4" />
@@ -201,11 +218,19 @@ export default function NilaiSiswaPageView() {
                       {selectedSummary.semester} {selectedSummary.academicYear}
                     </p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs text-slate-500">Rata-rata tersedia</p>
-                    <p className="mt-1 text-2xl font-semibold text-slate-900">
-                      {selectedSummary.finalAverage ?? "-"}
-                    </p>
+                  <div className="flex gap-8 text-right">
+                    <div>
+                      <p className="text-xs text-slate-500">Total Nilai</p>
+                      <p className="mt-1 text-2xl font-semibold text-slate-900">
+                        {selectedSummary.totalScore ?? "-"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500">Rata-rata tersedia</p>
+                      <p className="mt-1 text-2xl font-semibold text-slate-900">
+                        {selectedSummary.finalAverage ?? "-"}
+                      </p>
+                    </div>
                   </div>
                 </div>
 

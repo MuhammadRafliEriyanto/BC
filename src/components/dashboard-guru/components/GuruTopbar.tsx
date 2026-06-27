@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Bell,
   ChevronDown,
@@ -20,6 +20,7 @@ import {
   useTransition,
 } from "react";
 
+import { buildGuruUrl } from "@/lib/guru-helpers";
 import { GuruUserProfileDialog } from "@/components/dashboard-guru/components/GuruUserProfileDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -223,7 +224,7 @@ function getNotificationTypeLabel(type: TeacherNotificationItem["type"]) {
     case "class":
       return "Kelas";
     case "task":
-      return "Tugas";
+      return "Latihan";
     case "tryout":
       return "Ujian";
     default:
@@ -249,6 +250,7 @@ function getNotificationBadgeVariant(type: TeacherNotificationItem["type"]) {
 export default function GuruTopbar() {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profile, setProfile] = useState<GuruTopbarProfile>(fallbackProfile);
@@ -482,7 +484,7 @@ export default function GuruTopbar() {
                 return (
                   <Link
                     key={menu.path}
-                    href={menu.path}
+                    href={buildGuruUrl(menu.path, searchParams)}
                     className={`rounded-md px-3 py-1.5 text-sm font-medium transition-all hover:scale-[1.05] hover:bg-white/10 hover:text-white ${
                       isActive ? "bg-white/15 text-white" : "text-white/80"
                     }`}
@@ -696,7 +698,7 @@ export default function GuruTopbar() {
               return (
                 <Link
                   key={menu.path}
-                  href={menu.path}
+                  href={buildGuruUrl(menu.path, searchParams)}
                   onClick={() => setMobileOpen(false)}
                   className={`block rounded-md px-3 py-2 text-sm transition ${
                     isActive

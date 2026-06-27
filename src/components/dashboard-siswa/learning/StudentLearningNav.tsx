@@ -16,7 +16,7 @@ const learningMenus = [
     icon: FileText,
   },
   {
-    label: "Kirim Tugas",
+    label: "Kirim Jawaban",
     href: "/dashboard-siswa/kirim-tugas",
     icon: Send,
   },

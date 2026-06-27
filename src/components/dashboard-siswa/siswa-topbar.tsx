@@ -448,7 +448,7 @@ export default function SiswaTopbar() {
                 alt="Logo Bina Cendekia"
                 width={40}
                 height={40}
-                className="transition group-hover:scale-105"
+                className="w-auto h-auto transition group-hover:scale-105"
                 priority
               />
 

@@ -34,7 +34,7 @@ const tabs: TabConfig[] = [
   },
   {
     key: "tugas",
-    label: "Daftar Tugas",
+    label: "Daftar Latihan",
     shortLabel: "Tugas",
     icon: FileText,
     href: "/dashboard-siswa/tugas",
@@ -227,7 +227,7 @@ export default function PelajaranSection() {
                 className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-orange-500 px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-orange-600"
               >
                 <Send className="h-3.5 w-3.5" />
-                Kirim Tugas
+                Kirim Jawaban
               </Link>
             </div>
           </article>

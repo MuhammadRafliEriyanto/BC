@@ -136,7 +136,6 @@ export type TugasPertemuanTableProps = {
   onAdd: () => void;
   onEdit: (task: TugasPertemuan) => void;
   onDelete: (taskId: string) => void;
-  onGradeNow: (task: TugasPertemuan) => void;
   onViewSubmissions: (task: TugasPertemuan) => void;
 };
 
@@ -214,4 +213,5 @@ export type TaskSubmissionReviewDialogProps = {
   isDetailLoading: boolean;
   onOpenChange: (open: boolean) => void;
   onSelectSubmission: (submissionId: string) => void;
+  onGradeSubmission?: (studentId: string) => void;
 };

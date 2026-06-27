@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  ClipboardCheck,
   Clock3,
   Download,
   ExternalLink,
@@ -70,18 +71,19 @@ export default function TaskSubmissionReviewDialog({
   isDetailLoading,
   onOpenChange,
   onSelectSubmission,
+  onGradeSubmission,
 }: TaskSubmissionReviewDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[92vh] max-w-6xl grid-rows-[auto_minmax(0,1fr)_auto] gap-0 rounded-[24px] border border-slate-200 bg-white p-0 shadow-lg">
         <DialogHeader className="border-b border-slate-200 bg-gradient-to-r from-orange-50/60 via-white to-amber-50/30 px-4 py-4 pr-14 text-left md:px-5">
           <DialogTitle className="text-lg font-semibold text-slate-800">
-            Review Submission Tugas
+            Review Submission Latihan
           </DialogTitle>
           <DialogDescription className="text-sm text-slate-500">
             {task
-              ? `Pantau hasil pengumpulan tugas ${task.judulTugas} untuk kelas ${kelasName}.`
-              : `Pantau hasil pengumpulan tugas untuk kelas ${kelasName}.`}
+              ? `Pantau hasil pengumpulan latihan ${task.judulTugas} untuk kelas ${kelasName}.`
+              : `Pantau hasil pengumpulan latihan untuk kelas ${kelasName}.`}
           </DialogDescription>
         </DialogHeader>
 
@@ -89,7 +91,7 @@ export default function TaskSubmissionReviewDialog({
           <div className="flex min-h-0 flex-col border-b border-slate-200 lg:border-b-0 lg:border-r">
             <div className="border-b border-slate-200 bg-slate-50/50 px-4 py-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Tugas Aktif
+                Latihan Aktif
               </p>
               <h3 className="mt-1 text-base font-semibold text-slate-800">
                 {task?.judulTugas ?? "-"}
@@ -174,7 +176,7 @@ export default function TaskSubmissionReviewDialog({
                     <Inbox className="h-5 w-5" />
                   </div>
                   <p className="mt-4 text-base font-semibold text-slate-700">
-                    Belum ada submission untuk tugas ini.
+                    Belum ada submission untuk latihan ini.
                   </p>
                   <p className="mt-2 text-sm leading-6 text-slate-500">
                     Guru dapat membuka kembali dialog ini setelah siswa mulai
@@ -238,6 +240,19 @@ export default function TaskSubmissionReviewDialog({
                     </div>
                   </div>
                 </div>
+
+                {onGradeSubmission ? (
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => onGradeSubmission(submissionDetail.studentId)}
+                      className="inline-flex items-center gap-2 border border-emerald-500 bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 hover:shadow-[0_18px_30px_-22px_rgba(16,185,129,0.55)]"
+                    >
+                      <ClipboardCheck className="h-4 w-4 shrink-0" />
+                      Beri Nilai Siswa Ini
+                    </button>
+                  </div>
+                ) : null}
 
                 {submissionDetail.answerText ? (
                   <section className="border border-slate-200 bg-white p-4">

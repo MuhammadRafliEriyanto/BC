@@ -1148,14 +1148,15 @@ export function AdminTeachers({
         description="Kelola data guru, filter cabang, serta atur status mengajar."
         square
         action={
-          <div className="flex flex-wrap justify-start gap-2 sm:justify-end">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <Button
               variant="secondary"
               className={warmPrimaryButtonClassName}
               onClick={openCreateDialog}
             >
               <Plus className="size-4" />
-              Tambah Data
+              <span className="hidden sm:inline">Tambah Data</span>
+              <span className="inline sm:hidden">Tambah</span>
             </Button>
             <Button
               variant="outline"
@@ -1164,7 +1165,7 @@ export function AdminTeachers({
               disabled={!filteredTeachers.length}
             >
               <Download className="size-4" />
-              Export
+              <span className="hidden sm:inline">Export</span>
             </Button>
             <Button
               variant="outline"
@@ -1172,7 +1173,7 @@ export function AdminTeachers({
               onClick={() => setIsImportOpen(true)}
             >
               <Upload className="size-4" />
-              Import
+              <span className="hidden sm:inline">Import</span>
             </Button>
           </div>
         }
@@ -1278,8 +1279,8 @@ export function AdminTeachers({
           </div>
         ) : null}
 
-        <div className="mb-6 grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1.7fr)_220px_160px_auto]">
-          <div className="md:col-span-2 xl:col-span-1">
+        <div className="mb-6 flex flex-col gap-3 md:flex-row md:flex-wrap">
+          <div className="w-full md:flex-1">
             <Input
               className={warmFieldClassName}
               value={search}
@@ -1288,49 +1289,55 @@ export function AdminTeachers({
             />
           </div>
 
-          <Select value={branchFilter} onValueChange={setBranchFilter}>
-            <SelectTrigger className={warmSelectTriggerClassName}>
-              <SelectValue placeholder="Cabang" />
-            </SelectTrigger>
-            <SelectContent className={warmSelectContentClassName}>
-              {branchFilterOptions.map((option) => (
-                <SelectItem
-                  key={option}
-                  value={option}
-                  className={warmSelectItemClassName}
-                >
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="grid w-full grid-cols-2 gap-3 sm:flex sm:w-auto sm:flex-wrap">
+            <div className="w-full sm:w-[220px]">
+              <Select value={branchFilter} onValueChange={setBranchFilter}>
+                <SelectTrigger className={warmSelectTriggerClassName}>
+                  <SelectValue placeholder="Cabang" />
+                </SelectTrigger>
+                <SelectContent className={warmSelectContentClassName}>
+                  {branchFilterOptions.map((option) => (
+                    <SelectItem
+                      key={option}
+                      value={option}
+                      className={warmSelectItemClassName}
+                    >
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <Select
-            value={statusFilter}
-            onValueChange={(value) =>
-              setStatusFilter(value as TeacherStatusFilterOption)
-            }
-          >
-            <SelectTrigger className={warmSelectTriggerClassName}>
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent className={warmSelectContentClassName}>
-              {teacherStatusOptions.map((option) => (
-                <SelectItem
-                  key={option}
-                  value={option}
-                  className={warmSelectItemClassName}
-                >
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <div className="w-full sm:w-[160px]">
+              <Select
+                value={statusFilter}
+                onValueChange={(value) =>
+                  setStatusFilter(value as TeacherStatusFilterOption)
+                }
+              >
+                <SelectTrigger className={warmSelectTriggerClassName}>
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent className={warmSelectContentClassName}>
+                  {teacherStatusOptions.map((option) => (
+                    <SelectItem
+                      key={option}
+                      value={option}
+                      className={warmSelectItemClassName}
+                    >
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
           <Button
             type="button"
             variant="outline"
-            className={`w-full xl:w-auto ${warmOutlineButtonClassName}`}
+            className={`w-full sm:w-auto ${warmOutlineButtonClassName}`}
             onClick={handleResetFilters}
           >
             <RotateCcw className="size-4" />
@@ -1381,7 +1388,7 @@ export function AdminTeachers({
         }}
       >
         <DialogContent
-          className={`sm:max-w-5xl ${warmOverlayPanelClassName}`}
+          className={`max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] sm:max-w-5xl ${warmOverlayPanelClassName}`}
         >
           <DialogHeader>
             <DialogTitle>
@@ -1626,7 +1633,7 @@ export function AdminTeachers({
           }
         }}
       >
-        <DialogContent className={`sm:max-w-xl ${warmOverlayPanelClassName}`}>
+        <DialogContent className={`max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] sm:max-w-xl ${warmOverlayPanelClassName}`}>
           <DialogHeader>
             <DialogTitle>Import data guru</DialogTitle>
             <DialogDescription>

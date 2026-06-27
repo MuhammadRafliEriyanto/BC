@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import TryoutSiswaPageView from "@/components/dashboard-siswa/pages/TryoutSiswaPageView";
+import ActiveTryoutPageView from "@/components/dashboard-siswa/pages/ActiveTryoutPageView";
 
 export const metadata: Metadata = {
   title: "Pengerjaan Ujian Siswa",
@@ -19,5 +19,5 @@ export default async function DashboardSiswaExamAttemptPage({
 }: DashboardSiswaExamAttemptPageProps) {
   const { attemptId } = await params;
 
-  return <TryoutSiswaPageView attemptId={attemptId} />;
+  return <ActiveTryoutPageView attemptId={attemptId} />;
 }

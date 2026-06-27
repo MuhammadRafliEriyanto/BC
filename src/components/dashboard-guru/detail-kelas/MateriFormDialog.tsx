@@ -169,7 +169,7 @@ export default function MateriFormDialog({
           <button
             type="button"
             onClick={onSubmit}
-            className="w-full border border-orange-400 bg-white via-orange-500 to-amber-400 px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-[1.02] sm:w-auto"
+            className="w-full border border-orange-500 bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-700 hover:brightness-[1.02] sm:w-auto"
           >
             {mode === "add" ? "Simpan Materi" : "Update Materi"}
           </button>

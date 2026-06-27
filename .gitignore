@@ -53,3 +53,11 @@ next-env.d.ts
 /dev-root.err.log
 /dev-root.out.log
 /owner-dashboard-dev.log
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

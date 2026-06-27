@@ -49,6 +49,7 @@ export type FetchAdminStudentsParams = {
   branch?: string;
   className?: string;
   level?: AdminStudent["level"];
+  academicYear?: string;
 };
 
 export type FetchAdminTeachersParams = {
@@ -69,6 +70,7 @@ export type FetchAdminSchedulesParams = {
   branch?: string;
   className?: string;
   day?: string;
+  academicYear?: string;
 };
 
 export type AdminStudentsListData = {
@@ -136,6 +138,7 @@ export async function fetchAdminStudents(params: FetchAdminStudentsParams = {}) 
       branch: params.branch,
       className: params.className,
       level: params.level,
+      academicYear: params.academicYear,
     })}`,
     {
       method: "GET",
@@ -174,6 +177,7 @@ export async function fetchAdminSchedules(params: FetchAdminSchedulesParams = {}
       branch: params.branch,
       className: params.className,
       day: params.day,
+      academicYear: params.academicYear,
     })}`,
     {
       method: "GET",

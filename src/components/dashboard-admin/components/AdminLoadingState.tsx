@@ -37,7 +37,7 @@ export function AdminMetricGridSkeleton({
   className,
 }: AdminMetricGridSkeletonProps) {
   return (
-    <div className={cn("grid gap-3 sm:grid-cols-2 xl:grid-cols-4", className)}>
+    <div className={cn("grid grid-cols-2 gap-3 xl:grid-cols-4", className)}>
       {Array.from({ length: count }).map((_, index) => (
         <div
           key={index}
