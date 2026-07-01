@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { clearAuthClientState } from "@/lib/auth";
 
+import { subscribeStudentDashboardRefresh } from "../student-dashboard-refresh-events";
+import type { StudentAcademicAccess } from "./studentAcademicAccess";
+
 export type AssessmentType = "UTS" | "UAS" | "Tryout";
 
 export type StudentTryoutAttempt = {
@@ -49,13 +52,17 @@ type StudentTryoutListResponse = {
   message?: string;
   data?: {
     tryouts?: StudentTryoutItem[];
+    academicAccess?: StudentAcademicAccess | null;
   };
 };
 
 export function useStudentTryouts() {
   const [tryouts, setTryouts] = useState<StudentTryoutItem[]>([]);
+  const [academicAccess, setAcademicAccess] =
+    useState<StudentAcademicAccess | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -76,18 +83,25 @@ export function useStudentTryouts() {
 
         if (response.status === 401) {
           clearAuthClientState();
+          setTryouts([]);
+          setAcademicAccess(null);
           setLoadError("Sesi login berakhir. Silakan login ulang.");
           return;
         }
 
         if (!response.ok || !payload?.success || !payload.data) {
+          setTryouts([]);
+          setAcademicAccess(null);
           setLoadError(payload?.message || "Gagal memuat data ujian.");
           return;
         }
 
         setTryouts(payload.data.tryouts ?? []);
+        setAcademicAccess(payload.data.academicAccess ?? null);
       } catch (error) {
         if (!isMounted) return;
+        setTryouts([]);
+        setAcademicAccess(null);
         setLoadError(error instanceof Error ? error.message : "Terjadi kesalahan jaringan.");
       } finally {
         if (isMounted) {
@@ -101,7 +115,13 @@ export function useStudentTryouts() {
     return () => {
       isMounted = false;
     };
+  }, [reloadToken]);
+
+  useEffect(() => {
+    return subscribeStudentDashboardRefresh(() => {
+      setReloadToken((currentToken) => currentToken + 1);
+    });
   }, []);
 
-  return { tryouts, isLoading, loadError };
+  return { tryouts, academicAccess, isLoading, loadError };
 }

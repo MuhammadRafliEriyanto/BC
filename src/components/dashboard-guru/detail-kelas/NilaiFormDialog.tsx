@@ -50,7 +50,7 @@ export default function NilaiFormDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <div className="grid gap-4 px-5 py-5">
           {tasks.length > 0 ? (
             <label className="grid gap-2 text-sm font-medium text-slate-700">

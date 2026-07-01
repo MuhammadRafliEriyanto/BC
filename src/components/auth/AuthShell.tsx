@@ -501,15 +501,15 @@ export function AuthShell({
                     Masuk ke dashboard belajar dengan tampilan yang selaras dengan sistem LMS.
                   </h1>
                   <p className="mt-4 max-w-2xl text-sm leading-7 text-white/78 sm:text-base">
-                    Gunakan email utama Anda untuk login ke portal Bina Cendekia. Alur sesi,
-                    verifikasi, dan redirect dashboard tetap mengikuti sistem backend yang sudah
-                    berjalan.
+                    Gunakan kode akun dari admin untuk login ke portal Bina Cendekia. Email lama
+                    tetap bisa dipakai sebagai cadangan, sementara alur sesi dan redirect
+                    dashboard mengikuti role akun.
                   </p>
 
                   <div className="mt-8 grid gap-4 sm:grid-cols-3">
                     {[
                       { label: "Portal", value: "Login LMS" },
-                      { label: "Verifikasi", value: "Email aktif" },
+                      { label: "Akun", value: "Kode login" },
                       { label: "Akses", value: "Role-based" },
                     ].map((item) => (
                       <div

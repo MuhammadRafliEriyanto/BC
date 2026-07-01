@@ -19,7 +19,12 @@ import {
 import { clearAuthClientState } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
+import {
+  getStudentAcademicAccessMessage,
+  type StudentAcademicAccess,
+} from "../data/studentAcademicAccess";
 import StudentLearningShell from "../learning/StudentLearningShell";
+import { subscribeStudentDashboardRefresh } from "../student-dashboard-refresh-events";
 import {
   type ActiveTryoutSession,
   type StudentTryoutItem,
@@ -143,17 +148,19 @@ function EmptyTryoutState({
   );
 }
 
-type TryoutSiswaPageViewProps = {};
-
-export default function TryoutSiswaPageView({}: TryoutSiswaPageViewProps = {}) {
+export default function TryoutSiswaPageView() {
   const router = useRouter();
   const [tryouts, setTryouts] = useState<StudentTryoutItem[]>([]);
   const [activeSession, setActiveSession] = useState<ActiveTryoutSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [academicAccess, setAcademicAccess] =
+    useState<StudentAcademicAccess | null>(null);
 
   const totalQuestions = activeSession?.totalQuestions ?? 0;
+  const academicAccessMessage =
+    getStudentAcademicAccessMessage(academicAccess);
   const summaryText = isLoading
     ? "Memuat ujian"
     : `${tryouts.length} ujian published`;
@@ -181,6 +188,7 @@ export default function TryoutSiswaPageView({}: TryoutSiswaPageViewProps = {}) {
 
       const nextTryouts = payload.data?.tryouts ?? [];
       setTryouts(nextTryouts);
+      setAcademicAccess(payload.data?.academicAccess ?? null);
 
       if (nextTryouts.length > 0) {
         const nextSession = buildSessionFromTryout(nextTryouts[0]);
@@ -192,6 +200,7 @@ export default function TryoutSiswaPageView({}: TryoutSiswaPageViewProps = {}) {
       console.error("[tryout-siswa-page] load_tryouts_failed", error);
       setTryouts([]);
       setActiveSession(null);
+      setAcademicAccess(null);
       setLoadError(
         error instanceof Error && error.message
           ? error.message
@@ -218,6 +227,12 @@ export default function TryoutSiswaPageView({}: TryoutSiswaPageViewProps = {}) {
 
   useEffect(() => {
     queueMicrotask(() => {
+      void loadTryoutList();
+    });
+  }, [loadTryoutList]);
+
+  useEffect(() => {
+    return subscribeStudentDashboardRefresh(() => {
       void loadTryoutList();
     });
   }, [loadTryoutList]);
@@ -297,7 +312,10 @@ export default function TryoutSiswaPageView({}: TryoutSiswaPageViewProps = {}) {
       ) : !activeSession ? (
         <EmptyTryoutState
           title="Belum ada ujian published untuk akun ini"
-          description="Siswa hanya melihat UTS, UAS, atau Tryout yang sudah dipublish guru dan cocok dengan cabang serta kelasnya."
+          description={
+            academicAccessMessage ??
+            "Siswa hanya melihat UTS, UAS, atau Tryout yang sudah dipublish guru dan cocok dengan cabang serta kelasnya."
+          }
           onRetry={loadTryoutList}
         />
       ) : (

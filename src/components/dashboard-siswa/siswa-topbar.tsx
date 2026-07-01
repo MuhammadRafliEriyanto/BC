@@ -45,6 +45,7 @@ import {
   membershipService,
   type MembershipStatusData,
 } from "@/lib/subscription";
+import { subscribeStudentDashboardRefresh } from "./student-dashboard-refresh-events";
 
 const menus = [
   {
@@ -393,6 +394,13 @@ export default function SiswaTopbar() {
       }
 
       void loadCurrentUser();
+      void loadStudentProfile();
+      void loadNotifications();
+    });
+  }, [loadNotifications]);
+
+  useEffect(() => {
+    return subscribeStudentDashboardRefresh(() => {
       void loadStudentProfile();
       void loadNotifications();
     });

@@ -261,7 +261,11 @@ function PaymentDetailItem({
   );
 }
 
-export default function HistoriTagihanSiswa() {
+export default function HistoriTagihanSiswa({
+  reloadSignal = 0,
+}: {
+  reloadSignal?: number;
+}) {
   const [payments, setPayments] = useState<MembershipPaymentHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -300,7 +304,7 @@ export default function HistoriTagihanSiswa() {
     queueMicrotask(() => {
       void loadPaymentHistory();
     });
-  }, [reloadKey]);
+  }, [reloadKey, reloadSignal]);
 
   const pendingPayment = payments.find(canContinuePayment) ?? null;
 

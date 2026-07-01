@@ -22,7 +22,6 @@ import {
 } from "react";
 
 import { requestAdminApi } from "@/lib/admin-api";
-import { fetchAdminPaymentActivations } from "@/lib/admin-payments";
 import {
   defaultAdminDashboardConfig,
   type AdminDashboardConfigData,
@@ -69,7 +68,6 @@ import {
   type AdminColumnDefinition,
 } from "./components/AdminDataTable";
 import { AdminPaginationFooter } from "./components/AdminPaginationFooter";
-import { AdminSummaryLineSkeleton } from "./components/AdminLoadingState";
 import { AdminSectionCard } from "./components/AdminSectionCard";
 import { AdminStatusBadge } from "./components/AdminStatusBadge";
 
@@ -88,6 +86,7 @@ type StudentFormValues = {
   className: string;
   birthDate: string;
   academicYear: string;
+  password?: string;
   status: AdminStudent["status"];
 };
 
@@ -125,10 +124,9 @@ type StudentActionFeedback = {
   message: string;
 };
 
-type StudentMembershipStatus = "Sudah Membership" | "Belum Membership";
-
 type StudentLevelFilterOption = AdminStudent["level"] | "Semua";
 type StudentStatusFilterOption = AdminStudent["status"] | "Semua";
+type StudentMembershipTone = "default" | "success" | "warning" | "danger";
 
 type BranchApiItem = {
   name?: string;
@@ -170,6 +168,7 @@ function createEmptyStudentForm(defaultClassName: string): StudentFormValues {
     className: defaultClassName,
     birthDate: "",
     academicYear: "2025/2026",
+    password: "",
     status: "Aktif",
   };
 }
@@ -276,10 +275,6 @@ function formatBirthDateForDisplay(birthDate: string) {
   return `${day}/${month}/${year}`;
 }
 
-function normalizeStudentMembershipId(value: string | null | undefined) {
-  return value?.trim() ?? "";
-}
-
 function toStudentFormValues(student: AdminStudent): StudentFormValues {
   return {
     name: student.name,
@@ -290,6 +285,7 @@ function toStudentFormValues(student: AdminStudent): StudentFormValues {
     className: student.className,
     birthDate: student.birthDate,
     academicYear: student.academicYear || "2025/2026",
+    password: "",
     status: student.status,
   };
 }
@@ -341,17 +337,29 @@ function DetailItem({ label, value }: { label: string; value: string }) {
 
 function StudentActions({
   student,
-  membershipStatus,
   onEdit,
   onDelete,
   onToggleStatus,
 }: {
   student: AdminStudent;
-  membershipStatus: StudentMembershipStatus;
   onEdit: (student: AdminStudent) => void;
   onDelete: (student: AdminStudent) => void;
   onToggleStatus: (student: AdminStudent) => void;
 }) {
+  const status = student.membership?.status || "none";
+  let label = "Belum Membership";
+  let tone: StudentMembershipTone = "default";
+
+  if (status === "active") {
+    label = "Aktif";
+    tone = "success";
+  } else if (status === "pending") {
+    label = "Menunggu Mulai";
+    tone = "warning";
+  } else if (status === "expired") {
+    label = "Expired";
+    tone = "danger";
+  }
   return (
     <div className="flex items-center justify-center gap-1.5">
       <Sheet>
@@ -374,7 +382,7 @@ function StudentActions({
           <SheetHeader>
             <SheetTitle>Detail siswa</SheetTitle>
             <SheetDescription>
-              Ringkasan profil siswa, kelas aktif, dan password hasil generate.
+              Ringkasan profil siswa, kode login, kelas aktif, dan password hasil generate.
             </SheetDescription>
           </SheetHeader>
           <div className="mt-6 space-y-5">
@@ -389,12 +397,14 @@ function StudentActions({
                   {student.name}
                 </p>
                 <p className="truncate text-sm text-slate-500">
-                  {student.email}
+                  Kode login: {student.loginCode || student.id}
                 </p>
               </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
+              <DetailItem label="Kode Login" value={student.loginCode || student.id} />
+              <DetailItem label="Email Internal" value={student.email} />
               <DetailItem label="No. HP" value={student.phone} />
               <DetailItem
                 label="Cabang"
@@ -403,7 +413,7 @@ function StudentActions({
               <DetailItem label="Program" value={student.program} />
               <DetailItem label="Jenjang" value={student.level} />
               <DetailItem label="Kelas" value={student.className} />
-              <DetailItem label="Membership" value={membershipStatus} />
+              <DetailItem label="Membership" value={label} />
               <DetailItem
                 label="Tanggal lahir"
                 value={formatBirthDateForDisplay(student.birthDate)}
@@ -413,12 +423,7 @@ function StudentActions({
 
             <div className="flex flex-wrap items-center gap-3">
               <AdminStatusBadge status={student.status} />
-              <AdminStatusBadge
-                status={membershipStatus}
-                tone={
-                  membershipStatus === "Sudah Membership" ? "success" : "warning"
-                }
-              />
+              <AdminStatusBadge status={label} tone={tone} />
             </div>
           </div>
         </SheetContent>
@@ -525,11 +530,7 @@ export function AdminStudents({
   const [pageLimit, setPageLimit] = useState(20);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [studentsWithMembershipIds, setStudentsWithMembershipIds] = useState<
-    string[]
-  >([]);
-  const [membershipLoading, setMembershipLoading] = useState(true);
-  const [membershipError, setMembershipError] = useState<string | null>(null);
+
   const [summary, setSummary] = useState<AdminStudentsSummary>({
     totalItems: 0,
     activeCount: 0,
@@ -641,56 +642,16 @@ export function AdminStudents({
     [classFilter, combinedSearchQuery, levelFilter, page, pageLimit, statusFilter, academicYearFilter],
   );
 
-  const loadMembershipCoverage = useCallback(async () => {
-    setMembershipLoading(true);
-    setMembershipError(null);
 
-    try {
-      const knownStudentIds = new Set<string>();
-      let nextPage = 1;
-      let totalPagesCount = 1;
-
-      do {
-        const result = await fetchAdminPaymentActivations({
-          page: nextPage,
-          limit: 100,
-        });
-
-        result.items.forEach((item) => {
-          const normalizedStudentId = normalizeStudentMembershipId(item.studentId);
-
-          if (normalizedStudentId) {
-            knownStudentIds.add(normalizedStudentId);
-          }
-        });
-
-        totalPagesCount = Math.max(result.pagination.totalPages, 1);
-        nextPage += 1;
-      } while (nextPage <= totalPagesCount);
-
-      setStudentsWithMembershipIds([...knownStudentIds]);
-      setMembershipError(null);
-    } catch (requestError) {
-      setStudentsWithMembershipIds([]);
-      setMembershipError(
-        requestError instanceof Error
-          ? requestError.message
-          : "Gagal memuat status membership siswa.",
-      );
-    } finally {
-      setMembershipLoading(false);
-    }
-  }, []);
 
   const refreshStudentViews = useCallback(
     async (nextPage: number = page) => {
       await Promise.allSettled([
         refreshStudents(nextPage),
-        loadMembershipCoverage(),
         Promise.resolve(onRefresh?.()),
       ]);
     },
-    [loadMembershipCoverage, onRefresh, page, refreshStudents],
+    [onRefresh, page, refreshStudents],
   );
 
   useEffect(() => {
@@ -714,15 +675,7 @@ export function AdminStudents({
     };
   }, [page, refreshStudents, requestKey]);
 
-  useEffect(() => {
-    const timerId = window.setTimeout(() => {
-      void loadMembershipCoverage();
-    }, 0);
 
-    return () => {
-      window.clearTimeout(timerId);
-    };
-  }, [loadMembershipCoverage]);
 
   const resolvedBranchOptions = useMemo(() => {
     const currentBranch = formValues.branch.trim();
@@ -741,26 +694,12 @@ export function AdminStudents({
       ? []
       : (classOptionsByLevel[levelFilter as AdminStudent["level"]] ?? []);
   const filteredStudents = students;
-  const studentMembershipIdSet = useMemo(
-    () =>
-      new Set(
-        studentsWithMembershipIds.map((studentId) =>
-          normalizeStudentMembershipId(studentId),
-        ),
-      ),
-    [studentsWithMembershipIds],
-  );
 
-  function getStudentMembershipStatus(student: AdminStudent): StudentMembershipStatus {
-    return studentMembershipIdSet.has(normalizeStudentMembershipId(student.id))
-      ? "Sudah Membership"
-      : "Belum Membership";
-  }
 
   const activeStudents = summary.activeCount;
   const inactiveStudents = summary.inactiveCount;
   const filteredStudentsWithMembershipCount = filteredStudents.filter(
-    (student) => getStudentMembershipStatus(student) === "Sudah Membership",
+    (student) => student.membership?.status === "active",
   ).length;
   const filteredStudentsWithoutMembershipCount =
     filteredStudents.length - filteredStudentsWithMembershipCount;
@@ -851,12 +790,12 @@ export function AdminStudents({
       return;
     }
 
-    if (!normalizedEmail) {
-      setFormError("Email wajib diisi.");
+    if (isEditing && !normalizedEmail) {
+      setFormError("Email siswa wajib diisi saat edit data.");
       return;
     }
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+    if (normalizedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
       setFormError("Format email belum valid.");
       return;
     }
@@ -883,6 +822,7 @@ export function AdminStudents({
 
     const duplicateStudent = students.find(
       (student) =>
+        normalizedEmail &&
         normalizeEmail(student.email) === normalizedEmail &&
         student.id !== editingStudentId,
     );
@@ -904,13 +844,14 @@ export function AdminStudents({
           method: editingStudentId ? "PUT" : "POST",
           body: JSON.stringify({
             name: normalizedName,
-            email: normalizedEmail,
+            ...(normalizedEmail ? { email: normalizedEmail } : {}),
             phone: normalizedPhone,
             branch: normalizedBranch,
             program: normalizedProgram,
             className: normalizedClassName,
             birthDate: normalizedBirthDate,
             academicYear: formValues.academicYear,
+            ...(formValues.password ? { password: formValues.password } : {}),
             status: formValues.status,
           }),
         },
@@ -1106,12 +1047,15 @@ export function AdminStudents({
       ),
     },
     {
-      key: "email",
-      header: "Email",
+      key: "loginCode",
+      header: "Kode Login",
       cell: (student) => (
-        <p className="max-w-[220px] truncate text-sm text-slate-700">
-          {student.email}
-        </p>
+        <div className="max-w-[240px]">
+          <p className="truncate text-sm font-semibold text-slate-800">
+            {student.loginCode || student.id}
+          </p>
+          <p className="truncate text-xs text-slate-500">{student.email}</p>
+        </div>
       ),
     },
     {
@@ -1143,13 +1087,36 @@ export function AdminStudents({
       key: "membershipStatus",
       header: "Membership",
       cell: (student) => {
-        const membershipStatus = getStudentMembershipStatus(student);
+        const status = student.membership?.status || "none";
+        
+        let label = "Belum Membership";
+        let tone: StudentMembershipTone = "default";
+
+        if (status === "active") {
+          label = "Aktif";
+          tone = "success";
+        } else if (status === "pending") {
+          label = "Menunggu Mulai";
+          tone = "warning";
+        } else if (status === "expired") {
+          label = "Expired";
+          tone = "danger";
+        }
 
         return (
-          <AdminStatusBadge
-            status={membershipStatus}
-            tone={membershipStatus === "Sudah Membership" ? "success" : "warning"}
-          />
+          <div className="flex flex-col gap-1">
+            <AdminStatusBadge status={label} tone={tone} />
+            {student.membership?.packageName && (
+              <span className="text-xs text-slate-500 whitespace-nowrap">
+                {student.membership.packageName}
+              </span>
+            )}
+            {student.membership?.endDate && (
+              <span className="text-xs text-slate-400 whitespace-nowrap">
+                s/d {new Date(student.membership.endDate).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+              </span>
+            )}
+          </div>
         );
       },
     },
@@ -1178,7 +1145,6 @@ export function AdminStudents({
       cell: (student) => (
         <StudentActions
           student={student}
-          membershipStatus={getStudentMembershipStatus(student)}
           onEdit={openEditDialog}
           onDelete={setStudentToDelete}
           onToggleStatus={handleToggleStatus}
@@ -1225,9 +1191,6 @@ export function AdminStudents({
           </div>
         }
       >
-        {isLoading || membershipLoading ? (
-          <AdminSummaryLineSkeleton className="mb-4" badges={5} />
-        ) : (
         <div className="mb-4 flex flex-wrap items-center gap-2 text-sm text-slate-500">
           <span>
             Menampilkan {filteredStudents.length} dari {totalItems} siswa.
@@ -1248,7 +1211,6 @@ export function AdminStudents({
             Belum membership {filteredStudentsWithoutMembershipCount}
           </Badge>
         </div>
-        )}
 
         {importResult ? (
           <div
@@ -1292,12 +1254,6 @@ export function AdminStudents({
           </div>
         ) : null}
 
-        {membershipError ? (
-          <div className="mb-4 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-            {membershipError}
-          </div>
-        ) : null}
-
         {actionFeedback ? (
           <div
             className={`mb-4 rounded-xl border px-4 py-3 text-sm ${
@@ -1316,7 +1272,7 @@ export function AdminStudents({
               className={warmFieldClassName}
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Cari nama, email, no HP, cabang, program, atau kelas..."
+              placeholder="Cari nama, kode login, email, no HP, cabang, program, atau kelas..."
             />
           </div>
 
@@ -1431,7 +1387,7 @@ export function AdminStudents({
           keyExtractor={(student) => student.id}
           emptyTitle="Tidak ada siswa yang cocok"
           emptyDescription="Coba ubah kata kunci pencarian atau kombinasi filter."
-          isLoading={isLoading || membershipLoading}
+          isLoading={isLoading}
           square
           getRowClassName={(student) =>
             student.status === "Nonaktif"
@@ -1475,8 +1431,8 @@ export function AdminStudents({
               {isEditing ? "Edit siswa" : "Tambah siswa baru"}
             </DialogTitle>
             <DialogDescription>
-              Isi nama, email, no HP, cabang, program, kelas, dan tanggal lahir.
-              Password akan tergenerate otomatis dari tanggal lahir.
+              Isi data siswa. Kode login dibuat otomatis dari ID siswa; email bisa
+              dikosongkan agar sistem membuat email internal.
             </DialogDescription>
           </DialogHeader>
 
@@ -1493,16 +1449,27 @@ export function AdminStudents({
                 />
               </StudentField>
 
-              <StudentField label="Email">
-                <Input
-                  className={warmFieldClassName}
-                  type="email"
-                  value={formValues.email}
-                  onChange={(event) =>
-                    updateFormValue("email", event.target.value)
-                  }
-                  placeholder="nama@email.com"
-                />
+              <StudentField label="Email kontak/internal">
+                <div className="space-y-2">
+                  <Input
+                    className={warmFieldClassName}
+                    type="email"
+                    value={formValues.email}
+                    onChange={(event) =>
+                      updateFormValue("email", event.target.value)
+                    }
+                    placeholder={
+                      isEditing
+                        ? "nama@email.com"
+                        : "Kosongkan untuk email internal"
+                    }
+                  />
+                  {!isEditing ? (
+                    <p className="text-xs leading-5 text-slate-500">
+                      Login siswa memakai kode akun, misalnya STD-160.
+                    </p>
+                  ) : null}
+                </div>
               </StudentField>
 
               <StudentField label="No HP">
@@ -1598,12 +1565,27 @@ export function AdminStudents({
                 />
               </StudentField>
 
-              <StudentField label="Password generate">
-                <Input
-                  className={`${warmFieldClassName} disabled:bg-slate-50 disabled:text-slate-500 disabled:hover:border-slate-200`}
-                  value={generatedPasswordPreview}
-                  disabled
-                />
+              <StudentField label="Password">
+                <div className="space-y-2">
+                  <Input
+                    className={warmFieldClassName}
+                    type="password"
+                    value={formValues.password || ""}
+                    onChange={(event) =>
+                      updateFormValue("password", event.target.value)
+                    }
+                    placeholder={
+                      isEditing
+                        ? "Kosongkan jika tidak diubah"
+                        : "Kosongkan untuk generate dari Tgl Lahir"
+                    }
+                  />
+                  {!isEditing || !formValues.password ? (
+                    <p className="text-xs leading-5 text-slate-500">
+                      Password bawaan (jika kosong): <span className="font-semibold text-slate-700">{generatedPasswordPreview}</span>
+                    </p>
+                  ) : null}
+                </div>
               </StudentField>
 
               <StudentField label="Tahun Ajaran">
@@ -1765,7 +1747,7 @@ export function AdminStudents({
 
           <div className="rounded-[22px] border border-slate-200/80 bg-gradient-to-r from-white to-orange-50/45 px-4 py-3 text-sm leading-6 text-slate-600 shadow-[0_12px_26px_-22px_rgba(249,115,22,0.16)]">
             {studentToDelete
-              ? `Hapus ${studentToDelete.name} dengan email ${studentToDelete.email}?`
+              ? `Hapus ${studentToDelete.name} dengan kode login ${studentToDelete.loginCode || studentToDelete.id}?`
               : "Pilih siswa yang ingin dihapus."}
           </div>
 

@@ -23,6 +23,7 @@ import {
   useStudentDashboardData,
   type StudentDashboardSchedule,
 } from "../data/useStudentDashboardData";
+import { getStudentAcademicAccessMessage } from "../data/studentAcademicAccess";
 
 const WEEK_DAYS = [
   "Senin",
@@ -177,6 +178,9 @@ export default function JadwalSiswaPageView() {
     schedules.map((schedule) => normalizeText(schedule.subject)).filter(Boolean),
   ).size;
   const student = dashboardData?.student;
+  const academicAccessMessage = getStudentAcademicAccessMessage(
+    dashboardData?.academicAccess,
+  );
 
   function selectDay(day: string) {
     setSelectedDay(day);
@@ -257,7 +261,8 @@ export default function JadwalSiswaPageView() {
               Belum ada jadwal pelajaran
             </h2>
             <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-500">
-              {loadError ??
+              {academicAccessMessage ??
+                loadError ??
                 "Jadwal akan tampil otomatis setelah kelas dan cabang siswa memiliki jadwal aktif."}
             </p>
           </section>

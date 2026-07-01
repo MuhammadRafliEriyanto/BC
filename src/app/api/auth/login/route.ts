@@ -12,7 +12,9 @@ export async function POST(request: Request) {
     const { payload, response } = await callAuthBackend<LoginResponse>("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({
+        identifier: body?.identifier ?? body?.email,
         email: body?.email,
+        loginCode: body?.loginCode,
         password: body?.password,
       }),
     });

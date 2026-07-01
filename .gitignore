@@ -42,17 +42,28 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-/backend
 /.tmp
-/backend-dev.err.log
-/backend-dev.out.log
-/backend-dev.log
-/backend-restart.err.log
-/backend-restart.out.log
-/DATA GURU BC.xlsx
-/dev-root.err.log
-/dev-root.out.log
-/owner-dashboard-dev.log
+
+# Abaikan SEMUA file log (baik error dari server maupun editor)
+*.log
+.codex*
+
+# Abaikan cache Python (seperti di folder manual-book)
+__pycache__/
+*.py[cod]
+
+# Abaikan konfigurasi editor lokal
+.vscode/
+.idea/
+
+# Abaikan semua file data (seperti excel/csv) agar data asli tidak terupload ke github
+*.xlsx
+*.csv
+# Abaikan folder manual book, folder docs, dan folder data (soal/assessment/backup)
+/manual-book
+/data
+/docs
+*.docx
 
 # Playwright
 node_modules/

@@ -86,7 +86,7 @@ export const landingSteps: LandingStep[] = [
   {
     title: "Isi data siswa",
     description:
-      "Masukkan nama, email, nomor HP, jenjang, kelas, dan password melalui halaman daftar online.",
+      "Masukkan nama, email, nomor HP, jenjang, dan kelas melalui halaman daftar online.",
     icon: FileCheck2,
   },
   {

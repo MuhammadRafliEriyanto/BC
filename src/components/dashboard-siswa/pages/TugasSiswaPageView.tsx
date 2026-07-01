@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { useStudentLearningData } from "../data/useStudentLearningData";
+import { getStudentAcademicAccessMessage } from "../data/studentAcademicAccess";
 import StudentLearningShell from "../learning/StudentLearningShell";
 
 function formatSubmissionTime(value: string | null | undefined) {
@@ -57,8 +58,11 @@ function getTaskStatusClass(
 }
 
 export default function TugasSiswaPageView() {
-  const { tasks, isLoading, loadError } = useStudentLearningData();
+  const { tasks, academicAccess, isLoading, loadError } =
+    useStudentLearningData();
   const pendingTasks = tasks.filter((task) => task.status !== "Sudah Dinilai");
+  const academicAccessMessage =
+    getStudentAcademicAccessMessage(academicAccess);
 
   return (
     <StudentLearningShell
@@ -83,7 +87,9 @@ export default function TugasSiswaPageView() {
             Belum ada tugas tersedia
           </p>
           <p className="mt-2 text-sm text-slate-500">
-            {loadError ?? "Guru belum menambahkan tugas untuk kelas kamu."}
+            {academicAccessMessage ??
+              loadError ??
+              "Guru belum menambahkan tugas untuk kelas kamu."}
           </p>
         </section>
       ) : (

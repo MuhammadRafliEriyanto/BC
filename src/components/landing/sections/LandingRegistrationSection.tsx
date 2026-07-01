@@ -11,9 +11,9 @@ import {
 } from "@/components/ui/card";
 
 const registrationChecklist = [
-  "Nama siswa, email, nomor HP, dan password akun.",
+  "Nama siswa, email, nomor HP, program, dan kelas.",
   "Pilihan program dan kelas yang sesuai dengan jenjang.",
-  "Paket membership 1, 3, 6, atau 12 bulan.",
+  "Paket membership 1 semester atau 2 semester.",
   "Konfirmasi pembayaran sebelum akses dashboard dibuka.",
 ] as const;
 

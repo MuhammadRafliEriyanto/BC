@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 
 import { clearAuthClientState } from "@/lib/auth";
 
+import { subscribeStudentDashboardRefresh } from "../student-dashboard-refresh-events";
+import type { StudentAcademicAccess } from "./studentAcademicAccess";
+
 export type StudentAttendanceHistoryRecord = {
   id: string;
   sessionId: string;
@@ -26,13 +29,17 @@ type StudentAttendanceResponse = {
   message?: string;
   data?: {
     records: StudentAttendanceHistoryRecord[];
+    academicAccess?: StudentAcademicAccess | null;
   };
 };
 
 export function useStudentAttendanceData() {
   const [history, setHistory] = useState<StudentAttendanceHistoryRecord[]>([]);
+  const [academicAccess, setAcademicAccess] =
+    useState<StudentAcademicAccess | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -58,19 +65,22 @@ export function useStudentAttendanceData() {
         if (response.status === 401) {
           clearAuthClientState();
           setHistory([]);
+          setAcademicAccess(null);
           setLoadError("Sesi login berakhir. Silakan login ulang.");
           return;
         }
 
         if (!response.ok || !payload?.success || !payload.data) {
           setHistory([]);
+          setAcademicAccess(null);
           setLoadError(
             payload?.message || "Riwayat absensi belum bisa dimuat saat ini.",
           );
           return;
         }
 
-        setHistory(payload.data.records);
+        setHistory(payload.data.records ?? []);
+        setAcademicAccess(payload.data.academicAccess ?? null);
       } catch (error) {
         if (!isMounted) {
           return;
@@ -80,6 +90,7 @@ export function useStudentAttendanceData() {
           error,
         });
         setHistory([]);
+        setAcademicAccess(null);
         setLoadError("Riwayat absensi belum bisa dimuat saat ini.");
       } finally {
         if (isMounted) {
@@ -95,10 +106,17 @@ export function useStudentAttendanceData() {
     return () => {
       isMounted = false;
     };
+  }, [reloadToken]);
+
+  useEffect(() => {
+    return subscribeStudentDashboardRefresh(() => {
+      setReloadToken((currentToken) => currentToken + 1);
+    });
   }, []);
 
   return {
     history,
+    academicAccess,
     isLoading,
     loadError,
   };

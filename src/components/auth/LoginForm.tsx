@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import Script from "next/script";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useState } from "react";
 import { Eye, EyeOff, LoaderCircle } from "lucide-react";
 
 import { AuthShell } from "@/components/auth/AuthShell";
@@ -15,29 +14,6 @@ import {
   clearAuthClientState,
   persistAuthUser,
 } from "@/lib/auth";
-
-type GoogleCredentialResponse = {
-  credential?: string;
-};
-
-type GoogleIdentityWindow = Window & {
-  google?: {
-    accounts?: {
-      id?: {
-        initialize: (options: {
-          client_id: string;
-          callback: (response: GoogleCredentialResponse) => void;
-          cancel_on_tap_outside?: boolean;
-          context?: string;
-        }) => void;
-        renderButton: (
-          element: HTMLElement,
-          options: Record<string, string | number | boolean>,
-        ) => void;
-      };
-    };
-  };
-};
 
 function InputError({ message }: { message?: string }) {
   if (!message) {
@@ -54,18 +30,13 @@ function InputError({ message }: { message?: string }) {
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const googleButtonRef = useRef<HTMLDivElement | null>(null);
-  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID?.trim() ?? "";
-  const isGoogleLoginEnabled = googleClientId.length > 0;
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const [googleScriptReady, setGoogleScriptReady] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formValues, setFormValues] = useState({
-    email: "",
+    identifier: "",
     password: "",
   });
 
@@ -131,7 +102,7 @@ export function LoginForm() {
     try {
       clearAuthClientState();
       const response = await authService.login({
-        email: formValues.email,
+        identifier: formValues.identifier,
         password: formValues.password,
         rememberMe,
       });
@@ -143,68 +114,6 @@ export function LoginForm() {
       setLoading(false);
     }
   }
-
-  const handleGoogleCredential = useEffectEvent(async (credential?: string) => {
-    if (!credential) {
-      setErrorMessage("Credential Google tidak ditemukan. Silakan coba lagi.");
-      return;
-    }
-
-    setGoogleLoading(true);
-    setErrorMessage("");
-    setFieldErrors({});
-
-    try {
-      clearAuthClientState();
-
-      const response = await authService.googleLogin({
-        credential,
-        rememberMe,
-      });
-
-      completeAuth(response);
-    } catch (error) {
-      handleAuthError(error, "Login Google gagal diproses. Silakan coba lagi.");
-    } finally {
-      setGoogleLoading(false);
-    }
-  });
-
-  useEffect(() => {
-    if (!isGoogleLoginEnabled || !googleScriptReady || !googleButtonRef.current) {
-      return;
-    }
-
-    const googleApi = (window as GoogleIdentityWindow).google?.accounts?.id;
-
-    if (!googleApi) {
-      return;
-    }
-
-    const targetWidth = Math.max(280, Math.min(googleButtonRef.current.clientWidth || 360, 390));
-
-    if (!(window as any)._gsiInitialized) {
-      googleApi.initialize({
-        client_id: googleClientId,
-        callback: (response) => {
-          void handleGoogleCredential(response.credential);
-        },
-        cancel_on_tap_outside: true,
-        context: "signin",
-      });
-      (window as any)._gsiInitialized = true;
-    }
-
-    googleButtonRef.current.innerHTML = "";
-    googleApi.renderButton(googleButtonRef.current, {
-      theme: "outline",
-      size: "large",
-      text: "continue_with",
-      shape: "rectangular",
-      width: targetWidth,
-      logo_alignment: "left",
-    });
-  }, [googleClientId, googleScriptReady, isGoogleLoginEnabled]);
 
   return (
     <AuthShell
@@ -228,44 +137,35 @@ export function LoginForm() {
         </div>
       }
     >
-      {isGoogleLoginEnabled ? (
-        <Script
-          src="https://accounts.google.com/gsi/client"
-          strategy="afterInteractive"
-          onReady={() => setGoogleScriptReady(true)}
-          onError={() => {
-            setGoogleScriptReady(false);
-            setErrorMessage("Google Sign-In gagal dimuat. Silakan gunakan login email.");
-          }}
-        />
-      ) : null}
+
 
       <div className="space-y-7">
         <form className="space-y-5" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-slate-700">
-                Your Email
+              <label htmlFor="identifier" className="text-sm font-medium text-slate-700">
+                Kode Akun / Email
               </label>
               <Input
-                id="email"
-                type="email"
-                value={formValues.email}
+                id="identifier"
+                type="text"
+                value={formValues.identifier}
                 onChange={(event) => {
                   setErrorMessage("");
+                  clearFieldError("identifier");
                   clearFieldError("email");
                   setFormValues((current) => ({
                     ...current,
-                    email: event.target.value,
+                    identifier: event.target.value,
                   }));
                 }}
-                placeholder="name@example.com"
+                placeholder="Contoh: STD-160, TCH-001, atau email"
                 className="h-12 rounded-xl border-[#f2c7b3] bg-white px-4 shadow-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
-                autoComplete="email"
+                autoComplete="username"
                 required
-                disabled={loading || googleLoading}
+                disabled={loading}
               />
-              <InputError message={fieldErrors.email} />
+              <InputError message={fieldErrors.identifier ?? fieldErrors.email} />
             </div>
 
             <div className="space-y-2">
@@ -289,14 +189,14 @@ export function LoginForm() {
                   className="h-12 rounded-xl border-[#f2c7b3] bg-white px-4 pr-12 shadow-none transition focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10"
                   autoComplete="current-password"
                   required
-                  disabled={loading || googleLoading}
+                  disabled={loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((current) => !current)}
                   className="absolute inset-y-0 right-0 inline-flex w-12 items-center justify-center text-slate-400 transition hover:text-orange-600"
                   aria-label={showPassword ? "Hide password" : "Show password"}
-                  disabled={loading || googleLoading}
+                  disabled={loading}
                 >
                   {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </button>
@@ -305,24 +205,18 @@ export function LoginForm() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center justify-start gap-3">
             <label className="group flex cursor-pointer items-center gap-2.5 text-sm text-slate-600 transition hover:text-slate-900">
               <input
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(event) => setRememberMe(event.target.checked)}
                 className="size-4 rounded border-slate-300 accent-orange-600 transition focus:ring-orange-500/10"
-                disabled={loading || googleLoading}
+                disabled={loading}
                 suppressHydrationWarning
               />
               Remember Me
             </label>
-            <Link
-              href="/forgot-password"
-              className="text-sm font-medium text-slate-400 transition hover:text-orange-600"
-            >
-              Forgot Password?
-            </Link>
           </div>
 
           {errorMessage ? (
@@ -334,9 +228,9 @@ export function LoginForm() {
           <Button
             type="submit"
             className="h-12 w-full rounded-xl bg-[linear-gradient(135deg,#ea580c_0%,#dc2626_100%)] text-sm font-semibold text-white shadow-[0_20px_34px_-24px_rgba(220,38,38,0.45)] transition hover:brightness-105 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
-            disabled={loading || googleLoading}
+            disabled={loading}
           >
-            {loading || googleLoading ? (
+            {loading ? (
               <>
                 <LoaderCircle className="mr-2 size-4 animate-spin" />
                 Memproses...
@@ -347,34 +241,7 @@ export function LoginForm() {
           </Button>
         </form>
 
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-slate-200/80" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-[#fff8f1] px-4 font-medium tracking-[0.18em] text-slate-400">
-              Atau lanjut dengan
-            </span>
-          </div>
-        </div>
 
-        <div>
-          {isGoogleLoginEnabled ? (
-            <div className="rounded-2xl border border-[#f3d6c4] bg-white p-3 shadow-[0_16px_30px_-28px_rgba(194,65,12,0.2)]">
-              <div ref={googleButtonRef} className="w-full min-h-[44px]" />
-              {!googleScriptReady ? (
-                <div className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 text-sm text-slate-500">
-                  <LoaderCircle className="size-4 animate-spin text-orange-600" />
-                  Menyiapkan Google Sign-In...
-                </div>
-              ) : null}
-            </div>
-          ) : (
-            <div className="w-full rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-center text-sm text-slate-500">
-              Login Google belum diaktifkan pada aplikasi ini.
-            </div>
-          )}
-        </div>
       </div>
     </AuthShell>
   );

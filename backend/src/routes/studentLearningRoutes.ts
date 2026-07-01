@@ -1,0 +1,60 @@
+import { Router } from "express";
+
+import {
+  createMyStudentTaskSubmission,
+  downloadMyStudentMaterialAttachment,
+  downloadMyStudentTaskSubmissionAttachment,
+  downloadMyStudentTaskAttachment,
+  getMyStudentTaskSubmission,
+  getMyStudentDashboardData,
+  getMyStudentLearningData,
+  updateMyStudentTaskSubmission,
+} from "../controllers/studentLearningController";
+import { getMyStudentNotifications } from "../controllers/studentNotificationController";
+import {
+  getMyStudentExamAttempt,
+  getMyStudentTryoutDetail,
+  getMyStudentTryouts,
+  startMyStudentExam,
+  submitMyStudentExamAttempt,
+  submitMyStudentTryout,
+} from "../controllers/studentTryoutController";
+import apiKeyMiddleware from "../middleware/apiKeyMiddleware";
+import authorizeRole from "../middleware/authorizeRole";
+import protect from "../middleware/protect";
+
+const router = Router();
+
+router.use(apiKeyMiddleware, protect, authorizeRole("siswa"));
+
+router.get("/me/dashboard", getMyStudentDashboardData);
+router.get("/me/notifications", getMyStudentNotifications);
+router.get("/me/learning", getMyStudentLearningData);
+router.get("/me/tryouts", getMyStudentTryouts);
+router.post("/me/exams/:tryoutId/start", startMyStudentExam);
+router.get("/me/exam-attempts/:attemptId", getMyStudentExamAttempt);
+router.post(
+  "/me/exam-attempts/:attemptId/submission",
+  submitMyStudentExamAttempt,
+);
+router.get("/me/tryouts/:tryoutId", getMyStudentTryoutDetail);
+router.post("/me/tryouts/:tryoutId/submission", submitMyStudentTryout);
+router
+  .route("/me/learning/tasks/:taskId/submission")
+  .get(getMyStudentTaskSubmission)
+  .post(createMyStudentTaskSubmission)
+  .patch(updateMyStudentTaskSubmission);
+router.get(
+  "/me/learning/tasks/:taskId/submission/attachment",
+  downloadMyStudentTaskSubmissionAttachment,
+);
+router.get(
+  "/me/learning/materials/:materialId/attachment",
+  downloadMyStudentMaterialAttachment,
+);
+router.get(
+  "/me/learning/tasks/:taskId/attachment",
+  downloadMyStudentTaskAttachment,
+);
+
+export default router;

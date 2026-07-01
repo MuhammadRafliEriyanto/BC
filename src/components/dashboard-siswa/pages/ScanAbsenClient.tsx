@@ -1,9 +1,110 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Camera, CheckCircle2, ScanLine } from "lucide-react";
+import {
+  AlertCircle,
+  Camera,
+  CheckCircle2,
+  LoaderCircle,
+  RotateCcw,
+  ScanLine,
+} from "lucide-react";
 import { Html5Qrcode } from "html5-qrcode";
+
+import { publishStudentDashboardRefresh } from "../student-dashboard-refresh-events";
+
+type StudentAttendanceScanResponse = {
+  success: boolean;
+  message?: string;
+  data?: {
+    session?: {
+      sessionId: string;
+    };
+    record?: {
+      recordId: string;
+      status: string;
+    };
+  };
+};
+
+type AttendanceQrPayload = {
+  sessionId: string;
+  token: string;
+};
+
+function normalizeText(value: string | null | undefined) {
+  return value?.trim().replace(/\s+/g, " ") ?? "";
+}
+
+function parseSearchParamsPayload(params: URLSearchParams) {
+  const sessionId = normalizeText(
+    params.get("sessionId") ?? params.get("session_id"),
+  );
+  const token = normalizeText(params.get("token") ?? params.get("qrToken"));
+
+  if (!sessionId || !token) {
+    return null;
+  }
+
+  return { sessionId, token } satisfies AttendanceQrPayload;
+}
+
+function parseAttendanceQrPayload(decodedText: string) {
+  const rawValue = normalizeText(decodedText);
+
+  if (!rawValue) {
+    return null;
+  }
+
+  try {
+    const url = new URL(
+      rawValue,
+      typeof window === "undefined" ? "http://localhost" : window.location.origin,
+    );
+    const payload = parseSearchParamsPayload(url.searchParams);
+
+    if (payload) {
+      return payload;
+    }
+  } catch {
+    // Continue with other supported QR payload formats.
+  }
+
+  if (rawValue.includes("=")) {
+    const payload = parseSearchParamsPayload(
+      new URLSearchParams(rawValue.replace(/^\?/, "")),
+    );
+
+    if (payload) {
+      return payload;
+    }
+  }
+
+  try {
+    const parsedPayload = JSON.parse(rawValue) as Partial<AttendanceQrPayload>;
+    const sessionId = normalizeText(parsedPayload.sessionId);
+    const token = normalizeText(parsedPayload.token);
+
+    if (sessionId && token) {
+      return { sessionId, token } satisfies AttendanceQrPayload;
+    }
+  } catch {
+    // Continue with legacy delimiter format.
+  }
+
+  const [sessionId, token] = rawValue.split("|").map(normalizeText);
+
+  if (sessionId && token) {
+    return { sessionId, token } satisfies AttendanceQrPayload;
+  }
+
+  return null;
+}
+
+async function readJsonResponse<T>(response: Response) {
+  return (await response.json().catch(() => null)) as T | null;
+}
 
 export default function ScanAbsenClient() {
   const router = useRouter();
@@ -12,13 +113,18 @@ export default function ScanAbsenClient() {
 
   const [isSuccess, setIsSuccess] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [scanError, setScanError] = useState<string | null>(null);
   const [isStarting, setIsStarting] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [retryNonce, setRetryNonce] = useState(0);
   const scannerRef = useRef<Html5Qrcode | null>(null);
+  const isProcessingRef = useRef(false);
 
   useEffect(() => {
     if (isSuccess) return;
 
     let isMounted = true;
+    isProcessingRef.current = false;
 
     // Create the pure scanner instance
     const html5QrCode = new Html5Qrcode("qr-reader");
@@ -32,6 +138,69 @@ export default function ScanAbsenClient() {
       return 300;
     };
 
+    const handleDecodedText = async (decodedText: string) => {
+      if (!isMounted || isProcessingRef.current) {
+        return;
+      }
+
+      isProcessingRef.current = true;
+      setIsSubmitting(true);
+      setScanError(null);
+
+      if (html5QrCode.isScanning) {
+        await html5QrCode.stop().catch(console.warn);
+      }
+
+      const payload = parseAttendanceQrPayload(decodedText);
+
+      if (!payload) {
+        if (isMounted) {
+          setIsSubmitting(false);
+          setScanError("QR absensi tidak valid. Silakan scan QR dari sesi absensi guru.");
+        }
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/student/me/attendance/scan", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          cache: "no-store",
+          body: JSON.stringify(payload),
+        });
+        const result = await readJsonResponse<StudentAttendanceScanResponse>(response);
+
+        if (!isMounted) {
+          return;
+        }
+
+        if (!response.ok || !result?.success) {
+          setIsSubmitting(false);
+          setScanError(
+            result?.message ||
+              "Absensi QR belum bisa diproses. Pastikan sesi masih aktif.",
+          );
+          return;
+        }
+
+        publishStudentDashboardRefresh();
+        setIsSubmitting(false);
+        setIsSuccess(true);
+
+        setTimeout(() => {
+          router.push("/dashboard-siswa#jadwal-mata-pelajaran");
+        }, 1800);
+      } catch {
+        if (isMounted) {
+          setIsSubmitting(false);
+          setScanError("Gagal menghubungi server absensi QR.");
+        }
+      }
+    };
+
     html5QrCode
       .start(
         { facingMode: "environment" },
@@ -41,20 +210,7 @@ export default function ScanAbsenClient() {
           aspectRatio: 1.0,
         },
         (decodedText) => {
-          if (!isMounted) return;
-          setIsSuccess(true);
-          
-          // Stop scanning immediately after success
-          if (html5QrCode.isScanning) {
-            html5QrCode.stop().catch(console.warn);
-          }
-          
-          console.log("Scanned:", decodedText);
-
-          // Mock API call delay, then redirect back
-          setTimeout(() => {
-            router.push("/dashboard-siswa#jadwal-mata-pelajaran");
-          }, 2500);
+          void handleDecodedText(decodedText);
         },
         () => {
           // Ignore normal scan failures (happens every frame)
@@ -92,7 +248,19 @@ export default function ScanAbsenClient() {
       }
       scannerRef.current = null;
     };
-  }, [isSuccess, router]);
+  }, [isSuccess, retryNonce, router]);
+
+  const handleRetryScan = () => {
+    isProcessingRef.current = false;
+    setIsSuccess(false);
+    setIsSubmitting(false);
+    setIsStarting(true);
+    setScanError(null);
+    setCameraError(null);
+    setRetryNonce((current) => current + 1);
+  };
+
+  const visibleError = cameraError ?? scanError;
 
   return (
     <section className="mx-auto flex w-full max-w-[500px] flex-col gap-6 px-4 py-8 md:px-6 md:py-10">
@@ -137,9 +305,10 @@ export default function ScanAbsenClient() {
           </div>
         ) : (
           <div className="flex flex-col">
-            {cameraError && (
-              <div className="border-b border-red-100 bg-red-50/80 px-4 py-3 text-center text-xs font-medium text-red-600">
-                {cameraError}
+            {visibleError && (
+              <div className="flex items-center justify-center gap-2 border-b border-red-100 bg-red-50/80 px-4 py-3 text-center text-xs font-medium text-red-600">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{visibleError}</span>
               </div>
             )}
             
@@ -159,11 +328,34 @@ export default function ScanAbsenClient() {
                   <p className="mt-3 text-sm font-medium tracking-wide">Membuka Kamera...</p>
                 </div>
               )}
+
+              {isSubmitting && !cameraError && (
+                <div className="absolute inset-0 z-10 m-4 flex flex-col items-center justify-center rounded-2xl bg-slate-950/85 text-white backdrop-blur-sm sm:m-5">
+                  <div className="flex size-12 items-center justify-center rounded-full bg-white/10">
+                    <LoaderCircle className="size-6 animate-spin text-white/85" />
+                  </div>
+                  <p className="mt-3 text-sm font-medium tracking-wide">
+                    Memproses Absensi...
+                  </p>
+                </div>
+              )}
             </div>
             
-            <div className="flex items-center justify-center gap-2 border-t border-slate-100 bg-slate-50/50 p-4 text-[13px] font-medium text-slate-500 backdrop-blur">
-              <ScanLine className="h-4 w-4 text-orange-500" />
-              Posisikan QR Code di area kotak
+            <div className="flex flex-col items-center justify-center gap-3 border-t border-slate-100 bg-slate-50/50 p-4 text-[13px] font-medium text-slate-500 backdrop-blur">
+              <div className="flex items-center justify-center gap-2">
+                <ScanLine className="h-4 w-4 text-orange-500" />
+                Posisikan QR Code di area kotak
+              </div>
+              {visibleError ? (
+                <button
+                  type="button"
+                  onClick={handleRetryScan}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-orange-500 px-4 py-2 text-xs font-semibold text-white shadow-[0_14px_28px_-22px_rgba(249,115,22,0.8)] transition hover:bg-orange-600"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  Scan Ulang
+                </button>
+              ) : null}
             </div>
           </div>
         )}

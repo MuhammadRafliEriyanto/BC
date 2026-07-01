@@ -1,24 +1,53 @@
 "use client";
 
-import { useEffect, useEffectEvent, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState, type FormEvent } from "react";
 import {
   AlertCircle,
+  ArrowRight,
+  ArrowUpRight,
   CalendarClock,
   CreditCard,
+  GraduationCap,
+  LoaderCircle,
   RefreshCcw,
   ShieldCheck,
   UserRound,
 } from "lucide-react";
 
 import HistoriTagihanSiswa from "../sections/HistoriTagihanSiswa";
+import {
+  publishStudentDashboardRefresh,
+  subscribeStudentDashboardRefresh,
+} from "../student-dashboard-refresh-events";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  CLASS_OPTIONS_BY_PROGRAM,
   MembershipRequestError,
+  ONLINE_PACKAGES,
   findPackageByName,
   formatDateLabel,
+  formatRupiah,
+  getPriceByClassAndPackage,
   membershipService,
+  type OnlinePackageKey,
+  type ProgramOptionValue,
   type MembershipStatusData,
 } from "@/lib/subscription";
 
@@ -28,6 +57,7 @@ type MembershipOverview = {
   branch: string;
   className: string;
   program: string;
+  packageKey: string | null;
   packageName: string;
   durationLabel: string;
   startDate: string;
@@ -45,6 +75,7 @@ const emptyOverview: MembershipOverview = {
   branch: "-",
   className: "-",
   program: "-",
+  packageKey: null,
   packageName: "Belum ada membership aktif",
   durationLabel: "-",
   startDate: "-",
@@ -55,6 +86,167 @@ const emptyOverview: MembershipOverview = {
   daysRemainingLabel: "-",
   paymentStatus: null,
 };
+
+type RenewalFormValues = {
+  program: ProgramOptionValue;
+  classLevel: string;
+  packageKey: OnlinePackageKey;
+};
+
+type RenewalClassSuggestion = Pick<RenewalFormValues, "program" | "classLevel"> & {
+  currentClassLabel: string;
+  targetClassLabel: string;
+};
+
+type RenewalFeedback = {
+  tone: "success" | "warning";
+  message: string;
+  checkoutUrl?: string | null;
+} | null;
+
+const defaultRenewalFormValues: RenewalFormValues = {
+  program: "SMP",
+  classLevel: "Kelas 7",
+  packageKey: "1-semester",
+};
+
+function isOnlinePackageKey(value: string | null | undefined): value is OnlinePackageKey {
+  return value === "1-semester" || value === "2-semester";
+}
+
+function extractGrade(value: string | null | undefined) {
+  return value?.match(/\b(1[0-2]|[2-9])\b/)?.[1] ?? null;
+}
+
+function inferProgramFromOverview(
+  overview: MembershipOverview,
+): ProgramOptionValue | null {
+  const normalizedProgram = overview.program.trim().toUpperCase();
+  const normalizedClassName = overview.className.trim().toUpperCase();
+  const grade = Number(extractGrade(overview.className));
+
+  if (normalizedProgram === "SD" || normalizedProgram === "SMP" || normalizedProgram === "SMA") {
+    return normalizedProgram;
+  }
+
+  if (normalizedClassName.includes("SD")) {
+    return "SD";
+  }
+
+  if (normalizedClassName.includes("SMP")) {
+    return "SMP";
+  }
+
+  if (normalizedClassName.includes("SMA")) {
+    return "SMA";
+  }
+
+  if (grade >= 2 && grade <= 6) {
+    return "SD";
+  }
+
+  if (grade >= 7 && grade <= 9) {
+    return "SMP";
+  }
+
+  if (grade >= 10 && grade <= 12) {
+    return "SMA";
+  }
+
+  return null;
+}
+
+function inferClassLevelFromClassName(
+  overview: MembershipOverview,
+  program: ProgramOptionValue,
+) {
+  const grade = extractGrade(overview.className) ?? "";
+  const classLevel = grade ? `Kelas ${grade}` : "";
+
+  const classOptions = CLASS_OPTIONS_BY_PROGRAM[program] as readonly string[];
+
+  return classOptions.includes(classLevel) ? classLevel : null;
+}
+
+function getSuggestedRenewalClass(
+  program: ProgramOptionValue,
+  classLevel: string,
+): Pick<RenewalFormValues, "program" | "classLevel"> {
+  const classOptions = CLASS_OPTIONS_BY_PROGRAM[program] as readonly string[];
+  const currentIndex = classOptions.indexOf(classLevel);
+
+  if (currentIndex >= 0 && currentIndex < classOptions.length - 1) {
+    return {
+      program,
+      classLevel: classOptions[currentIndex + 1],
+    };
+  }
+
+  if (program === "SD" && classLevel === "Kelas 6") {
+    return {
+      program: "SMP",
+      classLevel: "Kelas 7",
+    };
+  }
+
+  if (program === "SMP" && classLevel === "Kelas 9") {
+    return {
+      program: "SMA",
+      classLevel: "Kelas 10",
+    };
+  }
+
+  return {
+    program,
+    classLevel,
+  };
+}
+
+function formatClassTargetLabel(program: ProgramOptionValue, classLevel: string) {
+  return `${program} ${classLevel.replace(/^Kelas\s+/i, "")}`;
+}
+
+function resolveRenewalClassSuggestion(
+  overview: MembershipOverview,
+): RenewalClassSuggestion | null {
+  if (overview.studentId === "-") {
+    return null;
+  }
+
+  const program = inferProgramFromOverview(overview);
+
+  if (!program) {
+    return null;
+  }
+
+  const classLevel = inferClassLevelFromClassName(overview, program);
+
+  if (!classLevel) {
+    return null;
+  }
+
+  const suggestedClass = getSuggestedRenewalClass(program, classLevel);
+
+  return {
+    ...suggestedClass,
+    currentClassLabel: formatClassTargetLabel(program, classLevel),
+    targetClassLabel: formatClassTargetLabel(
+      suggestedClass.program,
+      suggestedClass.classLevel,
+    ),
+  };
+}
+
+function buildRenewalFormDefaults(overview: MembershipOverview): RenewalFormValues {
+  const suggestedClass = resolveRenewalClassSuggestion(overview);
+
+  return {
+    ...(suggestedClass ?? defaultRenewalFormValues),
+    packageKey: isOnlinePackageKey(overview.packageKey)
+      ? overview.packageKey
+      : defaultRenewalFormValues.packageKey,
+  };
+}
 
 function formatAccessLabel(accessStatus: MembershipStatusData["accessStatus"]) {
   switch (accessStatus) {
@@ -126,6 +318,7 @@ function buildMembershipOverview(
     branch: data.student?.branch?.trim() || "-",
     className: data.student?.className?.trim() || "-",
     program: data.student?.program?.trim() || "-",
+    packageKey: data.subscription?.packageKey?.trim() || null,
     packageName: data.subscription?.packageName?.trim() || "Belum ada membership aktif",
     durationLabel: resolvedPackage
       ? `${resolvedPackage.durationMonth} bulan`
@@ -255,6 +448,14 @@ export default function TagihanSiswaPageView() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [historyReloadKey, setHistoryReloadKey] = useState(0);
+  const [isRenewalDialogOpen, setIsRenewalDialogOpen] = useState(false);
+  const [isCreatingRenewal, setIsCreatingRenewal] = useState(false);
+  const [renewalFormValues, setRenewalFormValues] =
+    useState<RenewalFormValues>(defaultRenewalFormValues);
+  const [renewalError, setRenewalError] = useState<string | null>(null);
+  const [renewalFeedback, setRenewalFeedback] = useState<RenewalFeedback>(null);
+  const lastLoadedClassNameRef = useRef<string | null>(null);
 
   const loadMembershipOverview = useEffectEvent(async () => {
     setIsLoading(true);
@@ -262,7 +463,19 @@ export default function TagihanSiswaPageView() {
 
     try {
       const response = await membershipService.getMySubscription();
-      setOverview(buildMembershipOverview(response.data));
+      const nextOverview = buildMembershipOverview(response.data);
+      const previousClassName = lastLoadedClassNameRef.current;
+
+      lastLoadedClassNameRef.current = nextOverview.className;
+      setOverview(nextOverview);
+      setRenewalFormValues(buildRenewalFormDefaults(nextOverview));
+
+      if (
+        previousClassName !== null &&
+        previousClassName !== nextOverview.className
+      ) {
+        publishStudentDashboardRefresh();
+      }
     } catch (requestError) {
       if (
         requestError instanceof MembershipRequestError &&
@@ -290,6 +503,13 @@ export default function TagihanSiswaPageView() {
   }, [reloadKey]);
 
   useEffect(() => {
+    return subscribeStudentDashboardRefresh(() => {
+      setReloadKey((currentValue) => currentValue + 1);
+      setHistoryReloadKey((currentValue) => currentValue + 1);
+    });
+  }, []);
+
+  useEffect(() => {
     if (overview.paymentStatus === "pending") {
       const intervalId = window.setInterval(() => {
         setReloadKey((k) => k + 1);
@@ -297,6 +517,83 @@ export default function TagihanSiswaPageView() {
       return () => window.clearInterval(intervalId);
     }
   }, [overview.paymentStatus]);
+
+  const renewalClassSuggestion = resolveRenewalClassSuggestion(overview);
+  const effectiveRenewalFormValues: RenewalFormValues = {
+    ...renewalFormValues,
+    ...(renewalClassSuggestion
+      ? {
+          program: renewalClassSuggestion.program,
+          classLevel: renewalClassSuggestion.classLevel,
+        }
+      : {}),
+  };
+  const selectedRenewalPackage =
+    ONLINE_PACKAGES.find((item) => item.packageKey === effectiveRenewalFormValues.packageKey) ??
+    ONLINE_PACKAGES[0];
+  const selectedRenewalAmount = getPriceByClassAndPackage(
+    effectiveRenewalFormValues.classLevel,
+    effectiveRenewalFormValues.packageKey,
+  );
+  const renewalTargetClassLabel =
+    renewalClassSuggestion?.targetClassLabel ??
+    formatClassTargetLabel(
+      effectiveRenewalFormValues.program,
+      effectiveRenewalFormValues.classLevel,
+    );
+  const canCreateRenewal =
+    overview.studentId !== "-" &&
+    Boolean(renewalClassSuggestion) &&
+    overview.accessStatus !== "not_registered" &&
+    overview.paymentStatus !== "pending";
+  const renewalUnavailableMessage = !renewalClassSuggestion
+    ? "Kelas siswa belum bisa dikenali otomatis. Minta admin merapikan data kelas siswa terlebih dahulu."
+    : overview.paymentStatus === "pending"
+      ? "Masih ada tagihan pending. Selesaikan atau batalkan tagihan lama terlebih dahulu."
+      : "Perpanjangan tersedia setelah membership awal tercatat.";
+
+  async function handleCreateRenewalPayment(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!canCreateRenewal) {
+      setRenewalError("Perpanjangan belum bisa dibuat untuk status membership saat ini.");
+      return;
+    }
+
+    setIsCreatingRenewal(true);
+    setRenewalError(null);
+    setRenewalFeedback(null);
+
+    try {
+      const response = await membershipService.createMyRenewalPayment({
+        packageKey: effectiveRenewalFormValues.packageKey,
+      });
+      const checkoutUrl = response.data?.payment?.checkoutUrl ?? null;
+
+      setRenewalFeedback({
+        tone: "success",
+        message: "Tagihan perpanjangan berhasil dibuat.",
+        checkoutUrl,
+      });
+      setIsRenewalDialogOpen(false);
+      setReloadKey((currentValue) => currentValue + 1);
+      setHistoryReloadKey((currentValue) => currentValue + 1);
+      publishStudentDashboardRefresh();
+    } catch (requestError) {
+      const message =
+        requestError instanceof Error
+          ? requestError.message
+          : "Tagihan perpanjangan belum bisa dibuat.";
+
+      setRenewalError(message);
+      setRenewalFeedback({
+        tone: "warning",
+        message,
+      });
+    } finally {
+      setIsCreatingRenewal(false);
+    }
+  }
 
   return (
     <section className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 md:px-6 md:py-8">
@@ -419,27 +716,274 @@ export default function TagihanSiswaPageView() {
               </div>
             </div>
 
-            <aside className="rounded-[24px] border border-slate-100 bg-slate-50/80 p-4">
-              <div className="inline-flex items-center gap-2 text-orange-600">
-                <CreditCard className="h-4 w-4" />
-                <p className="text-sm font-semibold">Aturan Pembayaran Saat Ini</p>
+            <aside className="rounded-[24px] border border-slate-200 bg-white p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-600">
+                  <CreditCard className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-slate-900">
+                    Perpanjang Membership
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-slate-500">
+                    Kelas tujuan dihitung otomatis dari data siswa saat ini.
+                  </p>
+                </div>
               </div>
 
-              <div className="mt-3 space-y-3 text-sm leading-6 text-slate-600">
+              <div className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
                 <PaymentPolicyCopy accessStatus={overview.accessStatus} />
-                <p className="rounded-2xl border border-dashed border-orange-200 bg-white px-3 py-3 text-slate-500">
+                <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-3 py-3 text-slate-500">
                   Sistem saat ini masih memakai model sekali bayar per paket.
                   Opsi cicilan belum saya aktifkan supaya alurnya tetap sesuai
                   dengan backend yang sudah ada.
                 </p>
+
+                <div className="border-t border-slate-200 pt-4">
+                  <div className="rounded-[22px] border border-slate-200 bg-slate-50/70 p-4">
+                    <div className="flex items-center gap-2 text-slate-500">
+                      <GraduationCap className="h-4 w-4" />
+                      <p className="text-xs font-semibold uppercase text-slate-500">
+                        Kelas Perpanjangan
+                      </p>
+                      <Badge variant="outline" className="ml-auto px-2 py-0.5 text-[11px]">
+                        Otomatis
+                      </Badge>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                      <div className="min-w-0 rounded-2xl border border-slate-200 bg-white px-3 py-3">
+                        <p className="text-[11px] font-medium text-slate-400">
+                          Saat ini
+                        </p>
+                        <p className="mt-1 truncate text-sm font-semibold text-slate-900">
+                          {renewalClassSuggestion?.currentClassLabel ?? overview.className}
+                        </p>
+                      </div>
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400">
+                        <ArrowRight className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0 rounded-2xl border border-slate-200 bg-white px-3 py-3">
+                        <p className="text-[11px] font-medium text-slate-400">
+                          Tujuan
+                        </p>
+                        <p className="mt-1 truncate text-sm font-semibold text-slate-900">
+                          {renewalTargetClassLabel}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                    <p className="text-xs font-medium text-slate-500">
+                      {selectedRenewalPackage.packageName}
+                    </p>
+                    <p className="mt-1 text-xl font-semibold tracking-tight text-slate-950">
+                      {formatRupiah(selectedRenewalAmount)}
+                    </p>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="mt-4 w-full"
+                    disabled={!canCreateRenewal || isCreatingRenewal}
+                    onClick={() => {
+                      setRenewalError(null);
+                      setRenewalFeedback(null);
+                      setIsRenewalDialogOpen(true);
+                    }}
+                  >
+                    Perpanjang Sekarang
+                    <ArrowUpRight className="h-4 w-4" />
+                  </Button>
+
+                  {!canCreateRenewal ? (
+                    <p className="mt-3 text-xs leading-5 text-slate-400">
+                      {renewalUnavailableMessage}
+                    </p>
+                  ) : null}
+
+                  {renewalFeedback ? (
+                    <div
+                      className={`mt-4 rounded-2xl border px-3 py-3 text-sm leading-6 ${
+                        renewalFeedback.tone === "success"
+                          ? "border-emerald-100 bg-emerald-50 text-emerald-700"
+                          : "border-amber-100 bg-amber-50 text-amber-700"
+                      }`}
+                    >
+                      <p className="font-semibold">{renewalFeedback.message}</p>
+                      {renewalFeedback.checkoutUrl ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="mt-3 rounded-full bg-emerald-600 text-white hover:bg-emerald-700"
+                          onClick={() => {
+                            window.open(
+                              renewalFeedback.checkoutUrl ?? "",
+                              "_blank",
+                              "noopener,noreferrer",
+                            );
+                          }}
+                        >
+                          Buka Checkout
+                          <ArrowUpRight className="h-4 w-4" />
+                        </Button>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
               </div>
             </aside>
           </div>
         </section>
       ) : null}
 
+      <Dialog
+        open={isRenewalDialogOpen}
+        onOpenChange={(open) => {
+          if (!isCreatingRenewal) {
+            setIsRenewalDialogOpen(open);
+          }
+        }}
+      >
+        <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] max-w-md border-slate-200 bg-white p-0 shadow-[0_24px_48px_-30px_rgba(15,23,42,0.24)] sm:max-h-[calc(100dvh-2rem)] sm:w-[calc(100%-2rem)]">
+          <form
+            onSubmit={handleCreateRenewalPayment}
+            className="flex max-h-[calc(100dvh-1rem)] min-h-0 flex-col sm:max-h-[calc(100dvh-2rem)]"
+          >
+            <DialogHeader className="shrink-0 border-b border-slate-200 px-4 py-3.5 pr-14 text-left sm:px-5 sm:pr-16">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="outline" className="rounded-full px-3 py-1">
+                  {overview.studentId}
+                </Badge>
+                <Badge variant={formatAccessVariant(overview.accessStatus)}>
+                  {overview.accessLabel}
+                </Badge>
+              </div>
+              <DialogTitle className="text-lg font-semibold tracking-tight text-slate-950">
+                Perpanjang Membership
+              </DialogTitle>
+              <DialogDescription>
+                Kelas otomatis, tinggal pilih paket.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-3 [-ms-overflow-style:none] [scrollbar-width:none] sm:px-5 [&::-webkit-scrollbar]:hidden">
+              <div className="rounded-[18px] border border-slate-200 bg-slate-50/70 p-3">
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="h-4 w-4 text-slate-500" />
+                  <p className="text-xs font-semibold uppercase text-slate-500">
+                    Kelas Otomatis
+                  </p>
+                  <Badge variant="outline" className="ml-auto px-2 py-0.5 text-[11px]">
+                    Tanpa input manual
+                  </Badge>
+                </div>
+
+                <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                  <div className="min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-2">
+                    <p className="text-[11px] font-medium text-slate-400">Saat ini</p>
+                    <p className="mt-1 truncate text-sm font-semibold text-slate-900">
+                      {renewalClassSuggestion?.currentClassLabel ?? overview.className}
+                    </p>
+                  </div>
+                  <div className="mx-auto flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400">
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </div>
+                  <div className="min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-2">
+                    <p className="text-[11px] font-medium text-slate-400">Tujuan</p>
+                    <p className="mt-1 truncate text-sm font-semibold text-slate-900">
+                      {renewalTargetClassLabel}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                  Paket
+                </label>
+                <Select
+                  value={renewalFormValues.packageKey}
+                  onValueChange={(value) =>
+                    setRenewalFormValues((current) => ({
+                      ...current,
+                      packageKey: value as OnlinePackageKey,
+                    }))
+                  }
+                  disabled={isCreatingRenewal}
+                >
+                  <SelectTrigger className="h-10 rounded-xl">
+                    <SelectValue placeholder="Pilih paket" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ONLINE_PACKAGES.map((item) => (
+                      <SelectItem key={item.packageKey} value={item.packageKey}>
+                        {item.packageName} |{" "}
+                        {formatRupiah(
+                          getPriceByClassAndPackage(
+                            effectiveRenewalFormValues.classLevel,
+                            item.packageKey,
+                          ),
+                        )}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center justify-between gap-3 rounded-[18px] border border-slate-200 bg-white px-4 py-3">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold uppercase text-slate-500">
+                    Total Tagihan
+                  </p>
+                  <p className="mt-1 truncate text-xs text-slate-500">
+                    {selectedRenewalPackage.packageName} | {renewalTargetClassLabel}
+                  </p>
+                </div>
+                <p className="shrink-0 text-lg font-semibold tracking-tight text-slate-950">
+                  {formatRupiah(selectedRenewalAmount)}
+                </p>
+              </div>
+
+              {renewalError ? (
+                <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700">
+                  {renewalError}
+                </div>
+              ) : null}
+            </div>
+
+            <DialogFooter className="!grid shrink-0 grid-cols-2 gap-2 border-t border-slate-200/80 bg-white px-4 py-3 sm:px-5">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 rounded-xl"
+                disabled={isCreatingRenewal}
+                onClick={() => setIsRenewalDialogOpen(false)}
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                variant="secondary"
+                className="h-10 rounded-xl"
+                disabled={isCreatingRenewal || !canCreateRenewal}
+              >
+                {isCreatingRenewal ? (
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                ) : (
+                  <CreditCard className="h-4 w-4" />
+                )}
+                Buat Tagihan
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       <div id="riwayat-tagihan">
-        <HistoriTagihanSiswa />
+        <HistoriTagihanSiswa reloadSignal={historyReloadKey} />
       </div>
     </section>
   );

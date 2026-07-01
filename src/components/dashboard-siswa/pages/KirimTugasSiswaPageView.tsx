@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Download, FolderOpenDot } from "lucide-react";
 
 import { useStudentLearningData } from "../data/useStudentLearningData";
+import { getStudentAcademicAccessMessage } from "../data/studentAcademicAccess";
 import FlexibleSubmissionPanel from "../learning/FlexibleSubmissionPanel";
 import StudentLearningShell from "../learning/StudentLearningShell";
 
@@ -40,11 +41,14 @@ function toDateOrder(value: string | null | undefined) {
 export default function KirimTugasSiswaPageView() {
   const {
     tasks,
+    academicAccess,
     isLoading,
     loadError,
     refreshLearningData,
     updateTaskSubmissionSummary,
   } = useStudentLearningData();
+  const academicAccessMessage =
+    getStudentAcademicAccessMessage(academicAccess);
   const submitTargets = tasks.filter(
     (task) => task.status !== "Sudah Dinilai",
   );
@@ -93,7 +97,8 @@ export default function KirimTugasSiswaPageView() {
             Belum ada tugas yang bisa dikirim
           </p>
           <p className="mt-2 text-sm text-slate-500">
-            {loadError ??
+            {academicAccessMessage ??
+              loadError ??
               "Saat ini belum ada tugas aktif yang perlu kamu submit."}
           </p>
         </section>
@@ -137,7 +142,8 @@ export default function KirimTugasSiswaPageView() {
               <p className="mt-2 text-sm text-slate-500">
                 {gradedTasks.length > 0
                   ? "Semua tugas aktif sudah selesai dinilai. Kamu bisa review hasil penilaian guru di atas."
-                  : loadError ??
+                  : academicAccessMessage ??
+                    loadError ??
                     "Saat ini belum ada tugas aktif yang perlu kamu submit."}
               </p>
             </section>

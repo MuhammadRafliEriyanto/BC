@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import type { StudentAcademicAccess } from "../data/studentAcademicAccess";
 
 export type AnswerMap = Record<string, string>;
 export type AssessmentType = "UTS" | "UAS" | "Tryout";
@@ -71,6 +72,7 @@ export type StudentTryoutListResponse = {
   message?: string;
   data?: {
     tryouts?: StudentTryoutItem[];
+    academicAccess?: StudentAcademicAccess | null;
   };
 };
 

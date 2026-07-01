@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import StudentMembershipAccessGate from "@/components/dashboard-siswa/StudentMembershipAccessGate";
 import SiswaTopbar from "@/components/dashboard-siswa/siswa-topbar";
 
 export default function DashboardSiswaLayout({
@@ -10,7 +11,7 @@ export default function DashboardSiswaLayout({
   return (
     <main className="min-h-screen w-full bg-slate-100/80">
       <SiswaTopbar />
-      {children}
+      <StudentMembershipAccessGate>{children}</StudentMembershipAccessGate>
     </main>
   );
 }

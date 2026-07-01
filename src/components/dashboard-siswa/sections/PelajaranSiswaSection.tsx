@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useStudentLearningData } from "../data/useStudentLearningData";
 import { useStudentTryouts } from "../data/useStudentTryouts";
+import { getStudentAcademicAccessMessage } from "../data/studentAcademicAccess";
 
 type TabKey = "materi" | "tugas" | "tryout";
 
@@ -85,8 +86,18 @@ function SectionAction({
 
 export default function PelajaranSection() {
   const [activeTab, setActiveTab] = useState<TabKey>("materi");
-  const { materials, tasks, isLoading, loadError } = useStudentLearningData();
-  const { tryouts, isLoading: isTryoutsLoading, loadError: tryoutsError } = useStudentTryouts();
+  const { materials, tasks, academicAccess, isLoading, loadError } =
+    useStudentLearningData();
+  const {
+    tryouts,
+    academicAccess: tryoutAcademicAccess,
+    isLoading: isTryoutsLoading,
+    loadError: tryoutsError,
+  } = useStudentTryouts();
+  const academicAccessMessage =
+    getStudentAcademicAccessMessage(academicAccess);
+  const tryoutAcademicAccessMessage =
+    getStudentAcademicAccessMessage(tryoutAcademicAccess);
 
   const activeTabConfig = useMemo(
     () => tabs.find((tab) => tab.key === activeTab) ?? tabs[0],
@@ -119,6 +130,7 @@ export default function PelajaranSection() {
         <EmptyState
           title="Belum ada materi"
           description={
+            academicAccessMessage ??
             loadError ??
             "Materi pembelajaran belum diunggah oleh guru untuk kelas kamu."
           }
@@ -182,6 +194,7 @@ export default function PelajaranSection() {
         <EmptyState
           title="Belum ada tugas"
           description={
+            academicAccessMessage ??
             loadError ??
             "Tugas mandiri maupun kelompok belum ditambahkan oleh guru kelas kamu."
           }
@@ -251,6 +264,7 @@ export default function PelajaranSection() {
         <EmptyState
           title="Belum ada sesi ujian"
           description={
+            tryoutAcademicAccessMessage ??
             tryoutsError ??
             "Belum ada sesi ujian atau tryout yang diterbitkan untuk kelas kamu saat ini."
           }

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import type { StudentDashboardData } from "../data/useStudentDashboardData";
+import { getStudentAcademicAccessMessage } from "../data/studentAcademicAccess";
 
 type HeaderAkademikSiswaProps = {
   dashboardData: StudentDashboardData | null;
@@ -60,6 +61,10 @@ export default function HeaderAkademikSiswa({
   dashboardLoading = false,
   dashboardError = null,
 }: HeaderAkademikSiswaProps) {
+  const academicAccessMessage = getStudentAcademicAccessMessage(
+    dashboardData?.academicAccess,
+  );
+
   const derivedProgram = useMemo<ProgramConfig | null>(() => {
     if (!dashboardData) {
       return null;
@@ -67,11 +72,12 @@ export default function HeaderAkademikSiswa({
 
     const { student, academicSummary } = dashboardData;
     const scheduleDescription =
-      academicSummary.todayScheduleCount > 0
+      academicAccessMessage ??
+      (academicSummary.todayScheduleCount > 0
         ? `${academicSummary.todayScheduleCount} sesi belajar terjadwal hari ini untuk kelas ${student.className}.`
         : academicSummary.scheduleCount > 0
           ? `Tidak ada jadwal hari ini. Total ${academicSummary.scheduleCount} jadwal mingguan siap dipantau dari dashboard siswa.`
-          : "Jadwal pelajaran untuk kelas kamu belum tersedia di backend.";
+          : "Jadwal pelajaran untuk kelas kamu belum tersedia di backend.");
 
     return {
       name: `${student.program || academicSummary.jenjang} - ${academicSummary.kelasLabel}`,
@@ -84,7 +90,8 @@ export default function HeaderAkademikSiswa({
             desc:
               academicSummary.materialCount > 0
                 ? `${academicSummary.materialCount} materi sudah dipublikasikan untuk kelas ${student.className}.`
-                : `Guru belum mempublikasikan materi untuk kelas ${student.className}.`,
+                : academicAccessMessage ??
+                  `Guru belum mempublikasikan materi untuk kelas ${student.className}.`,
             stats: `${academicSummary.materialCount} Materi`,
             primaryLabel: "Buka Materi",
             primaryHref: "/dashboard-siswa/materi",
@@ -100,7 +107,8 @@ export default function HeaderAkademikSiswa({
             desc:
               academicSummary.taskCount > 0
                 ? `${academicSummary.taskCount} tugas tersedia untuk dipantau dan dikerjakan dari dashboard siswa.`
-                : "Belum ada tugas aktif yang dibagikan untuk kelas kamu.",
+                : academicAccessMessage ??
+                  "Belum ada tugas aktif yang dibagikan untuk kelas kamu.",
             stats: `${academicSummary.taskCount} Tugas`,
             primaryLabel: "Lihat Tugas",
             primaryHref: "/dashboard-siswa/tugas",
@@ -116,12 +124,13 @@ export default function HeaderAkademikSiswa({
             desc:
               academicSummary.tryoutCount > 0
                 ? `${academicSummary.tryoutCount} sesi ujian/tryout tersedia untuk kelas ${student.className}.`
-                : "Belum ada sesi ujian aktif yang tersedia untuk kelas kamu.",
+                : academicAccessMessage ??
+                  "Belum ada sesi ujian aktif yang tersedia untuk kelas kamu.",
             stats: `${academicSummary.tryoutCount} Ujian`,
             primaryLabel: "Mulai Ujian",
             primaryHref: "/dashboard-siswa/ujian",
-            secondaryLabel: "Lihat Hasil",
-            secondaryHref: "/dashboard-siswa/ujian/riwayat",
+            secondaryLabel: "Lihat Ujian",
+            secondaryHref: "/dashboard-siswa/ujian",
           },
         },
         {
@@ -139,7 +148,7 @@ export default function HeaderAkademikSiswa({
         },
       ],
     };
-  }, [dashboardData]);
+  }, [academicAccessMessage, dashboardData]);
 
   const heroTitle = useMemo(() => {
     if (dashboardLoading) {
@@ -165,9 +174,13 @@ export default function HeaderAkademikSiswa({
       );
     }
 
+    if (academicAccessMessage) {
+      return academicAccessMessage;
+    }
+
     const { academicSummary } = dashboardData;
     return `${academicSummary.materialCount} materi, ${academicSummary.taskCount} tugas, ${academicSummary.tryoutCount} ujian, dan ${academicSummary.todayScheduleCount} jadwal hari ini siap dipantau dari dashboard siswa.`;
-  }, [dashboardData, dashboardError, dashboardLoading]);
+  }, [academicAccessMessage, dashboardData, dashboardError, dashboardLoading]);
 
   const programOptions = useMemo(
     () => (derivedProgram ? [derivedProgram] : []),
@@ -187,7 +200,9 @@ export default function HeaderAkademikSiswa({
     null;
   const emptyStateMessage = dashboardLoading
     ? "Memuat ringkasan belajar siswa..."
-    : dashboardError || "Data akademik siswa belum tersedia.";
+    : academicAccessMessage ??
+      dashboardError ??
+      "Data akademik siswa belum tersedia.";
 
   return (
     <div id="header-akademik-siswa" className="space-y-4">

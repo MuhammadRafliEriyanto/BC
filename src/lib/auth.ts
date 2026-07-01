@@ -6,6 +6,7 @@ export type AuthUser = {
   _id: string;
   nama: string;
   email: string;
+  loginCode?: string | null;
   avatar: string | null;
   role: UserRole;
   isEmailVerified: boolean;
@@ -24,7 +25,8 @@ export type ApiResponse<T extends Record<string, unknown> = Record<string, never
 };
 
 export type LoginPayload = {
-  email: string;
+  identifier?: string;
+  email?: string;
   password: string;
   rememberMe?: boolean;
 };
@@ -313,6 +315,11 @@ export function readPersistedAuthUser() {
       typeof parsedUser._id !== "string" ||
       typeof parsedUser.nama !== "string" ||
       typeof parsedUser.email !== "string" ||
+      !(
+        !("loginCode" in parsedUser) ||
+        parsedUser.loginCode === null ||
+        typeof parsedUser.loginCode === "string"
+      ) ||
       !("avatar" in parsedUser) ||
       !(
         parsedUser.avatar === null ||

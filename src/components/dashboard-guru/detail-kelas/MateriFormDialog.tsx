@@ -38,7 +38,7 @@ export default function MateriFormDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="min-h-0 overflow-y-auto overscroll-y-contain">
+        <div className="min-h-0 overflow-y-auto overscroll-y-contain [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <div className="grid gap-5 px-4 py-4 md:px-5 md:py-5">
             <div className="grid gap-4 md:grid-cols-2">
               <label className="grid gap-2 text-sm font-medium text-slate-700">

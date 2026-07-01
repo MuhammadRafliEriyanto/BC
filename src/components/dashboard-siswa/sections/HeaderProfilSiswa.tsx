@@ -20,12 +20,15 @@ import {
 } from "@/lib/subscription";
 
 import type { StudentDashboardData } from "../data/useStudentDashboardData";
+import { getStudentAcademicAccessMessage } from "../data/studentAcademicAccess";
+import { subscribeStudentDashboardRefresh } from "../student-dashboard-refresh-events";
 
 type StudentProfile = {
   name: string;
   initials: string;
   className: string;
-  status: string;
+  studentStatus: string;
+  membershipValue: string;
   program: string;
   paymentValue: string;
 };
@@ -58,7 +61,8 @@ const fallbackStudentProfile: StudentProfile = {
   name: "Siswa",
   initials: "SI",
   className: "Kelas belum tersedia",
-  status: "Memuat",
+  studentStatus: "Memuat",
+  membershipValue: "Memuat",
   program: "Program belum tersedia",
   paymentValue: "Menunggu data",
 };
@@ -100,15 +104,15 @@ function formatAccessStatusLabel(
 ) {
   switch (accessStatus) {
     case "active":
-      return "Aktif";
+      return "Membership Aktif";
     case "pending":
-      return "Pending";
+      return "Menunggu Pembayaran";
     case "expired":
-      return "Berakhir";
+      return "Membership Berakhir";
     case "not_registered":
-      return "Belum Terdaftar";
+      return "Belum Ada Membership";
     default:
-      return "Siswa";
+      return "Menunggu data";
   }
 }
 
@@ -140,7 +144,8 @@ function buildProfileFromAuthUser(user: AuthUser): StudentProfile {
     name: user.nama,
     initials: getInitials(user.nama),
     className: "Kelas belum tersedia",
-    status: formatRoleLabel(user.role),
+    studentStatus: formatRoleLabel(user.role),
+    membershipValue: "Menunggu data",
     program: "Program belum tersedia",
     paymentValue: "Menunggu data",
   };
@@ -159,12 +164,18 @@ function buildProfileFromMembershipData(data?: MembershipStatusData | null) {
     name: resolvedName,
     initials: getInitials(resolvedName),
     className: student?.className?.trim() || "Kelas belum tersedia",
-    status:
-      student?.status?.trim() || formatAccessStatusLabel(data?.accessStatus),
+    studentStatus: student?.status?.trim() || "Siswa",
+    membershipValue: formatAccessStatusLabel(data?.accessStatus),
     program: student?.program?.trim() || "Program belum tersedia",
     paymentValue: buildPaymentSummary(data?.payment, data?.accessStatus),
   } satisfies StudentProfile;
 }
+
+const highlightedProfileLabels = new Set([
+  "Status Siswa",
+  "Akses Membership",
+  "Tagihan",
+]);
 
 export default function HeaderProfilSiswa({
   dashboardData,
@@ -233,6 +244,12 @@ export default function HeaderProfilSiswa({
     });
   }, []);
 
+  useEffect(() => {
+    return subscribeStudentDashboardRefresh(() => {
+      void loadStudentProfile();
+    });
+  }, []);
+
   const subjectSchedules: SubjectSchedule[] =
     dashboardData?.schedules?.map((schedule) => ({
       id: schedule.id,
@@ -243,6 +260,9 @@ export default function HeaderProfilSiswa({
       room: schedule.room,
     })) ?? [];
   const visibleSubjectSchedules = subjectSchedules.slice(0, 3);
+  const academicAccessMessage = getStudentAcademicAccessMessage(
+    dashboardData?.academicAccess,
+  );
 
   return (
     <div className="flex h-full flex-col gap-4">
@@ -267,7 +287,7 @@ export default function HeaderProfilSiswa({
                 {profile.name}
               </p>
               <p className="mt-1 text-xs text-white/90 md:text-sm">
-                {profile.status}
+                {profile.membershipValue}
               </p>
             </div>
           </div>
@@ -276,7 +296,8 @@ export default function HeaderProfilSiswa({
         <div className="text-xs md:text-sm">
           {[
             ["Program", profile.program],
-            ["Status", profile.status],
+            ["Status Siswa", profile.studentStatus],
+            ["Akses Membership", profile.membershipValue],
             ["Kelas", profile.className],
             ["Tagihan", profile.paymentValue],
           ].map(([label, value]) => (
@@ -287,7 +308,7 @@ export default function HeaderProfilSiswa({
               <span className="text-slate-500">{label}</span>
               <span
                 className={`text-right font-medium ${
-                  label === "Status" || label === "Tagihan"
+                  highlightedProfileLabels.has(label)
                     ? "text-orange-600"
                     : "text-slate-800"
                 }`}
@@ -297,6 +318,13 @@ export default function HeaderProfilSiswa({
             </div>
           ))}
         </div>
+
+        {academicAccessMessage ? (
+          <div className="border-t border-orange-100 bg-orange-50/70 px-4 py-3 text-xs leading-5 text-orange-700 md:px-5">
+            <p className="font-semibold">Kelas berikutnya sudah siap</p>
+            <p className="mt-1 text-orange-700/85">{academicAccessMessage}</p>
+          </div>
+        ) : null}
       </section>
 
       <section
@@ -316,7 +344,8 @@ export default function HeaderProfilSiswa({
                   ? "Memuat jadwal pelajaran siswa..."
                   : subjectSchedules.length > 0
                     ? `${subjectSchedules.length} sesi tersedia untuk dipantau.`
-                    : "Belum ada jadwal pelajaran untuk saat ini."}
+                    : academicAccessMessage ??
+                      "Belum ada jadwal pelajaran untuk saat ini."}
               </p>
             </div>
 
@@ -376,7 +405,8 @@ export default function HeaderProfilSiswa({
                 Belum ada jadwal pelajaran untuk saat ini.
               </p>
               <p className="mt-1 text-[11px] text-slate-500">
-                {dashboardError ??
+                {academicAccessMessage ??
+                  dashboardError ??
                   "Jadwal kelas akan tampil otomatis sesuai kelas siswa yang sedang login."}
               </p>
             </div>

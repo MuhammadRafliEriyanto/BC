@@ -2,11 +2,8 @@
 
 import {
   Check,
-  CheckCircle2,
   ChevronRight,
   Clock3,
-  Eye,
-  EyeOff,
   GraduationCap,
   Info,
   type LucideIcon,
@@ -50,8 +47,6 @@ import { useState, useEffect, useMemo } from "react";
 type RegisterOnlineViewProps = {
   initialPackageKey?: OnlinePackageKey;
 };
-
-const DEFAULT_PACKAGE_KEY: OnlinePackageKey = "2-semester";
 
 function resolvePackageKey(packageKey?: OnlinePackageKey): OnlinePackageKey {
   return packageKey && (packageKey as string) !== "12-bulan" ? packageKey : "2-semester";
@@ -110,8 +105,6 @@ export default function RegisterOnlineView({ initialPackageKey }: RegisterOnline
     () => resolvePackageKey(initialPackageKey),
     [initialPackageKey],
   );
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -121,8 +114,6 @@ export default function RegisterOnlineView({ initialPackageKey }: RegisterOnline
   const [formValues, setFormValues] = useState<RegisterOnlinePayload>(() => ({
     nama: "",
     email: "",
-    password: "",
-    confirmPassword: "",
     phone: "",
     branch: "",
     program: "SMP",
@@ -494,78 +485,7 @@ export default function RegisterOnlineView({ initialPackageKey }: RegisterOnline
             </div>
           </FormSection>
 
-          {/* Section 3: Keamanan */}
-          <FormSection title="Kata Sandi Akun" icon={CheckCircle2}>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <label htmlFor="password" className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Password
-                </label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    value={formValues.password}
-                    onChange={(event) =>
-                      setFormValues((current) => ({
-                        ...current,
-                        password: event.target.value,
-                      }))
-                    }
-                    placeholder="Min. 8 karakter"
-                  className="h-12 rounded-2xl border-slate-200/60 bg-slate-50/50 px-4 pr-11 transition-all duration-300 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-500/10 hover:border-slate-300"
-                    autoComplete="new-password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((current) => !current)}
-                    className="absolute inset-y-0 right-0 inline-flex w-11 items-center justify-center text-slate-400 transition hover:text-orange-600"
-                  >
-                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                  </button>
-                </div>
-                <InputError message={fieldErrors.password} />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="confirmPassword" className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Konfirmasi Password
-                </label>
-                <div className="relative">
-                  <Input
-                    id="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={formValues.confirmPassword}
-                    onChange={(event) =>
-                      setFormValues((current) => ({
-                        ...current,
-                        confirmPassword: event.target.value,
-                      }))
-                    }
-                    placeholder="Ulangi password"
-                  className="h-12 rounded-2xl border-slate-200/60 bg-slate-50/50 px-4 pr-11 transition-all duration-300 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-500/10 hover:border-slate-300"
-                    autoComplete="new-password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword((current) => !current)}
-                    className="absolute inset-y-0 right-0 inline-flex w-11 items-center justify-center text-slate-400 transition hover:text-orange-600"
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff className="size-4" />
-                    ) : (
-                      <Eye className="size-4" />
-                    )}
-                  </button>
-                </div>
-                <InputError message={fieldErrors.confirmPassword} />
-              </div>
-            </div>
-          </FormSection>
-
-          {/* Section 4: Paket */}
+          {/* Section 3: Paket */}
           <div className="space-y-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import { useStudentLearningData } from "../data/useStudentLearningData";
+import { getStudentAcademicAccessMessage } from "../data/studentAcademicAccess";
 import StudentLearningShell from "../learning/StudentLearningShell";
 
 function getMaterialStatusClass(status: "Baru" | "Dipelajari") {
@@ -21,8 +22,11 @@ function getMaterialStatusClass(status: "Baru" | "Dipelajari") {
 }
 
 export default function MateriSiswaPageView() {
-  const { materials, isLoading, loadError } = useStudentLearningData();
+  const { materials, academicAccess, isLoading, loadError } =
+    useStudentLearningData();
   const [selectedMaterialId, setSelectedMaterialId] = useState("");
+  const academicAccessMessage =
+    getStudentAcademicAccessMessage(academicAccess);
   const resolvedSelectedMaterialId = materials.some(
     (material) => material.id === selectedMaterialId,
   )
@@ -56,7 +60,8 @@ export default function MateriSiswaPageView() {
             Belum ada materi tersedia
           </p>
           <p className="mt-2 text-sm text-slate-500">
-            {loadError ??
+            {academicAccessMessage ??
+              loadError ??
               "Guru belum membagikan materi yang dipublikasikan untuk kelas kamu."}
           </p>
         </section>

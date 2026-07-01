@@ -30,6 +30,7 @@ export type AdminStudent = {
   id: string;
   name: string;
   email: string;
+  loginCode: string;
   phone: string;
   branch: string;
   level: "SD" | "SMP" | "SMA";
@@ -39,12 +40,21 @@ export type AdminStudent = {
   academicYear: string;
   generatedPassword: string;
   status: "Aktif" | "Nonaktif";
+  membership?: {
+    status: "active" | "pending" | "expired" | "none";
+    packageKey?: string;
+    packageName?: string;
+    paymentStatus?: string;
+    startDate?: string;
+    endDate?: string;
+  };
 };
 
 export type AdminTeacher = {
   id: string;
   name: string;
   email: string;
+  loginCode: string;
   subject: string;
   schedule: string;
   activeClasses: number;

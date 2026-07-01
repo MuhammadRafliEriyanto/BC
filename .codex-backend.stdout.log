@@ -1,7 +1,0 @@
-
-> bimbel-new-backend@1.0.0 dev
-> tsx watch src/server.ts
-
-Mencoba koneksi ke MongoDB...
-MongoDB connected: ac-xoluqrw-shard-00-00.ahx9jjw.mongodb.net/bimbel-lms
-SMTP ready: raflimhmmd621@gmail.com

@@ -1,0 +1,81 @@
+import { Router } from "express";
+
+import {
+  archiveAdminPayment,
+  cancelAdminPayment,
+  createAdminBatchPaymentSession,
+  confirmDummyPayment,
+  createAdminPaymentSession,
+  createXenditTestSession,
+  exportAdminPaymentActivations,
+  exportAdminPayments,
+  getAdminPaymentActivations,
+  getAdminPaymentSummary,
+  getAdminPayments,
+  getOwnerActivities,
+  getPaymentStatus,
+  handleXenditPaymentWebhook,
+  resendAdminPaymentLink,
+  replaceAdminPayment,
+  updateAdminPaymentStatus,
+} from "../controllers/paymentController";
+import apiKeyMiddleware from "../middleware/apiKeyMiddleware";
+import authorizeRole from "../middleware/authorizeRole";
+import protect from "../middleware/protect";
+
+const router = Router();
+
+router.post("/xendit/webhook", handleXenditPaymentWebhook);
+
+router.use(apiKeyMiddleware);
+
+router.get("/owner-activities", protect, authorizeRole("admin", "owner"), getOwnerActivities);
+router.get("/admin", protect, authorizeRole("admin"), getAdminPayments);
+router.get("/admin/export", protect, authorizeRole("admin"), exportAdminPayments);
+router.get("/admin/summary", protect, authorizeRole("admin"), getAdminPaymentSummary);
+router.get("/admin/activations", protect, authorizeRole("admin"), getAdminPaymentActivations);
+router.get(
+  "/admin/activations/export",
+  protect,
+  authorizeRole("admin"),
+  exportAdminPaymentActivations,
+);
+router.post(
+  "/admin/create-session",
+  protect,
+  authorizeRole("admin"),
+  createAdminPaymentSession,
+);
+router.post(
+  "/admin/create-batch-session",
+  protect,
+  authorizeRole("admin"),
+  createAdminBatchPaymentSession,
+);
+router.post(
+  "/admin/:paymentId/resend-link",
+  protect,
+  authorizeRole("admin"),
+  resendAdminPaymentLink,
+);
+router
+  .route("/admin/:paymentId")
+  .patch(protect, authorizeRole("admin"), replaceAdminPayment)
+  .delete(protect, authorizeRole("admin"), archiveAdminPayment);
+router.patch(
+  "/admin/:paymentId/status",
+  protect,
+  authorizeRole("admin"),
+  updateAdminPaymentStatus,
+);
+router.post(
+  "/admin/:paymentId/cancel",
+  protect,
+  authorizeRole("admin"),
+  cancelAdminPayment,
+);
+router.get("/status", getPaymentStatus);
+router.post("/confirm", confirmDummyPayment);
+router.post("/xendit/test-session", createXenditTestSession);
+
+export default router;

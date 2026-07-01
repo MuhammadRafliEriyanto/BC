@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 
 import { clearAuthClientState } from "@/lib/auth";
 
+import { subscribeStudentDashboardRefresh } from "../student-dashboard-refresh-events";
+import type { StudentAcademicAccess } from "./studentAcademicAccess";
+
 type StudentDashboardApiResponse = {
   success: boolean;
   message?: string;
@@ -44,6 +47,7 @@ export type StudentDashboardData = {
   };
   schedules: StudentDashboardSchedule[];
   todaySchedules: StudentDashboardSchedule[];
+  academicAccess?: StudentAcademicAccess | null;
 };
 
 export function useStudentDashboardData() {
@@ -52,6 +56,7 @@ export function useStudentDashboardData() {
   );
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -94,6 +99,7 @@ export function useStudentDashboardData() {
           ...payload.data,
           schedules: payload.data.schedules ?? [],
           todaySchedules: payload.data.todaySchedules ?? [],
+          academicAccess: payload.data.academicAccess ?? null,
         });
       } catch (error) {
         if (!isMounted) {
@@ -119,6 +125,12 @@ export function useStudentDashboardData() {
     return () => {
       isMounted = false;
     };
+  }, [reloadToken]);
+
+  useEffect(() => {
+    return subscribeStudentDashboardRefresh(() => {
+      setReloadToken((currentToken) => currentToken + 1);
+    });
   }, []);
 
   return {

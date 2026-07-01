@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 
 import { clearAuthClientState } from "@/lib/auth";
 
+import { subscribeStudentDashboardRefresh } from "../student-dashboard-refresh-events";
+import type { StudentAcademicAccess } from "./studentAcademicAccess";
 import type {
   StudentAcademicSummary,
   StudentMaterial,
@@ -79,6 +81,7 @@ type StudentLearningResponse = {
     materials?: StudentLearningApiMaterialItem[];
     tasks?: StudentLearningApiTaskItem[];
     academicSummaries?: StudentLearningApiAcademicSummaryItem[];
+    academicAccess?: StudentAcademicAccess | null;
   };
 };
 
@@ -393,6 +396,8 @@ export function useStudentLearningData() {
   const [academicSummaries, setAcademicSummaries] = useState<
     StudentAcademicSummary[]
   >([]);
+  const [academicAccess, setAcademicAccess] =
+    useState<StudentAcademicAccess | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
@@ -432,6 +437,7 @@ export function useStudentLearningData() {
           setMaterials([]);
           setTasks([]);
           setAcademicSummaries([]);
+          setAcademicAccess(null);
           setLoadError("Sesi login berakhir. Silakan login ulang.");
           return;
         }
@@ -440,6 +446,7 @@ export function useStudentLearningData() {
           setMaterials([]);
           setTasks([]);
           setAcademicSummaries([]);
+          setAcademicAccess(null);
           setLoadError(
             payload?.message || "Materi dan tugas siswa belum bisa dimuat saat ini.",
           );
@@ -453,6 +460,7 @@ export function useStudentLearningData() {
         setAcademicSummaries(
           (payload.data?.academicSummaries ?? []).map(mapApiAcademicSummary),
         );
+        setAcademicAccess(payload.data?.academicAccess ?? null);
       } catch (error) {
         if (!isMountedRef.current) {
           return;
@@ -462,6 +470,7 @@ export function useStudentLearningData() {
         setMaterials([]);
         setTasks([]);
         setAcademicSummaries([]);
+        setAcademicAccess(null);
         setLoadError("Materi dan tugas siswa belum bisa dimuat saat ini.");
       } finally {
         if (isMountedRef.current) {
@@ -483,6 +492,13 @@ export function useStudentLearningData() {
     silentReloadRef.current = true;
     setReloadToken((currentToken) => currentToken + 1);
   }
+
+  useEffect(() => {
+    return subscribeStudentDashboardRefresh(() => {
+      silentReloadRef.current = true;
+      setReloadToken((currentToken) => currentToken + 1);
+    });
+  }, []);
 
   function updateTaskSubmissionSummary(
     taskId: string,
@@ -510,6 +526,7 @@ export function useStudentLearningData() {
     materials,
     tasks,
     academicSummaries,
+    academicAccess,
     isLoading,
     loadError,
     refreshLearningData,

@@ -133,8 +133,6 @@ export type MembershipAccessStatus =
 export type RegisterOnlinePayload = {
   nama: string;
   email: string;
-  password: string;
-  confirmPassword: string;
   phone: string;
   branch: string;
   program: ProgramOptionValue;
@@ -174,6 +172,8 @@ export type MembershipSubscription = {
   endDate: string | null;
   status: SubscriptionStatus;
   paymentStatus: PaymentStatus;
+  targetProgram?: string | null;
+  targetClassName?: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -223,6 +223,7 @@ export type RegisterOnlineData = {
     _id: string;
     nama: string;
     email: string;
+    loginCode?: string | null;
     role: string;
     isEmailVerified: boolean;
   };
@@ -253,6 +254,19 @@ export type MembershipPaymentHistoryData = {
   payments: MembershipPaymentHistoryItem[];
 };
 
+export type MembershipRenewalPayload = {
+  program?: ProgramOptionValue;
+  classLevel?: string;
+  packageKey: OnlinePackageKey;
+};
+
+export type MembershipRenewalData = {
+  student: MembershipStudent;
+  subscription: MembershipSubscription;
+  payment: MembershipPayment;
+  statusPagePath: string;
+};
+
 export type PaymentStatusData = {
   student: MembershipStudent;
   subscription: MembershipSubscription;
@@ -263,6 +277,7 @@ export type PaymentStatusData = {
 export type RegisterOnlineResponse = ApiResponse<RegisterOnlineData>;
 export type MembershipStatusResponse = ApiResponse<MembershipStatusData>;
 export type MembershipPaymentHistoryResponse = ApiResponse<MembershipPaymentHistoryData>;
+export type MembershipRenewalResponse = ApiResponse<MembershipRenewalData>;
 export type PaymentStatusResponse = ApiResponse<PaymentStatusData>;
 export type RegisterBranchOptionsResponse = ApiResponse<{
   branches: RegisterBranchOption[];
@@ -414,6 +429,15 @@ export const membershipService = {
       "/api/subscriptions/me/payments",
       {
         method: "GET",
+      },
+    );
+  },
+  createMyRenewalPayment(payload: MembershipRenewalPayload) {
+    return requestMembershipJson<MembershipRenewalData>(
+      "/api/subscriptions/me/renewal",
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
       },
     );
   },

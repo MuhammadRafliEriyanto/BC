@@ -9,6 +9,7 @@ import {
 import Link from "next/link";
 
 import { useStudentLearningData } from "../data/useStudentLearningData";
+import { getStudentAcademicAccessMessage } from "../data/studentAcademicAccess";
 import {
   ACADEMIC_SCORE_LABELS,
   calculateTotalScores,
@@ -44,8 +45,10 @@ function formatGradedTime(value: string | null) {
 }
 
 export default function NilaiSiswaPageView() {
-  const { tasks, academicSummaries, isLoading, loadError } =
+  const { tasks, academicSummaries, academicAccess, isLoading, loadError } =
     useStudentLearningData();
+  const academicAccessMessage =
+    getStudentAcademicAccessMessage(academicAccess);
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
 
   const groupedTasks = useMemo(() => {
@@ -119,7 +122,8 @@ export default function NilaiSiswaPageView() {
             Belum ada data nilai
           </p>
           <p className="mt-2 text-sm text-slate-500">
-            {loadError ??
+            {academicAccessMessage ??
+              loadError ??
               "Guru belum memberikan tugas atau evaluasi yang dinilai untuk kamu."}
           </p>
         </section>

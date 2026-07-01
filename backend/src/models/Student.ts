@@ -1,0 +1,77 @@
+import { HydratedDocument, Model, Schema, model, models, type Types } from "mongoose";
+
+export const STUDENT_STATUSES = ["Aktif", "Nonaktif"] as const;
+
+export type StudentStatus = (typeof STUDENT_STATUSES)[number];
+
+export interface IStudent {
+  studentId: string;
+  userId: Types.ObjectId;
+  phone: string;
+  branch: string;
+  program: string;
+  className: string;
+  academicYear: string;
+  birthDate: Date | null;
+  status: StudentStatus;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type StudentDocument = HydratedDocument<IStudent>;
+
+const studentSchema = new Schema<IStudent>(
+  {
+    studentId: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      unique: true,
+    },
+    phone: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    branch: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    program: {
+      type: String,
+      required: [true, "Program wajib diisi."],
+      trim: true,
+    },
+    className: {
+      type: String,
+      required: [true, "Kelas wajib diisi."],
+      trim: true,
+    },
+    academicYear: {
+      type: String,
+      trim: true,
+    },
+    birthDate: {
+      type: Date,
+      default: null,
+    },
+    status: {
+      type: String,
+      enum: STUDENT_STATUSES,
+      default: "Aktif",
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
+
+export const Student: Model<IStudent> =
+  (models.Student as Model<IStudent> | undefined) ?? model<IStudent>("Student", studentSchema);

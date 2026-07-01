@@ -13,6 +13,7 @@ import {
   type StudentAttendanceHistoryRecord,
   useStudentAttendanceData,
 } from "../data/useStudentAttendanceData";
+import { getStudentAcademicAccessMessage } from "../data/studentAcademicAccess";
 
 type AttendanceSubjectGroup = {
   key: string;
@@ -203,11 +204,14 @@ function AttendanceStatusBadge({ status }: { status: string }) {
 }
 
 export default function AbsensiSiswaPageView() {
-  const { history, isLoading, loadError } = useStudentAttendanceData();
+  const { history, academicAccess, isLoading, loadError } =
+    useStudentAttendanceData();
   const [selectedGroupKey, setSelectedGroupKey] = useState<string | null>(null);
   const subjectGroups = buildAttendanceSubjectGroups(history);
   const selectedGroup =
     subjectGroups.find((group) => group.key === selectedGroupKey) ?? null;
+  const academicAccessMessage =
+    getStudentAcademicAccessMessage(academicAccess);
 
   return (
     <section className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 md:px-6 md:py-8">
@@ -244,7 +248,8 @@ export default function AbsensiSiswaPageView() {
             Belum ada data kehadiran
           </p>
           <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-500">
-            {loadError ??
+            {academicAccessMessage ??
+              loadError ??
               "Kamu belum memiliki riwayat kehadiran di sesi kelas apa pun."}
           </p>
         </section>
